@@ -1,5 +1,7 @@
 # LuRP
 
+![Build](https://github.com/leethomason/lurp/actions/workflows/c-cpp.yml/badge.svg)
+
 LuRP is a story engine. It provides more services than a scripting engine, but less than a game 
 engine. It strives to "play well with others" so you can integrate LuRP into your engine or
 framework of choice.
