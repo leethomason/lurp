@@ -5,6 +5,7 @@ int TestReturnCode();
 
 void RecordTest(bool pass);
 void IncTestRun();
+void LogTests();
 
 #define RUN_TEST(test) IncTestRun(); fmt::print("Test: {}\n", #test); test
 

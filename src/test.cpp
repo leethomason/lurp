@@ -28,6 +28,16 @@ void RecordTest(bool pass)
 		++gNTestFail;
 }
 
+void LogTests()
+{
+	if (gNTestPass == 0) {
+		fmt::print("ERROR No tests ran!\n");
+	}
+	else {
+		fmt::print("RUN_TEST: {} TEST passed: {}\n", gNRunTest, gNTestPass);
+	}
+}
+
 /*
 static void PrintForest(const ScriptAssets& assets, const std::vector<NodeRef>& tree)
 {
@@ -971,13 +981,7 @@ int RunTests()
 	RUN_TEST(BattleTest::Test1());
 
 	assert(gNTestPass > 0);
-	if (gNTestPass == 0) {
-		fmt::print("ERROR No tests ran!\n");
-	}
-	else {
-		fmt::print("RUN_TEST: {} TEST passed: {}\n", gNRunTest, gNTestPass);
-	}
-
+	assert(gNTestFail == 0);
 	return TestReturnCode();
 }
 

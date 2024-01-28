@@ -925,6 +925,10 @@ int main(int argc, const char* argv[])
 	assert(s3.lCounts[1] <= knownNumLeak);
 	assert(s3.lSizes[1] <= knownLeakSize);
 #endif
-
-    return rc;
+	LogTests();
+	if (rc == 0)
+		fmt::print("LuRP tests run successfully.\n");
+	else
+		fmt::print("LuRP tests failed.\n");
+	return rc;
 }

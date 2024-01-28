@@ -40,6 +40,7 @@ add_test(
   COMMAND lurp
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")
 
 add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC})
 target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
