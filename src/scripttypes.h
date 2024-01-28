@@ -9,6 +9,8 @@
 #include "defs.h"
 #include "items.h"
 
+namespace lurp {
+
 class Inventory;
 struct ScriptAssets;
 class ScriptBridge;
@@ -147,3 +149,5 @@ struct Battle {
 		fmt::print("Battle {} 'player' v {}\n", entityID, enemy);
 	}
 };
+
+} // namespace lurp

@@ -5,6 +5,8 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 int Inventory::findItem(const Item& item) const {
 	auto it = findIt(item);
 	if (it == _items.end()) return 0;
@@ -98,3 +100,5 @@ void Inventory::save(std::ostream& stream)
 	}
 	fmt::print(stream, "}} ");
 }
+
+} // namespace lurp

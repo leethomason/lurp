@@ -11,6 +11,8 @@
 
 extern "C" struct lua_State;
 
+namespace lurp {
+
 struct ScriptAssets;
 struct ConstScriptAssets;
 struct Battler;
@@ -179,3 +181,4 @@ private:
 	bool _done = false;
 };
 
+} // namespace lurp

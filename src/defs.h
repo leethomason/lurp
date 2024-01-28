@@ -3,6 +3,7 @@
 #include <string>
 #include "lua.hpp"
 
+namespace lurp {
 
 using EntityID = std::string;
 
@@ -84,3 +85,5 @@ struct Variant {
 	double num = 0;
 	bool boolean = false;
 };
+
+} // namespace lurp

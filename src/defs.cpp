@@ -1,6 +1,7 @@
 #include "defs.h"
 #include <fmt/core.h>
 
+namespace lurp {
 
 bool Variant::isTruthy() const
 {
@@ -90,3 +91,4 @@ std::string Variant::toLuaString() const
 	return "unknown";
 }
 
+} // namespace lurp

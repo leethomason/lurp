@@ -9,6 +9,7 @@
 #include "scripthelper.h"
 #include "scriptbridge.h"
 
+namespace lurp {
 
 ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(bridge)
 {
@@ -578,4 +579,4 @@ void ZoneDriver::choose(int n)
 	checkScriptDriver();
 }
 
-
+} // namespace lurp

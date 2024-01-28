@@ -9,6 +9,8 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) const
 {
 	action = Choices::Action::kDone;
@@ -526,3 +528,4 @@ const char* scriptTypeName(ScriptType type)
 	return "error";
 }
 
+} // namespace lurp

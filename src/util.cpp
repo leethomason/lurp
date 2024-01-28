@@ -1,6 +1,8 @@
 #include "util.h"
 #include "SpookyV2.h"
 
+namespace lurp {
+
 bool Globals::trace = false;
 bool Globals::debugSave = false;
 
@@ -18,7 +20,6 @@ std::vector<std::string_view> splitSV(const std::string& str, char delim)
         result.push_back(sv);
     return result;
 }
-
 
 std::vector<std::string> split(const std::string& str, char delim)
 {
@@ -47,5 +48,4 @@ uint64_t Hash(const std::string& a, const std::string& b, const std::string& c, 
     return hash;
 }
 
-
-
+} // namespace lurp

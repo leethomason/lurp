@@ -4,6 +4,8 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 ScriptAssets::ScriptAssets(const ConstScriptAssets& csa) :
 	_csa(csa),
 	scripts(csa.scripts),
@@ -129,3 +131,5 @@ const CallScript& ScriptAssets::getCallScript(const EntityID& entityID) const { 
 const Actor& ScriptAssets::getActor(const EntityID& entityID) const { TYPE_BODY(actors, kActor); }
 const Container& ScriptAssets::getContainer(const EntityID& entityID) const { TYPE_BODY(containers, kContainer); }
 const Edge& ScriptAssets::getEdge(const EntityID& entityID) const { TYPE_BODY(edges, kEdge); }
+
+} // namespace lurp

@@ -7,11 +7,13 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 ScriptHelper::ScriptHelper(
 	ScriptBridge& bridge,
 	CoreData& coreData,
 	const ScriptEnv& env) :
-	_bridge(bridge), 
+	_bridge(bridge),
 	_coreData(coreData),
 	_scriptEnv(env)
 {
@@ -149,7 +151,7 @@ std::string ScriptHelper::pushPath(const std::string& path) const
 	std::vector<std::string_view> parts = splitSV(path, '.');
 	assert(parts.size() > 0);
 
-	for(int i=0; i<int(parts.size()) - 1; i++) {
+	for (int i = 0; i<int(parts.size()) - 1; i++) {
 		const auto& part = parts[i];
 		std::string p(part);
 		if (i == 0) {
@@ -280,3 +282,5 @@ void ScriptHelper::save(std::ostream& stream) const
 	fmt::print(stream, "  npc = '{}',\n", _scriptEnv.npc);
 	fmt::print(stream, "}}\n");
 }
+
+} // namespace lurp

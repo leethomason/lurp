@@ -13,6 +13,7 @@
 #include <sstream>
 
 using namespace lurp::swbattle;
+using namespace lurp;
 
 int gNTestPass = 0;
 int gNTestFail = 0;

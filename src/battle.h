@@ -16,18 +16,6 @@ struct Power;
 // implement:
 // - integrate with lua script
 // - reasonable test framework
-// T impact of wounds on rolls
-// T opportunity attacks
-// T defend
-// T multiple attackers
-// T unarmed
-// T clean up output (cover, range)
-// T armor
-// T powers
-// D edges / mods
-// D how to handle news - same as how to handle combat events? the inconsistency is annoying
-// X namespaces
-// T free attacks
 
 struct Die {
 	Die() {}

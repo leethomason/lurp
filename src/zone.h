@@ -6,6 +6,8 @@
 #include "defs.h"
 #include "items.h"
 
+namespace lurp {
+
 struct ScriptAssets;
 class ScriptBridge;
 struct NewsQueue;
@@ -42,11 +44,11 @@ struct Edge {
 	};
 
 	EntityID entityID;
-	std::string name;		
+	std::string name;
 	Dir dir = Dir::kUnknown;
 	EntityID room1;
 	EntityID room2;
-	EntityID key;			    
+	EntityID key;
 	bool locked = false;
 
 	std::pair<bool, Variant> get(const std::string& k) const {
@@ -65,7 +67,7 @@ struct Edge {
 	static std::string dirToLongName(Dir d);
 };
 
-struct DirEdge 
+struct DirEdge
 {
 	EntityID entityID;
 	std::string name;
@@ -77,7 +79,7 @@ struct DirEdge
 	EntityID key;
 };
 
-struct Room  {
+struct Room {
 	EntityID entityID;
 	std::string name;
 	std::string desc;
@@ -136,3 +138,5 @@ struct CallScript {
 		fmt::print("CallScript {} calls={}\n", entityID, scriptID);
 	}
 };
+
+} // namespace lurp

@@ -6,6 +6,8 @@
 #include "scripttypes.h"
 #include "iscript.h"
 
+namespace lurp {
+
 class ScriptBridge;
 
 struct ConstScriptAssets
@@ -81,3 +83,5 @@ private:
 
 	void scan();
 };
+
+} // namespace lurp

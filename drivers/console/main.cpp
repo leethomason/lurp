@@ -26,6 +26,7 @@
 #include <filesystem>
 
 using namespace lurp::swbattle;
+using namespace lurp;
 
 static constexpr int N_RANGE = 4;
 static constexpr char* RANGE[N_RANGE] = { "Short", "Medium", "Long", "Extreme" };
@@ -85,7 +86,7 @@ static Value ParseValue(const std::string& full)
 	v.rawStr = full;
 	if (full.empty()) return v;
 
-	std::vector<std::string> s = split(full, ' ');
+	std::vector<std::string> s = lurp::split(full, ' ');
 	assert(!s.empty());
 	std::string str = s[0];
 	if (s.size() > 1) {
@@ -328,7 +329,7 @@ static void PrintActions(BattleSystem& system)
 
 static void ConsoleBattleDriver()
 {
-	Random random(0xabc);
+	lurp::Random random(0xabc);
 	random.rand();
 
 	BattleSystem system(random);

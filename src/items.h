@@ -7,6 +7,8 @@
 #include <vector>
 #include <assert.h>
 
+namespace lurp {
+
 struct ConstScriptAssets;
 
 struct Item {
@@ -37,11 +39,11 @@ public:
 	Inventory& operator=(const Inventory&) = default;
 	bool operator==(const Inventory& rhs) const { return _items == rhs._items; }
 	bool operator!=(const Inventory& rhs) const { return !(*this == rhs); }
-	
+
 	bool emtpy() const { return _items.empty(); }
 	void clear() { _items.clear(); }
-	
-	void addInitItem(const EntityID & entityID, int n) { _initItems.push_back({ entityID, n }); }
+
+	void addInitItem(const EntityID& entityID, int n) { _initItems.push_back({ entityID, n }); }
 	void convert(const ConstScriptAssets& assets);
 
 	bool hasItem(const Item& item) const;
@@ -91,3 +93,5 @@ private:
 	std::vector<ItemRef> _items;
 	std::vector<std::pair<EntityID, int>> _initItems;
 };
+
+} // namespace lurp

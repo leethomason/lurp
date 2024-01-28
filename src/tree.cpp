@@ -3,6 +3,7 @@
 
 #include <assert.h>
 
+namespace lurp {
 
 void walkTree(const ScriptAssets& assets, const EntityID& entityID, int depth, std::vector<NodeRef>& tree)
 {
@@ -221,3 +222,5 @@ ScriptRef TreeIt::getParent() const
 	int index = _tree.getParentTE(_index);
 	return _tree.get(index);
 }
+
+} // namespace lurp

@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <unordered_set>
 
+namespace lurp {
+
 std::vector<std::string_view> splitSV(const std::string& str, char delim);
 std::vector<std::string> split(const std::string& str, char delim);
 
@@ -38,9 +40,9 @@ class Random
 {
 public:
 	Random() : s(1234) {}
-    Random(int seed) {
-        setSeed(seed);
-    }
+	Random(int seed) {
+		setSeed(seed);
+	}
 
 	void setSeed(uint32_t seed) {
 		s = (seed > 0) ? seed : 1;
@@ -55,7 +57,7 @@ public:
 		return uint32_t(s);
 	}
 
-    int32_t rand(int32_t limit) { return static_cast<int32_t>(rand() % limit); }
+	int32_t rand(int32_t limit) { return static_cast<int32_t>(rand() % limit); }
 	uint32_t rand(uint32_t limit) { return rand() % limit; }
 
 	int dice(int count, int sides, int bonus = 0) {
@@ -107,3 +109,5 @@ T sign(T a) {
 	if (a < 0) return T(-1);
 	return T(0);
 }
+
+} // namespace lurp

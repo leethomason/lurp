@@ -6,6 +6,8 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 const Room* Zone::firstRoom(const ScriptAssets& assets) const
 {
 	for (const EntityID& obj : objects) {
@@ -46,3 +48,5 @@ const Room* Zone::firstRoom(const ScriptAssets& assets) const
 	default: return "";
 	}
 }
+
+} // namespace lurp

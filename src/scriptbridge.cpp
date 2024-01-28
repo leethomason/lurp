@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <array>
 
+namespace lurp {
+
 // FIXME: revisit this on a big file
 // In the (small) test these don't do much. 79k -> 66k or so.
 // May be more important for big files.
@@ -1155,5 +1157,4 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	return 0;
 }
 
-
-
+} // namespace lurp
