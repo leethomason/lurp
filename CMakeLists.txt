@@ -38,7 +38,7 @@ enable_testing()
 add_test(
   NAME lurp
   COMMAND lurp
-  WORKING_DIRECTORY ".."
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC})
