@@ -20,5 +20,5 @@ jobs:
 
       - name: Test Project
         run: |
-          cmake --build . --config Release
-          ctest -C Release -V
+          cmake --build build --config Release
+          ctest --test-dir build -C Release -V
