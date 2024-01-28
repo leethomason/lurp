@@ -1,0 +1,407 @@
+#pragma once
+
+#include "util.h"
+#include "defs.h"
+
+#include <string>
+#include <variant>
+#include <queue>
+#include <bitset>
+
+namespace lurp {
+namespace swbattle {
+
+struct Power;
+
+// implement:
+// - integrate with lua script
+// - reasonable test framework
+// T impact of wounds on rolls
+// T opportunity attacks
+// T defend
+// T multiple attackers
+// T unarmed
+// T clean up output (cover, range)
+// T armor
+// T powers
+// D edges / mods
+// D how to handle news - same as how to handle combat events? the inconsistency is annoying
+// X namespaces
+// T free attacks
+
+struct Die {
+	Die() {}
+	Die(int n, int d, int b) : n(n), d(d), b(b) {}
+	int roll(Random&, int* nAce);
+
+	int n = 1;
+	int d = 4;
+	int b = 0;
+
+	bool isValid() const { return n > 0 && d > 0; }
+	static Die noDie() { return Die(0, 0, 0); }
+
+	bool operator==(const Die& rhs) const {
+		return n == rhs.n && d == rhs.d && b == rhs.b;
+	}
+	bool operator!=(const Die& rhs) const {
+		return !(*this == rhs);
+	}
+};
+
+struct Roll {
+	// Note that the ace system is only used for the n=1
+	Die die;				// what was rolled
+
+	int total[2] = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
+
+	int value() const { return std::max(total[0], total[1]); }
+	int nAce(int which) const {
+		if (die.n != 1) return 0;
+		int base = total[which] - die.b;	// roll w/ aces
+		return base / die.d;
+	}
+	int finalRoll(int which) const {
+		return total[which] - die.b - nAce(which) * die.d;
+	}
+	bool hasWild() const { return total[1] != std::numeric_limits<int>::min(); }
+
+	bool criticalFailure() const {
+		for (int i = 0; i < 2; i++) {
+			if (total[i] == std::numeric_limits<int>::min()) continue;
+			if (nAce(i) > 0) return false;
+			if (finalRoll(i) != 1) return false;
+		}
+		return true;
+	}
+};
+
+enum class ModType {
+	// These can be caused by powers, edges, etc.
+	kBoost,		// negative numbers de-buff
+	kStrength,
+	kArcane,
+	kFighting,	// affects attack but not parry
+	kShooting,
+	kPowerCover,
+	kArmor,
+
+	// These are caused by situtations
+	kDefend,
+	kGangUp,
+	kUnarmed,
+	kRange,
+	kNaturalCover,
+
+	// These are transient; they should never show up as a mod
+	kBolt,	// always does damage (no heal)
+	kHeal,	// always heals (no damage)
+};
+
+// "Boost", "Defend", "Cover", etc. 
+std::string ModTypeName(ModType type);
+
+struct ModInfo {
+	int src = 0;
+	ModType type;
+	int delta = 0;						
+	const Power* power = nullptr;
+};
+
+struct Power {
+	ModType type;
+	std::string name;
+	int cost = 1;
+	int rangeMult = 1;
+	int effectMult = 1;
+
+	int tn() const { return 4 + (cost + 1) / 2; }
+	bool forAllies() const {
+		if (type == ModType::kHeal) return true;
+		if (type == ModType::kBolt) return false;
+		return effectMult > 0;
+	}
+	bool forEnemies() const { return !forAllies(); }
+	bool doesDamage() const { return type == ModType::kBolt; }
+};
+
+struct ActivePower {
+	int caster = 0;
+	//int raise = 0;	// fixme: not currently implemented. Plenty of complexity here.
+	const Power* power = nullptr;
+};
+
+enum class Cover {
+	kNoCover = 0,
+	kLightCover = 1,
+	kMediumCover = 2,
+	kHeavyCover = 3,
+	kFullCover = 4,
+};
+
+enum class Range {
+	kShort,
+	kMedium,
+	kLong,
+	kExtreme,
+};
+
+struct MoveAction {
+	int combatant = 0;
+	int from = 0;
+	int to = 0;
+};
+
+struct DamageReport {
+	Roll damageRoll;					// always used if attack was successful
+	Roll strengthRoll;					// for melee only - adds to the total damage
+	int damage = 0;
+	bool defenderShaken = false;
+	int defenderWounds = 0;
+	bool defenderDead = false;
+};
+
+struct AttackAction {
+	int attacker = 0;
+	int defender = 0;					// target index to attack
+	bool melee = false;					// if true, melee attack, else ranged
+
+	std::vector<ModInfo> mods;			// mods applied to attack (for reporting)
+	std::vector<ModInfo> damageMods;
+	Roll attackRoll;
+
+	bool freeAttack = false;
+	bool success = false;
+	DamageReport damage;
+};
+
+struct RecoverAction {
+	int combatant = 0;
+	bool shaken = false;
+};
+
+struct PowerAction {
+	int src = 0;
+	int target = 0;
+	const Power* power = nullptr;
+	bool activated = false;
+	int raise = 0;
+	DamageReport damage;
+};
+
+struct Action {
+	enum class Type {
+		kMove,
+		kAttack,
+		kRecover,
+		kPower,
+	};
+	Type type;
+	std::variant<
+		MoveAction,
+		AttackAction,
+		RecoverAction,
+		PowerAction> data;
+};
+
+struct MeleeWeapon {
+	std::string name;		// "longsword"
+	Die damageDie;			// damage = STR + damageDie
+	int minStrength = 6;
+	bool twoHands = false;
+};
+
+struct RangedWeapon {
+	std::string name;		// "bow"
+	Die damageDie;			// damage = damageDie
+	int ap = 0;				// armor piercing
+	int minStrength = 6;
+	int range = 24;			// medium range, yards
+};
+
+struct Armor {
+	std::string name;
+	int armor = 0;
+	int minStrength = 4;
+};
+
+struct Combatant {
+	EntityID link;
+	std::string name;
+	int index = 0;
+	int team = 0;		// 0 player, 1 monster
+	int region = -1;
+
+	bool wild = false;
+
+	Die agility;
+	Die smarts;
+	Die spirit;
+	Die strength;
+	Die vigor;
+
+	Die fighting = Die(1, 4, -2);	// agility
+	Die shooting = Die(1, 4, -2);	// agility
+	Die arcane = Die(1, 4, -2);		// smarts
+
+	// Auto "level" where n is the number of advances (although this system much
+	// more narrowly defines advances than Savage Worlds, so that isn't quite correct either.)
+	// Very roughly: an advance will increase a die, witht the priorities given. So calling with:
+	//    `autoLevel(n, 6, 4, 2)`
+	// Will generally move to a fighting die 2 higher than the shooting, and the shooting 2 higher than 
+	// the arcane. `n` should be in the range of 1 to ~20. If any of fighting/shooting/arcane are
+	// 0, that skill tree will be ignored.
+	// The `seed` adds a little wiggle randomness to the auto-level.
+	void autoLevel(int n, int fighting, int shooting, int arcane, uint32_t seed=0);
+	
+	bool autoLevelFighting();
+	bool autoLevelShooting();
+	bool autoLevelArcane();
+
+	MeleeWeapon meleeWeapon;
+	RangedWeapon rangedWeapon;
+	Armor armor;
+	std::vector<Power> powers;
+
+	int wounds = 0;
+	bool shaken = false;
+	bool dead() const { return wild ? wounds > 3 : wounds > 0; }
+	std::vector<ActivePower> activePowers;
+
+	int toughness() const { return 2 + vigor.d / 2; }
+	int parry() const { return 2 + fighting.d / 2; }
+
+	enum {
+		kHasRecovered = 0,
+		kHasMoved,
+		kHasUsedAction,
+		kDefend,
+	};
+	std::bitset<32> flags;
+
+	void startTurn() { flags.reset(); }
+	void endTurn();
+
+	bool canMove() const { return !dead() && !flags[kHasMoved]; }
+	bool canAttack() const { return !dead() && !flags[kHasUsedAction] && !shaken; }
+	bool canPowers() const { return !dead() && !flags[kHasUsedAction] && !shaken && !powers.empty(); }
+
+	bool hasRanged() const { return !rangedWeapon.name.empty(); }
+	bool hasMelee() const { return !meleeWeapon.name.empty(); }
+	bool unArmed() const { return meleeWeapon.name.empty(); }
+	bool hasArmor() const { return !armor.name.empty(); }
+
+	bool buffed() const;
+	bool debuffed() const;
+
+	double baseMelee() const;
+	double baseRanged() const;
+};
+
+struct Region {
+	std::string name;
+	int yards = 0;
+	Cover cover = Cover::kNoCover;
+};
+
+class BattleSystem {
+public:
+	static constexpr int kDefendTN = 4;
+	static constexpr int kUnarmedTN = 2;
+
+	BattleSystem(Random& r) : _random(r) {}
+
+	// --------- Initialization --------
+	void setBattlefield(const std::string& name);
+	void addRegion(const Region& region);
+	// Player must be first!
+	void addCombatant(Combatant c);
+	void start(bool randomTurnOrder = true);
+
+	// --------- Status --------
+	const std::string& name() const { return _name; }
+	const std::vector<Region>& regions() const { return _regions; }
+	const std::vector<Combatant>& combatants() const { return _combatants; }
+	const int distance(int region0, int region1) const {
+		return std::abs(_regions[region0].yards - _regions[region1].yards);
+	}
+	std::vector<Combatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
+
+	std::queue<Action> queue;
+
+	// --------- Turn Order --------
+	int turn() const { return _turnOrder[_orderIndex]; }
+	bool playerTurn() const { return turn() == 0; }
+	const std::vector<int>& turnOrder() const { return _turnOrder; }
+
+	enum class ActionResult {
+		kSuccess,
+		kNoAction,
+		kOutOfRange,
+		kInvalid,
+	};
+
+	ActionResult attack(int combatant, int target, bool freeAttack=false);
+	ActionResult move(int combatant, int dir);
+	ActionResult power(int combatant, int target, int power);
+
+	ActionResult checkAttack(int combatant, int target) const;
+	ActionResult checkMove(int combatant, int dir) const;
+	ActionResult checkPower(int combatant, int target, int power) const;
+
+	// Just moves the combatant to the new region, no checks. Used for
+	// testing and setting up the battle.
+	void place(int combataint, int region);
+
+	void doEnemyActions();
+	void advance();
+	bool done() const;
+
+	// --------- Utility --------
+	std::pair<Die, int> calcMelee(int attacker, int target, std::vector<ModInfo>& mods) const;
+	std::pair<Die, int> calcRanged(int attacker, int target, std::vector<ModInfo>& mods) const;
+	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied, int mult = 1);
+	
+	int powerTN(int caster, const Power& power) const;
+	double powerChance(int caster, const Power& power) const;
+
+	Roll doRoll(Die d, bool useWild) { return doRoll(_random, d, useWild); }
+	static Roll doRoll(Random& random, Die d, bool useWild);
+
+	// --------- Chance Computation --------
+	// Note that the "ace" system causes some odd appearing statistical "steps". For example, consider
+	// a d6. There's no chance of rolling a 6 (since it aces.) The possible values go 5 then 7. a TN of 6 
+	// or 7 has the same likelihood.
+	static double chance(int tn, Die die);
+	static double wildChance(int tn, Die die);
+	static double chance(int tn, Die die, bool useWild) {
+		if (useWild) return wildChance(tn, die);
+		return chance(tn, die);
+	}
+
+	static double chanceAorBSucceeds(double a, double b) {
+		return 1.0 - (1.0 - a) * (1.0 - b);
+	}
+
+private:
+	int countMaintainedPowers(int combatant) const;
+	void recover(int combatant);
+	void filterActivePowers();
+
+	// power, target
+	std::pair<int, int> findPower(int combatant) const;
+
+	void applyDamage(Combatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report);
+
+	Random& _random;
+	int _length = 0;
+	int _orderIndex = 0;
+	std::string _name;
+	std::vector<Combatant> _combatants;
+	std::vector<Region> _regions;
+	std::vector<int> _turnOrder;
+	std::vector<ActivePower> _activePowers;
+};
+
+} // namespace lurp
+} // namespace swbattle
