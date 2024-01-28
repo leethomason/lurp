@@ -38,3 +38,17 @@ target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/
 
 add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
 target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
+
+# add_executable(lurptest ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC})
+# target_include_directories(lurptest PRIVATE src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
+
+# enable_testing()
+
+# add_test(
+#  NAME lurp
+#  COMMAND lurp
+#  WORKING_DIRECTORY ".."
+#)
+
+# set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION ", Fail 0")
+
