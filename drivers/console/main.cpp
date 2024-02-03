@@ -2,6 +2,7 @@
 #include "zonedriver.h"
 #include "scriptdriver.h"
 #include "test.h"
+#include "consoleutil.h"
 
 // Battle dev. fixme: remove.
 #include "battle.h"	// fixme: in development. remove.
@@ -33,41 +34,6 @@ static constexpr char* RANGE[N_RANGE] = { "Short", "Medium", "Long", "Extreme" }
 static constexpr int N_COVER = 5;
 static constexpr char* COVER[N_COVER] = { "None", "Light", "Medium", "Heavy", "Full"};
 
-struct Value
-{
-	// d		kChar	
-	// d2		kCharInt
-	// d32		kCharInt
-	// 1		kInt
-	// Sam		kString
-	// all of the above
-	// d32 2    option=2
-
-	enum class Type {
-		kNone,
-		kChar,
-		kCharInt,
-		kInt,
-		kString,
-	};
-
-	char cVal = 0;			
-	int intVal = 0;
-	std::string strVal;
-	std::string rawStr;
-	int option = INT_MIN;
-
-	Type type = Type::kNone;
-
-	bool intInRange(int end) const {
-		return type == Type::kInt && intVal >= 0 && intVal < end;
-	}
-	bool charIntInRange(char c, int end) const {
-		return type == Type::kCharInt && c == cVal && intVal >= 0 && intVal < end;
-	}
-	bool hasOption() const { return option != INT_MIN; }
-};
-
 static std::string ReadString()
 {
 	std::string r;
@@ -80,47 +46,6 @@ static std::string ReadString()
 	return r;
 }
 
-static Value ParseValue(const std::string& full)
-{
-	Value v;
-	v.rawStr = full;
-	if (full.empty()) return v;
-
-	std::vector<std::string> s = lurp::split(full, ' ');
-	assert(!s.empty());
-	std::string str = s[0];
-	if (s.size() > 1) {
-		v.option = std::stoi(s[1]);
-	}
-
-	if (str.size() == 1) {
-		if (std::isdigit(str[0])) {
-			v.type = Value::Type::kInt;
-			v.intVal = std::stoi(str);
-		}
-		else if (std::isalpha(str[0])) {
-			v.type = Value::Type::kChar;
-			v.cVal = str[0];
-		}
-		return v;
-	}
-	if (str.size() > 1) {
-		if (std::isalpha(str[0]) && std::isdigit(str[1])) {
-			v.type = Value::Type::kCharInt;
-			v.cVal = str[0];
-			v.intVal = std::stoi(str.c_str() + 1);
-			return v;
-		}
-	}
-	if (std::isdigit(str[0])) {
-		v.type = Value::Type::kInt;
-		v.intVal = std::stoi(str);
-		return v;
-	}
-	v.type = Value::Type::kString;
-	v.strVal = str;
-	return v;
-}
 
 static std::string RollStr(const Roll& roll)
 {
@@ -327,80 +252,128 @@ static void PrintActions(BattleSystem& system)
 	}
 }
 
-static void ConsoleBattleDriver()
+static void AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec, Random& random)
 {
-	lurp::Random random(0xabc);
-	random.rand();
+	MeleeWeapon mw, mwPlus;
+	RangedWeapon rw;
+	Armor armor;
+	Power power0, power1, power2;
+	std::string names[3];
 
+	if (era == 0) {
+		mwPlus = { "longsword", Die(1, 8, 0), 8, true };
+		mw = { "shortsword", Die(1, 6, 0), 6, false };
+		rw = { "bow", Die(1, 6, 0), 0, 6, 24 };
+		armor = { "chain", 3, 8 };
+
+		// type, name, cost, range, effect
+		power0 = { ModType::kBolt, "Fire Bolt", 1, 2 };
+		power1 = { ModType::kHeal, "Heal", 3, 0 };
+		power2 = { ModType::kPowerCover, "Shield of Force", 2, 0, 2 };
+
+		names[0] = "Skeleton Warrior";
+		names[1] = "Skeleton Archer";
+		names[2] = "Skeleton Mage";
+	}
+	else if (era == 1) {
+		mw = mwPlus = { "knife", Die(1, 4, 0), 4, false };
+		rw = { "revolver", Die(2, 6, 1), 1, 4, 24 };
+
+		power0 = { ModType::kBolt, "Arcane Bolt", 1, 2 };
+		power1 = { ModType::kHeal, "Blessed Heal", 3, 0 };
+		power2 = { ModType::kBolt, "Dark Mind", 3, 1, -1 };
+
+		names[0] = "Brawler";
+		names[1] = "Gunslinger";
+		names[2] = "Magi";
+	}
+	else {
+		mw = { "knife", Die(1, 4, 0), 4, false };
+		mwPlus = { "plasma sword", Die(1, 8, 0), 6, true };
+		rw = { "blaster", Die(2, 6, 0), 2, 4, 30 };
+		armor = { "plasteel", 4, 10 };
+
+		power0 = { ModType::kPowerCover, "Force Shield", 2, 0, 2 };
+		power1 = { ModType::kBoost, "Focus", 3, 1, 1 };
+		power2 = { ModType::kBoost, "Confuse", 3, 2, -1 };
+	}
+
+	int index = 0;
+	for (int i = 0; i < spec.fighters; i++) {
+		if (index >= n) continue;
+
+		c[index].name = names[0];
+		c[index].autoLevel(spec.level, 4, random.rand(3), random.rand(3), random.rand());
+		c[index].meleeWeapon = mwPlus;
+		c[index].armor = armor;
+		c[index].powers.push_back(power0);
+		c[index].powers.push_back(power1);
+		index++;
+	}
+	for (int i = 0; i < spec.shooters; i++) {
+		if (index >= n) continue;
+
+		c[index].name = names[1];
+		c[index].autoLevel(spec.level, random.rand(3), 4, random.rand(3), random.rand());
+		c[index].meleeWeapon = mw;
+		c[index].rangedWeapon = rw;
+		c[index].armor = armor;
+		c[index].powers.push_back(power0);
+		index++;
+	}
+	for (int i = 0; i < spec.arcanes; i++) {
+		if (index >= n) continue;
+
+		c[index].name = names[2];
+		c[index].autoLevel(spec.level, random.rand(3), random.rand(3), 4, random.rand());
+		c[index].meleeWeapon = mw;
+		c[index].armor = armor;
+		c[index].powers.push_back(power0);
+		c[index].powers.push_back(power1);
+		c[index].powers.push_back(power2);
+		index++;
+	}
+}
+
+static void ConsoleBattleDriver(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed)
+{
+	lurp::Random random(seed);
 	BattleSystem system(random);
-	std::vector<Region> regions = {
-		{ "Stalagmites", 0, Cover::kLightCover },
-		{ "Shallow pool", 8, Cover::kNoCover },
-		{ "Crumbling stone", 16, Cover::kMediumCover },
-		{ "Wide steps up", 24, Cover::kNoCover}
-	};
-	system.setBattlefield("Cursed Cavern");
-	for(const Region& r : regions)
-		system.addRegion(r);
+	int nEnemy = 1;
 
+	static constexpr int kMaxEnemy = 10;
 	Combatant player;
-	Combatant skele0;
-	Combatant skele1;
+	Combatant enemy[kMaxEnemy];
 
-	MeleeWeapon longsword = { "longsword", Die(1, 8, 0), 8, true};
-	MeleeWeapon shortsword = { "shortsword", Die(1, 6, 0), 6, false};
-	RangedWeapon bow = { "bow", Die(1, 6, 0), 0, 6, 24 };				
-	Armor chain = { "chain", 3, 8 };
-	Armor leather = { "leather", 2, 6 };
-	Armor hide = {"hide", 1, 4};
-
-	// type, name, cost, range, effect
-	Power arcaneBolt = { ModType::kBolt, "Fire Bolt", 1, 2 };
-	Power getSwol = { ModType::kStrength, "Get Swol", 3, 0};
-	Power darkmind = { ModType::kBoost, "Dark Mind", 3, 1, -1 };
-	Power heal = { ModType::kHeal, "Heal", 3, 0 };
-	Power frail = { ModType::kStrength, "Frail", 3, 1, -2 };
-	Power shell = { ModType::kPowerCover, "Shield of Force", 2, 0, 2 };
-
+	AssignCombatant(era, &player, 1, playerBS, random);
 	player.name = "Player";
 	player.wild = true;
+	AssignCombatant(era, enemy, kMaxEnemy, enemyBS, random);
 
-	player.agility = Die(1, 6, 0);
-	player.spirit = Die(1, 6, 0);
-	player.strength = Die(1, 8, 0);
-	
-	player.fighting = Die(1, 8, 0);
-	player.shooting = Die(1, 6, 0);
-	player.arcane = Die(1, 6, 0);
-
-	player.meleeWeapon = longsword;
-	player.rangedWeapon = bow;
-	player.armor = chain;
-	
-	player.powers.push_back(getSwol);
-	player.powers.push_back(heal);
-	player.powers.push_back(arcaneBolt);
-
-	skele0.name = "Skeleton Warrior";
-	skele0.region = int(regions.size()) - 1;
-	skele0.strength = Die(1, 8, 0);
-	skele0.fighting = Die(1, 6, 0);
-	skele0.shooting = Die(1, 4, 0);
-	skele0.meleeWeapon = longsword;
-	skele0.armor = hide;
-
-	skele1.name = "Skeleton Archer";
-	skele1.strength = Die(1, 6, 0);
-	skele1.fighting = Die(1, 4, 0);
-	skele1.shooting = Die(1, 6, 0);
-	skele1.meleeWeapon = shortsword;
-	skele1.rangedWeapon = bow;
-	skele1.armor = hide;
+	if (era == 0) {
+		system.setBattlefield("Cursed Cavern");
+		system.addRegion({ "Stalagmites", 0, Cover::kLightCover });
+		system.addRegion({ "Shallow pool", 8, Cover::kNoCover });
+		system.addRegion({ "Crumbling stone", 16, Cover::kMediumCover });
+		system.addRegion({ "Wide steps up", 24, Cover::kNoCover });
+	}
+	else if (era == 1) {
+		system.setBattlefield("Wild Weird West Bar");
+		system.addRegion({ "Upturned Tables", 0, Cover::kMediumCover });
+		system.addRegion({ "Open Floor", 5, Cover::kNoCover });
+		system.addRegion({ "Bar", 10, Cover::kHeavyCover });
+	}
+	else {
+		system.setBattlefield("Space Dock");
+		system.addRegion({ "Loading Ramp", 0, Cover::kLightCover });
+		system.addRegion({ "Catwalks", 10, Cover::kNoCover });
+		system.addRegion({ "Shipping Crates", 20, Cover::kMediumCover });
+	}
 
 	system.addCombatant(player);
-	system.addCombatant(skele0);
-	system.addCombatant(skele1);
-
+	for (int i = 0; i < nEnemy; i++) {
+		system.addCombatant(enemy[i]);
+	}
 	system.start();
 
 	PrintTurnOrder(system);
@@ -440,7 +413,7 @@ static void ConsoleBattleDriver()
 			}
 			fmt::print("(d)one\n");
 			fmt::print("> ");
-			Value v = ParseValue(ReadString());
+			Value v = Value::ParseValue(ReadString());
 			BattleSystem::ActionResult rc = BattleSystem::ActionResult::kSuccess;
 
 			if (v.rawStr == "f")
@@ -517,7 +490,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 				fmt::print("{}: {}\n", i, c.text);
 				i++;
 			}
-			Value v2 = ParseValue(ReadString());
+			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				dd.choose(v2.intVal);
 			PrintNews(mapData.newsQueue);
@@ -662,7 +635,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			for (size_t i = 0; i < choices.choices.size(); i++) {
 				fmt::print("{}: {}\n", i, choices.choices[i].text);
 			}
-			Value v2 = ParseValue(ReadString());
+			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				driver.choose(v2.intVal);
 			PrintNews(driver.mapData.newsQueue);
@@ -686,7 +659,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 
 			fmt::print("> ");
 
-			Value v = ParseValue(ReadString());
+			Value v = Value::ParseValue(ReadString());
 			if (ProcessMenu(v.rawStr, saveFile, driver)) {
 				break;
 			}
@@ -735,48 +708,6 @@ std::string FindSavePath(const std::string& scriptFile)
 	std::string result = std::string("game/saves/save-") + p.stem().string() + ".lua";
 	fmt::print("Save path: {}\n", result);
 	return result;
-}
-
-static void TestValueParsing()
-{
-	Value v;
-	v = ParseValue("d");
-	TEST(v.type == Value::Type::kChar);
-	TEST(v.cVal == 'd');
-	TEST(v.intVal == 0);
-	TEST(v.hasOption() == false);
-
-	v = ParseValue("d2");
-	TEST(v.type == Value::Type::kCharInt);
-	TEST(v.cVal == 'd');
-	TEST(v.intVal == 2);
-	TEST(v.hasOption() == false);
-
-	v = ParseValue("d32");
-	TEST(v.type == Value::Type::kCharInt);
-	TEST(v.cVal == 'd');
-	TEST(v.intVal == 32);
-
-	v = ParseValue("d32 2");
-	TEST(v.type == Value::Type::kCharInt);
-	TEST(v.cVal == 'd');
-	TEST(v.intVal == 32);
-	TEST(v.hasOption() == true);
-	TEST(v.option == 2);
-
-	v = ParseValue("1");
-	TEST(v.type == Value::Type::kInt);
-	TEST(v.intVal == 1);
-
-	v = ParseValue("Sam");
-	TEST(v.type == Value::Type::kString);
-	TEST(v.strVal == "Sam");
-
-	v = ParseValue("Sam 2");
-	TEST(v.type == Value::Type::kString);
-	TEST(v.strVal == "Sam");
-	TEST(v.hasOption() == true);
-	TEST(v.option == 2);
 }
 
 static void TestRollStr()
@@ -846,7 +777,7 @@ static void TestModStr()
 
 void RunConsoleTests()
 {
-	RUN_TEST(TestValueParsing());
+	RUN_TEST(Value::Test());
 	RUN_TEST(TestRollStr());
 	RUN_TEST(TestModStr());
 }
@@ -859,9 +790,13 @@ int main(int argc, const char* argv[])
 		fmt::print("LuRP story engine. This is the console line runner.\n");
 		fmt::print("Usage: lurp <path/to/lua/file> <starting-zone>\n");
 		fmt::print("Optional:\n");
-		fmt::print("  -b, --battle		Run the battle sim\n");
 		fmt::print("  -t, --trace		Enable debug tracing\n");
 		fmt::print("  -s, --debugSave   Save everything with warnings.\n");
+		fmt::print("  -b, --battle		Run the battle sim\n");
+		fmt::print("  -e, --enemies		<number><level><fight><shoot><arcane>\n");
+		fmt::print("  -p, --player      <number><level><fight><shoot><arcane>\n");
+		fmt::print("  -r, --era         0: ancient, 1: modern, 2: future\n");
+		fmt::print("  --seed            Random number seed\n");
 	}
 	int rc = 0;
 
@@ -877,6 +812,21 @@ int main(int argc, const char* argv[])
 		bool debugSave = cmdl[{ "-s", "--debugSave" }];
 		bool battleSim = cmdl[{ "-b", "--battle" }];
 
+		BattleSpec enemyBS;
+		BattleSpec playerBS;
+		int era = 0;
+
+		std::string v;
+		cmdl({ "-e", "--enemies" }) >> v;
+		enemyBS = BattleSpec::Parse(v);
+		cmdl({ "-p", "--player" }) >> v;
+		playerBS = BattleSpec::Parse(v);
+
+		cmdl({ "-r", "--era" }, 0) >> era;
+
+		uint32_t seed = uint32_t(time(0));
+		cmdl({ "--seed" }, seed) >> seed;
+
 		{
 			RunTests();
 			RunConsoleTests();
@@ -888,7 +838,7 @@ int main(int argc, const char* argv[])
 		std::string saveFile = FindSavePath(scriptFile);
 
 		if (battleSim) {
-			ConsoleBattleDriver();
+			ConsoleBattleDriver(era, playerBS, enemyBS, seed);
 		}
 		else {
 			// Run game.
