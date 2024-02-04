@@ -3,6 +3,8 @@
 #include <limits.h>
 #include <string>
 
+std::string ReadString();
+
 struct Value
 {
 	// d		kChar	
@@ -41,15 +43,6 @@ struct Value
 	bool hasOption() const { return option != INT_MIN; }
 };
 
-
-struct BattleSpec {
-	int level = 5;
-	int fighters = 1;
-	int shooters = 0;
-	int arcanes = 0;
-
-	static BattleSpec Parse(const std::string& str);
-};
 
 inline int ctoi(char c) {
 	if (c >= '0' && c <= '9') return c - '0';

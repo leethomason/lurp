@@ -5,6 +5,18 @@
 #include <string>
 #include <vector>
 
+std::string ReadString()
+{
+	std::string r;
+
+	while (true) {
+		char c = (char)getchar();
+		if (c == '\n') break;
+		r += c;
+	}
+	return r;
+}
+
 Value Value::ParseValue(const std::string& full)
 {
 	Value v;
@@ -89,12 +101,3 @@ void Value::Test()
 	TEST(v.option == 2);
 }
 
-BattleSpec BattleSpec::Parse(const std::string& s)
-{
-	BattleSpec bs;
-	if (s.size() > 0) bs.level = lurp::clamp(ctoi(s[0]), 1, 10);
-	if (s.size() > 1) bs.fighters = lurp::clamp(ctoi(s[1]), 0, 10);
-	if (s.size() > 2) bs.shooters = lurp::clamp(ctoi(s[2]), 0, 10);
-	if (s.size() > 3) bs.arcanes = lurp::clamp(ctoi(s[3]), 0, 10);
-	return bs;
-}
