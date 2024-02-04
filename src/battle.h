@@ -27,6 +27,8 @@ struct Die {
 	int b = 0;
 
 	bool isValid() const { return n > 0 && d > 0; }
+	int summary() const { return n * d + b; }
+
 	static Die noDie() { return Die(0, 0, 0); }
 
 	bool operator==(const Die& rhs) const {
@@ -43,13 +45,25 @@ struct Roll {
 
 	int total[2] = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
 
-	int value() const { return std::max(total[0], total[1]); }
+	int value() const { 
+		int v =  std::max(total[0], total[1]); 
+		if (v == std::numeric_limits<int>::min()) return 0;
+		return v;
+	}
+	Die selected(int which) const {
+		if (which == 0) return die;
+		Die d = die;
+		d.d = 6;
+		return d;
+	}
 	int nAce(int which) const {
-		int base = total[which] - die.b;	// roll w/ aces
-		return base / (die.d * die.n);
+		Die sd = selected(which);
+		int base = total[which] - sd.b;	// roll w/ aces
+		return base / (sd.d * sd.n);
 	}
 	int finalRoll(int which) const {
-		return total[which] - die.b - nAce(which) * die.d;
+		Die sd = selected(which);
+		return total[which] - sd.b - nAce(which) * sd.d;
 	}
 	bool hasWild() const { return total[1] != std::numeric_limits<int>::min(); }
 
@@ -142,6 +156,7 @@ struct MoveAction {
 struct DamageReport {
 	Roll damageRoll;					// always used if attack was successful
 	Roll strengthRoll;					// for melee only - adds to the total damage
+	int ap = 0;							// armor piercing component of the attack
 	int damage = 0;
 	bool defenderShaken = false;
 	int defenderWounds = 0;

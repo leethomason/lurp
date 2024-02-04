@@ -347,13 +347,15 @@ bool BattleSystem::done() const
 void BattleSystem::filterActivePowers()
 {
 	for (Combatant& c : _combatants) {
-		for (auto it = c.activePowers.begin(); it != c.activePowers.end(); ) {
-			const Combatant& caster = _combatants[it->caster];
+		size_t i = 0;
+		while(i < c.activePowers.size()) {
+			const ActivePower& ap = c.activePowers[i];
+			const Combatant& caster = _combatants[ap.caster];
 			if (caster.dead()) {
-				it = c.activePowers.erase(it);
+				c.activePowers.erase(c.activePowers.begin() + i);
 			}
 			else {
-				++it;
+				++i;
 			}
 		}
 	}
@@ -479,6 +481,8 @@ BattleSystem::ActionResult BattleSystem::checkPower(int combatant, int target, i
 		return ActionResult::kInvalid;
 	if (src.team == dst.team && power->forEnemies())
 		return ActionResult::kInvalid;
+	if (power->type == ModType::kHeal && dst.wounds == 0)
+		return ActionResult::kInvalid;
 
 	return ActionResult::kSuccess;
 }
@@ -525,6 +529,7 @@ void BattleSystem::applyDamage(Combatant& defender, int ap, const Die& die, cons
 		report.strengthRoll = doRoll(strDie, false);
 
 	report.damage = report.damageRoll.value() + report.strengthRoll.value();
+	report.ap = ap;
 
 	int armor = std::max(0, defender.armor.armor - ap);	// remove ap from armor
 	int toughness = defender.toughness() + armor;
@@ -546,6 +551,7 @@ void BattleSystem::applyDamage(Combatant& defender, int ap, const Die& die, cons
 	}
 	if (defender.dead()) {
 		report.defenderDead = true;
+		filterActivePowers();
 	}
 }
 
@@ -706,13 +712,18 @@ void BattleSystem::doEnemyActions()
 	const Combatant& player = _combatants[0];
 
 	bool isMelee = src.region == player.region;
-	int powerScore = src.arcane.d - (isMelee ? src.fighting.d : src.shooting.d) - countMaintainedPowers(turn());
-	int usePower = isMelee ? 5 : 3;
+	int powerScore =
+		src.arcane.summary()
+		- (isMelee ? src.fighting.summary() : src.shooting.summary())
+		- countMaintainedPowers(turn()) * 2;
+	int usePower = powerScore > 0;
+	bool usedPower = false;
 
 	if (powerScore > usePower && src.canPowers()) {
 		auto [power, target] = findPower(turn());
 		if (power >= 0 && target >= 0) {
 			this->power(turn(), target, power);
+			usedPower = true;
 		}
 	}
 
@@ -726,7 +737,13 @@ void BattleSystem::doEnemyActions()
 			}
 		}
 	}
-	else {
+	bool doMove = true;
+	if (src.hasRanged() && src.shooting.summary() > src.fighting.summary())
+		doMove = false;
+	if (usedPower)
+		doMove = false;
+
+	if (doMove) {
 		if (src.region != _combatants[0].region) {
 			move(turn(), src.region < _combatants[0].region ? 1 : -1);
 		}

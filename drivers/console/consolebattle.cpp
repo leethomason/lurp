@@ -141,9 +141,16 @@ static void PrintDamageReport(const Combatant& defender,
 		fmt::print("({})", ModStr(damageMods));
 	fmt::print("\n");
 
-	fmt::print("  toughness={} ({})\n",
+	fmt::print("  toughness={} ({})",
 		defender.toughness() + defender.armor.armor,
 		defender.armor.armor);
+
+	if (damage.ap) {
+		fmt::print(" -> toughness={} ({})",
+			defender.toughness() + defender.armor.armor - damage.ap,
+			defender.armor.armor - damage.ap);
+	}
+	fmt::print("\n");
 
 	if (damage.defenderDead)
 		fmt::print("  Defender is killed.\n");
@@ -227,7 +234,7 @@ static void PrintActions(BattleSystem& system)
 	}
 }
 
-static void AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec, Random& random)
+static int AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec, Random& random)
 {
 	MeleeWeapon mw, mwPlus;
 	RangedWeapon rw;
@@ -271,6 +278,10 @@ static void AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec
 		power0 = { ModType::kPowerCover, "Force Shield", 2, 0, 2 };
 		power1 = { ModType::kBoost, "Focus", 3, 1, 1 };
 		power2 = { ModType::kBoost, "Confuse", 3, 2, -1 };
+
+		names[0] = "Knight";
+		names[1] = "Marine";
+		names[2] = "Mystic";
 	}
 
 	int index = 0;
@@ -300,7 +311,7 @@ static void AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec
 		if (index >= n) continue;
 
 		c[index].name = names[2];
-		c[index].autoLevel(spec.level, 1, 1, 4, random.rand());
+		c[index].autoLevel(spec.level, 1, 1, 6, random.rand());
 		c[index].meleeWeapon = mw;
 		c[index].armor = armor;
 		c[index].powers.push_back(power0);
@@ -308,13 +319,13 @@ static void AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec
 		c[index].powers.push_back(power2);
 		index++;
 	}
+	return index;
 }
 
 void ConsoleBattleDriver(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed)
 {
 	lurp::Random random(seed);
 	BattleSystem system(random);
-	int nEnemy = 1;
 
 	static constexpr int kMaxEnemy = 10;
 	Combatant player;
@@ -323,7 +334,7 @@ void ConsoleBattleDriver(int era, const BattleSpec& playerBS, const BattleSpec& 
 	AssignCombatant(era, &player, 1, playerBS, random);
 	player.name = "Player";
 	player.wild = true;
-	AssignCombatant(era, enemy, kMaxEnemy, enemyBS, random);
+	int nEnemy = AssignCombatant(era, enemy, kMaxEnemy, enemyBS, random);
 
 	if (era == 0) {
 		system.setBattlefield("Cursed Cavern");
@@ -356,6 +367,7 @@ void ConsoleBattleDriver(int era, const BattleSpec& playerBS, const BattleSpec& 
 
 	while (!system.done()) {
 		if (system.playerTurn()) {
+			PrintActions(system);
 			PrintCombatants(system);
 			fmt::print("\n");
 			const Combatant& pc = system.combatants()[0];
