@@ -929,7 +929,7 @@ void BattleTest::Test1()
 	system.place(0, 2);
 	p = system.calcMelee(0, 1, mods);
 	TEST(p.first == Die(1, 6, 0));
-	TEST(p.second == 5);
+	TEST(p.second == 6);
 	TEST(mods.size() == 0);
 
 	system.place(0, 0);

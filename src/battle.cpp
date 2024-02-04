@@ -31,13 +31,17 @@ Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 {
 	Roll r;
 	r.die = d;
-	int n = useWild ? 2 : 1;
 
-	for (int i = 0; i < n; i++) {
-		int nAce = 0;
-		r.total[i] = d.roll(random, &nAce);
-		TEST(r.nAce(i) == nAce);
+	int nAce = 0;
+	r.total[0] = d.roll(random, &nAce);
+	TEST(r.nAce(0) == nAce);
+
+	if (useWild) {
+		Die wild = Die(1, 6, d.b);
+		r.total[1] = wild.roll(random, &nAce);
+		TEST(r.nAce(1) == nAce);
 	}
+
 	return r;
 }
 
@@ -294,13 +298,17 @@ void Combatant::autoLevel(int n, int f, int s, int a, uint32_t seed)
 		int shootingPriority = s - shootingScore;
 		int arcanePriority = a - arcaneScore;
 
-		if (s > 0 && shootingPriority >= fightingPriority && shootingPriority >= arcanePriority) {
+		if (s == 0) fightingPriority = INT_MIN;
+		if (f == 0) shootingPriority = INT_MIN;
+		if (a == 0) arcanePriority = INT_MIN;
+
+		if (shootingPriority >= fightingPriority && shootingPriority >= arcanePriority) {
 			autoLevelShooting();
 		}
-		else if (f > 0 && fightingPriority >= arcanePriority) {
+		else if (fightingPriority >= arcanePriority) {
 			autoLevelFighting();
 		}
-		else if (a > 0) {
+		else {
 			autoLevelArcane();
 		}
 	}
@@ -558,8 +566,6 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 	attack.melee = (src.region == dst.region);
 	attack.freeAttack = freeAttack;
 
-	int ap = 0;
-
 	if (attack.melee) {
 		// fixme: free attack should affect melee odds
 		auto [atkDie, tn] = calcMelee(attacker, defender, attack.mods);
@@ -569,10 +575,10 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		attack.success = !attack.attackRoll.criticalFailure() && value >= tn;
 		if (attack.success) {
 			// FIXME: does boost apply to damage?
-			Die strength = src.strength;
-			strength.b += applyMods(ModType::kStrength, src.activePowers, attack.damageMods);
+			Die strengthDie = src.strength;
+			strengthDie.b += applyMods(ModType::kStrength, src.activePowers, attack.damageMods);
 
-			applyDamage(dst, 0, src.meleeWeapon.damageDie, strength, attack.damage);
+			applyDamage(dst, 0, src.meleeWeapon.damageDie, strengthDie, attack.damage);
 		}
 	}
 	else {
@@ -582,11 +588,7 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		int value = attack.attackRoll.value();
 		attack.success = !attack.attackRoll.criticalFailure() && value >= tn;
 		if (attack.success) {
-			attack.damage.damageRoll = doRoll(src.rangedWeapon.damageDie, false);
-			attack.damage.damage = attack.damage.damageRoll.value();
-			ap = src.rangedWeapon.ap;
-
-			applyDamage(dst, ap, src.rangedWeapon.damageDie, Die(0, 0, 0), attack.damage);
+			applyDamage(dst, src.rangedWeapon.ap, src.rangedWeapon.damageDie, Die(0, 0, 0), attack.damage);
 		}
 	}
 	queue.push({ Action::Type::kAttack, attack });

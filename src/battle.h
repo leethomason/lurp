@@ -45,9 +45,8 @@ struct Roll {
 
 	int value() const { return std::max(total[0], total[1]); }
 	int nAce(int which) const {
-		if (die.n != 1) return 0;
 		int base = total[which] - die.b;	// roll w/ aces
-		return base / die.d;
+		return base / (die.d * die.n);
 	}
 	int finalRoll(int which) const {
 		return total[which] - die.b - nAce(which) * die.d;

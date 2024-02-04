@@ -68,6 +68,14 @@ static std::string ModStr(const std::vector<ModInfo>& mods)
 	return r;
 }
 
+static std::string DieStr(const Die& die)
+{
+	std::string r = fmt::format("{}d{}", die.n, die.d);
+	if (die.b)
+		r += fmt::format("{:+}", die.b);
+	return r;
+}
+
 static void PrintTurnOrder(const BattleSystem& system)
 {
 	const auto& turnOrder = system.turnOrder();
@@ -87,7 +95,7 @@ static void PrintCombatants(const BattleSystem& system)
 
 	for (size_t rIndex = 0; rIndex < regions.size(); ++rIndex) {
 		const Region& r = regions[rIndex];
-		fmt::print("'{}' cover={}\n", r.name, COVER[(int)r.cover]);
+		fmt::print("'{}' @ {} yards cover={}\n", r.name, r.yards, COVER[(int)r.cover]);
 
 		for (size_t cIndex = 0; cIndex < combatants.size(); cIndex++) {
 			const Combatant& c = combatants[cIndex];
@@ -98,7 +106,7 @@ static void PrintCombatants(const BattleSystem& system)
 				fmt::print("    {}:'{}' [f={} s={} a={}] ({}{}{}{}{}) toughness={} ({}) shaken={} wounds={} \n",
 					cIndex,
 					c.name,
-					c.fighting.d, c.shooting.d, c.arcane.d,
+					DieStr(c.fighting), DieStr(c.shooting), DieStr(c.arcane),
 					c.meleeWeapon.name, c.hasRanged() ? ", " : "", c.rangedWeapon.name,
 					c.hasArmor() ? " - " : "", c.armor.name,
 					c.toughness() + c.armor.armor, c.armor.armor,
