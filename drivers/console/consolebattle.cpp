@@ -98,7 +98,7 @@ static void PrintCombatants(const BattleSystem& system)
 		fmt::print("'{}' @ {} yards cover={}\n", r.name, r.yards, COVER[(int)r.cover]);
 
 		for (size_t cIndex = 0; cIndex < combatants.size(); cIndex++) {
-			const Combatant& c = combatants[cIndex];
+			const SWCombatant& c = combatants[cIndex];
 			if (c.dead() || c.region != rIndex) {
 				continue;
 			}
@@ -123,7 +123,7 @@ static void PrintCombatants(const BattleSystem& system)
 	}
 }
 
-static void PrintDamageReport(const Combatant& defender,
+static void PrintDamageReport(const SWCombatant& defender,
 	bool melee,
 	const DamageReport& damage,
 	const std::vector<ModInfo>& damageMods)
@@ -234,12 +234,12 @@ static void PrintActions(BattleSystem& system)
 	}
 }
 
-static int AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec, Random& random)
+static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spec, Random& random)
 {
 	MeleeWeapon mw, mwPlus;
 	RangedWeapon rw;
 	Armor armor;
-	Power power0, power1, power2;
+	SWPower power0, power1, power2;
 	std::string names[3];
 
 	if (era == 0) {
@@ -328,8 +328,8 @@ void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& ene
 	BattleSystem system(random);
 
 	static constexpr int kMaxEnemy = 10;
-	Combatant player;
-	Combatant enemy[kMaxEnemy];
+	SWCombatant player;
+	SWCombatant enemy[kMaxEnemy];
 
 	AssignCombatant(era, &player, 1, playerBS, random);
 	player.name = "Player";
@@ -370,7 +370,7 @@ void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& ene
 			PrintActions(system);
 			PrintCombatants(system);
 			fmt::print("\n");
-			const Combatant& pc = system.combatants()[0];
+			const SWCombatant& pc = system.combatants()[0];
 
 			fmt::print("Options:\n");
 			if (system.checkMove(0, 1) == BattleSystem::ActionResult::kSuccess)
@@ -393,7 +393,7 @@ void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& ene
 			}
 			if (pc.canPowers()) {
 				for (size_t i = 0; i < pc.powers.size(); i++) {
-					const Power& p = pc.powers[i];
+					const SWPower& p = pc.powers[i];
 
 					fmt::print("(p{} #) {} ({}%)\n", i, p.name, int(100.0 * system.powerChance(pc.index, p)));
 				}
@@ -458,10 +458,10 @@ static void TestRollStr()
 
 static void TestModStr()
 {
-	Power superBoost = { ModType::kBoost, "Super Boost", 3, 1, 2 };
-	Power okayBoost = { ModType::kBoost, "Okay Boost", 2, 1, 1 };
-	Power fuzzyMind = { ModType::kBoost, "Fuzzy Mind", 2, 1, -1 };
-	Power iceWall = { ModType::kPowerCover, "Frozen", 1, 0, 1 };
+	SWPower superBoost = { ModType::kBoost, "Super Boost", 3, 1, 2 };
+	SWPower okayBoost = { ModType::kBoost, "Okay Boost", 2, 1, 1 };
+	SWPower fuzzyMind = { ModType::kBoost, "Fuzzy Mind", 2, 1, -1 };
+	SWPower iceWall = { ModType::kPowerCover, "Frozen", 1, 0, 1 };
 
 	ActivePower apSuperBoost = { 1, &superBoost };
 	ActivePower apOkayBoost = { 1, &okayBoost };

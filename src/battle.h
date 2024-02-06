@@ -11,7 +11,7 @@
 namespace lurp {
 namespace swbattle {
 
-struct Power;
+struct SWPower;
 
 // implement:
 // - integrate with lua script
@@ -108,10 +108,10 @@ struct ModInfo {
 	int src = 0;
 	ModType type;
 	int delta = 0;						
-	const Power* power = nullptr;
+	const SWPower* power = nullptr;
 };
 
-struct Power {
+struct SWPower {
 	ModType type;
 	std::string name;
 	int cost = 1;
@@ -131,7 +131,7 @@ struct Power {
 struct ActivePower {
 	int caster = 0;
 	//int raise = 0;	// fixme: not currently implemented. Plenty of complexity here.
-	const Power* power = nullptr;
+	const SWPower* power = nullptr;
 };
 
 enum class Cover {
@@ -187,7 +187,7 @@ struct RecoverAction {
 struct PowerAction {
 	int src = 0;
 	int target = 0;
-	const Power* power = nullptr;
+	const SWPower* power = nullptr;
 	bool activated = false;
 	int raise = 0;
 	DamageReport damage;
@@ -229,7 +229,7 @@ struct Armor {
 	int minStrength = 4;
 };
 
-struct Combatant {
+struct SWCombatant {
 	EntityID link;
 	std::string name;
 	int index = 0;
@@ -265,7 +265,7 @@ struct Combatant {
 	MeleeWeapon meleeWeapon;
 	RangedWeapon rangedWeapon;
 	Armor armor;
-	std::vector<Power> powers;
+	std::vector<SWPower> powers;
 
 	int wounds = 0;
 	bool shaken = false;
@@ -319,17 +319,17 @@ public:
 	void setBattlefield(const std::string& name);
 	void addRegion(const Region& region);
 	// Player must be first!
-	void addCombatant(Combatant c);
+	void addCombatant(SWCombatant c);
 	void start(bool randomTurnOrder = true);
 
 	// --------- Status --------
 	const std::string& name() const { return _name; }
 	const std::vector<Region>& regions() const { return _regions; }
-	const std::vector<Combatant>& combatants() const { return _combatants; }
+	const std::vector<SWCombatant>& combatants() const { return _combatants; }
 	const int distance(int region0, int region1) const {
 		return std::abs(_regions[region0].yards - _regions[region1].yards);
 	}
-	std::vector<Combatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
+	std::vector<SWCombatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
 
 	std::queue<Action> queue;
 
@@ -366,8 +366,8 @@ public:
 	std::pair<Die, int> calcRanged(int attacker, int target, std::vector<ModInfo>& mods) const;
 	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied, int mult = 1);
 	
-	int powerTN(int caster, const Power& power) const;
-	double powerChance(int caster, const Power& power) const;
+	int powerTN(int caster, const SWPower& power) const;
+	double powerChance(int caster, const SWPower& power) const;
 
 	Roll doRoll(Die d, bool useWild) { return doRoll(_random, d, useWild); }
 	static Roll doRoll(Random& random, Die d, bool useWild);
@@ -395,13 +395,13 @@ private:
 	// power, target
 	std::pair<int, int> findPower(int combatant) const;
 
-	void applyDamage(Combatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report);
+	void applyDamage(SWCombatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report);
 
 	Random& _random;
 	int _length = 0;
 	int _orderIndex = 0;
 	std::string _name;
-	std::vector<Combatant> _combatants;
+	std::vector<SWCombatant> _combatants;
 	std::vector<Region> _regions;
 	std::vector<int> _turnOrder;
 	std::vector<ActivePower> _activePowers;

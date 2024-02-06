@@ -13,7 +13,7 @@ const Room* Zone::firstRoom(const ScriptAssets& assets) const
 	for (const EntityID& obj : objects) {
 		ScriptRef ref = assets.get(obj);
 		if (ref.type == ScriptType::kRoom) {
-			return &assets.rooms[ref.index];
+			return &assets._csa.rooms[ref.index];
 		}
 	}
 	return nullptr;

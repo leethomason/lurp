@@ -164,7 +164,8 @@ end
 
 function Combatant(c)
     c.type = "Combatant"
-    -- always generated; ephemeral entityID
+    -- always generated; ephemeral entityID. actually having a specified
+    -- entityID is potentially a dangerous conflict.
     c.entityID = createEntityID(nil, nil, "COMBATANT")
     Combatants[c.entityID] = c
     addToEntities(c)
@@ -388,23 +389,11 @@ end
 
 function ClearScriptEnv()
     coreCache[script.entityID] = nil
-    --setmetatable(script, nil)
     script = nil
-    --setmetatable(player, nil)
     player = nil
-    --if (npc) then
-    --    setmetatable(npc, nil)
-        npc = nil
-    --end
-    --if zone then
-    --    setmetatable(zone, nil)
-        zone = nil
-    --end
-    --if room then
-    --    setmetatable(room, nil)
-        room = nil
-    --end
-    --assert(script == nil)
+    npc = nil
+    zone = nil
+    room = nil
 end
 
 if DIR == nil then
@@ -415,16 +404,6 @@ if DIR == nil then
     CRandom = function()
         return math.random(0, 1024 * 1024 * 1024)
     end
-
-    --[[CIsLocked = function(entityID)
-        print("CIsLocked", entityID)
-        return false
-    end
-
-    CSetLocked = function(entityID, locked)
-        print("CSetLocked", entityID, locked)
-    end
-    ]]--
 
     CDeltaItem = function(containerID, itemID, n)
         print("CDeltaItem", containerID, itemID, n)

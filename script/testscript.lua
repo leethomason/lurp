@@ -62,7 +62,7 @@ Script {
     },
     Text{
         eval = function()
-            return player.arcane
+            return player.arcaneGlow
         end,
         s="narrator", "You have an arcane glow.",
     },
@@ -79,7 +79,7 @@ Script {
     Choices {
         { text = "Read another book", next = "rewind" },
         { text = "Read the arcane book", next = "done", code = function()
-            player.arcane = true
+            player.arcaneGlow = true
         end },
         { text = "Repeat the choices...", next = "repeat"},
         { text = "Leave", next = "pop" },
@@ -101,7 +101,7 @@ Script {
                 Choices {
                     { text = "Read another book", next = "rewind" },
                     { text = "Read the arcane book", next = "done", code = function()
-                        player.arcane = true
+                        player.arcaneGlow = true
                     end },
                     { text = "Repeat the choices...", next = "repeat"},
                     { text = "Leave", next = "pop" },
@@ -113,7 +113,7 @@ Script {
     },
     Text{
         eval = function()
-            return player.arcane
+            return player.arcaneGlow
         end,
         { s="narrator", "You have an arcane glow." },
     },
@@ -142,7 +142,7 @@ Script {
         },
         { eval = function () return player.class == "wizard" end,
           text = "Cast identify",
-          code = function () player.arcane = true end,
+          code = function () player.arcaneGlow = true end,
           next = Script { Text {
                 { s="narrator", "You seen an arcane glow."}
             }

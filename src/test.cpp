@@ -136,10 +136,10 @@ static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dia
 	dd.advance();
 	TEST(dd.type() == ScriptType::kChoices);
 	TEST(dd.choices().choices[1].text == "Read the arcane book");
-	TEST(runner->get("player.arcane").type == LUA_TNIL);
+	TEST(runner->get("player.arcaneGlow").type == LUA_TNIL);
 	dd.choose(1);
-	TEST(runner->get("player.arcane").type == LUA_TBOOLEAN);
-	TEST(runner->get("player.arcane").boolean == true);
+	TEST(runner->get("player.arcaneGlow").type == LUA_TBOOLEAN);
+	TEST(runner->get("player.arcaneGlow").boolean == true);
 	TEST(dd.type() == ScriptType::kText);
 	TEST(dd.line().text == "You have an arcane glow.");
 	dd.advance();
@@ -201,14 +201,14 @@ static void TestScriptAccess()
 
 	ScriptRef ref = assets.get("testplayer");
 	TEST(ref.type == ScriptType::kActor);
-	const Actor& player = assets.actors[ref.index];
+	const Actor& player = assets._csa.actors[ref.index];
 	TEST(player.name == "Test Player");
 
-	TEST(runner.get("player.maxHP").num == 10.0);
-	TEST(runner.get("player.maxHP").num == 10.0);
-	TEST(runner.get("player.hp").num == 9.0);
-	runner.set("player.hp", Variant(runner.get("player.maxHP")));
-	TEST(runner.get("player.hp").num == 10.0);
+	TEST(runner.get("player.fighting").num == 4.0);
+	runner.set("player.fighting", 5.0);
+	TEST(runner.get("player.fighting").num == 5.0);
+	runner.set("player.fighting", 4.0);
+	TEST(runner.get("player.fighting").num == 4.0);
 }
 
 static void TestLoad(bool inner)
@@ -262,7 +262,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge, bool inn
 	const Item& key01 = assets.getItem("KEY_01");
 	TEST(chestInventory.hasItem(key01) == true);
 	
-	const Actor& player = assets.actors[assets.get("testplayer").index];
+	const Actor& player = assets._csa.actors[assets.get("testplayer").index];
 	Inventory& playerInventory = assets.inventories.at(player.entityID);
 
 	transfer(key01, chestInventory, playerInventory);
@@ -319,7 +319,7 @@ static void TestCodeEval()
 		{
 			ScriptHelper runner(bridge, coreData.coreData, env);
 			runner.set("player.class", Variant("fighter"));
-			runner.set("player.arcane", Variant());
+			runner.set("player.arcaneGlow", Variant());
 			runner.set("player.mystery", Variant());
 		}
 		ScriptDriver driver(assets, env, coreData, &bridge);
@@ -332,7 +332,7 @@ static void TestCodeEval()
 		{
 			ScriptHelper runner(bridge, coreData.coreData, env);
 			runner.set("player.class", Variant("druid"));
-			runner.set("player.arcane", Variant());
+			runner.set("player.arcaneGlow", Variant());
 			runner.set("player.mystery", Variant());
 		}
 
@@ -346,7 +346,7 @@ static void TestCodeEval()
 			ScriptHelper runner(bridge, coreData.coreData, env);
 			// Set up a run
 			runner.set("player.class", Variant("wizard"));
-			runner.set("player.arcane", Variant());
+			runner.set("player.arcaneGlow", Variant());
 			runner.set("player.mystery", Variant());
 		}
 
@@ -360,7 +360,7 @@ static void TestCodeEval()
 		TEST(driver.choices().choices.size() == 1);
 		driver.choose(0);
 		TEST(driver.type() == ScriptType::kText);
-		TEST(runner->get("player.arcane").boolean == true);
+		TEST(runner->get("player.arcaneGlow").boolean == true);
 		driver.advance();
 		TEST(driver.done());
 	}
@@ -793,28 +793,28 @@ void TestLuaCore()
 void TestCombatant()
 {
 	{
-		Combatant c;
+		SWCombatant c;
 		c.autoLevel(8, 4, 2, 1);
 		TEST(c.fighting.d > 4);
 		TEST(c.fighting.d >= c.shooting.d);
 		TEST(c.shooting.d >= c.arcane.d);
 	}
 	{
-		Combatant c;
+		SWCombatant c;
 		c.autoLevel(8, 4, 2, 0);
 		TEST(c.fighting.d > 4);
 		TEST(c.fighting.d >= c.shooting.d);
 		TEST(c.arcane.d == 4 && c.arcane.b == -2);
 	}
 	{
-		Combatant c;
+		SWCombatant c;
 		c.autoLevel(8, 2, 4, 0);
 		TEST(c.shooting.d > 4);
 		TEST(c.shooting.d >= c.fighting.d);
 		TEST(c.arcane.d == 4 && c.arcane.b == -2);
 	}
 	{
-		Combatant c;
+		SWCombatant c;
 		c.autoLevel(8, 1, 1, 8);
 		TEST(c.arcane.d > 4);
 		TEST(c.arcane.d >= c.fighting.d);
@@ -829,8 +829,8 @@ void TestCombatant()
 		system.addRegion({ "Start", 0, Cover::kNoCover });
 		system.addRegion({ "Middle", 0, Cover::kNoCover });
 
-		Combatant a;
-		Combatant b;
+		SWCombatant a;
+		SWCombatant b;
 		system.addCombatant(a);
 		system.addCombatant(b);
 
@@ -870,12 +870,12 @@ void BattleTest::Test1()
 	RangedWeapon blaster = { "blaster", {2, 6, 0}, 2, 4, 30 };
 	MeleeWeapon baton = { "baton", {1, 4, 0}, 4, false };
 	Armor riotGear = { "riot gear", 2, 6 };
-	Power starCharm = { ModType::kBoost, "StarCharm", 3, 1, 1 };
-	Power farCharm = { ModType::kBoost, "FarCharm", 3, 4, 1 };
-	Power swol = { ModType::kStrength, "Swol", 1, 1, 1 };
-	Power spark = { ModType::kBolt, "Spark", 1, 1, 1 };
+	SWPower starCharm = { ModType::kBoost, "StarCharm", 3, 1, 1 };
+	SWPower farCharm = { ModType::kBoost, "FarCharm", 3, 4, 1 };
+	SWPower swol = { ModType::kStrength, "Swol", 1, 1, 1 };
+	SWPower spark = { ModType::kBolt, "Spark", 1, 1, 1 };
 
-	Combatant a;
+	SWCombatant a;
 	a.name = "Rogue Rebel";
 	a.wild = true;
 	a.autoLevel(8, 2, 4, 2, 0);
@@ -883,13 +883,13 @@ void BattleTest::Test1()
 	a.powers.push_back(starCharm);
 	a.powers.push_back(farCharm);
 
-	Combatant b;
+	SWCombatant b;
 	b.name = "Brute";
 	b.autoLevel(6, 4, 2, 0, 0);
 	b.meleeWeapon = baton;	
 	b.armor = riotGear;
 
-	Combatant c;
+	SWCombatant c;
 	c.name = "Sparky";
 	c.autoLevel(6, 0, 2, 4, 0);
 	c.rangedWeapon = blaster;

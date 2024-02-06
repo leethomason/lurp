@@ -600,9 +600,11 @@ Inventory ScriptBridge::readInventory() const
 {
 	Inventory inv;
 	try {
-		std::vector<StringCount> arr = getStrCountArray("items");
-		for (const auto& p : arr) {
-			inv.addInitItem(p.str, p.count);
+		if (hasField("items")) {
+			std::vector<StringCount> arr = getStrCountArray("items");
+			for (const auto& p : arr) {
+				inv.addInitItem(p.str, p.count);
+			}
 		}
 	}
 	catch (std::exception& e) {
@@ -919,14 +921,17 @@ Combatant ScriptBridge::readCombatant() const
 		c.bias = getIntField("bias", { 0 });
 
 		c.inventory = readInventory();
-		lua_pushstring(L, "regions");
-		lua_gettable(L, -2);
 
-		for (TableIt it(L, -1); !it.done(); it.next()) {
-			EntityID id = it.value().str;
-			c.powers.push_back(id);
+		if (hasField("powers")) {
+			lua_pushstring(L, "powers");
+			lua_gettable(L, -2);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				EntityID id = it.value().str;
+				c.powers.push_back(id);
+			}
+			lua_pop(L, 1);
 		}
-		lua_pop(L, 1);
 	}
 	catch (std::exception& e) {
 		FatalReadError(e.what(), c);
@@ -943,26 +948,30 @@ Battle ScriptBridge::readBattle() const
 		b.entityID = readEntityID("entityID", {});
 		b.name = getStrField("name", {"battle"});
 
-		lua_pushstring(L, "regions");
-		lua_gettable(L, -2);
+		if (hasField("regions")) {
+			lua_pushstring(L, "regions");
+			lua_gettable(L, -2);
 
-		for (TableIt it(L, -1); !it.done(); it.next()) {
-			if (it.kType() == LUA_TNUMBER) {
-				lurp::swbattle::Region r;
-				r.name = getField(L, "", 1).str;
-				r.yards = (int)getField(L, "", 2).num;
-				std::string c = getField(L, "", 3).str;
-				if (c == "light") r.cover = lurp::swbattle::Cover::kLightCover;
-				else if (c == "medium") r.cover = lurp::swbattle::Cover::kMediumCover;
-				else if (c == "heavy") r.cover = lurp::swbattle::Cover::kHeavyCover;
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				if (it.kType() == LUA_TNUMBER) {
+					lurp::swbattle::Region r;
+					r.name = getField(L, "", 1).str;
+					r.yards = (int)getField(L, "", 2).num;
+					std::string c = getField(L, "", 3).str;
+					if (c == "light") r.cover = lurp::swbattle::Cover::kLightCover;
+					else if (c == "medium") r.cover = lurp::swbattle::Cover::kMediumCover;
+					else if (c == "heavy") r.cover = lurp::swbattle::Cover::kHeavyCover;
 
-				b.regions.push_back(r);
+					b.regions.push_back(r);
+				}
 			}
-		}
-		for (TableIt it(L, -1); !it.done(); it.next()) {
-			if (it.kType() == LUA_TNUMBER) {
-				EntityID id = readEntityID("entityID", {});
-				b.combatants.push_back(id);
+			lua_pop(L, 1);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				if (it.kType() == LUA_TNUMBER) {
+					EntityID id = readEntityID("entityID", {});
+					b.combatants.push_back(id);
+				}
 			}
 		}
 	}

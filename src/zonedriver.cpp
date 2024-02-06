@@ -41,7 +41,7 @@ ZoneDriver::~ZoneDriver()
 
 const Container* ZoneDriver::getContainer(const EntityID& id)
 {
-	for (const Container& c : _assets.containers) {
+	for (const Container& c : _assets._csa.containers) {
 		if (c.entityID == id) return &c;
 	}
 	return nullptr;
@@ -64,12 +64,12 @@ void ZoneDriver::setZone(const EntityID& zone, EntityID room)
 
 const Room& ZoneDriver::currentRoom() const
 {
-	return _assets.rooms[_room.index];
+	return _assets._csa.rooms[_room.index];
 }
 
 const Zone& ZoneDriver::currentZone() const
 {
-	return _assets.zones[_zone.index];
+	return _assets._csa.zones[_zone.index];
 }
 
 const Actor& ZoneDriver::getPlayer()
@@ -80,10 +80,10 @@ const Actor& ZoneDriver::getPlayer()
 std::vector<Edge> ZoneDriver::edges(EntityID room) const
 {
 	if (room.empty())
-		room = _assets.rooms[_room.index].entityID;
+		room = _assets._csa.rooms[_room.index].entityID;
 
 	std::vector<Edge> result;
-	std::copy_if(_assets.edges.begin(), _assets.edges.end(), std::back_inserter(result), [&](const Edge& e) {
+	std::copy_if(_assets._csa.edges.begin(), _assets._csa.edges.end(), std::back_inserter(result), [&](const Edge& e) {
 		return e.room1 == room || e.room2 == room;
 	});
 	return result;
@@ -92,10 +92,10 @@ std::vector<Edge> ZoneDriver::edges(EntityID room) const
 std::vector<DirEdge> ZoneDriver::dirEdges(EntityID room) const
 {
 	if (room.empty())
-		room = _assets.rooms[_room.index].entityID;
+		room = _assets._csa.rooms[_room.index].entityID;
 
 	std::vector<DirEdge> result;
-	for (const Edge& e : _assets.edges) {
+	for (const Edge& e : _assets._csa.edges) {
 		bool found = false;
 		bool flip = false;
 		if (e.room1 == room) {
@@ -147,23 +147,23 @@ std::vector<DirEdge> ZoneDriver::dirEdges(EntityID room) const
 const std::vector<EntityID>& ZoneDriver::entities(EntityID room) const
 {
 	if (room.empty())
-		room = _assets.rooms[_room.index].entityID;
+		room = _assets._csa.rooms[_room.index].entityID;
 	ScriptRef roomRef = _assets.get(room);
-	const Room& r = _assets.rooms[roomRef.index];
+	const Room& r = _assets._csa.rooms[roomRef.index];
 	return r.objects;
 }
 
 ContainerVec ZoneDriver::getContainers(EntityID room)
 {
 	if (room.empty())
-		room = _assets.rooms[_room.index].entityID;
+		room = _assets._csa.rooms[_room.index].entityID;
 
 	const std::vector<EntityID>& eArr = this->entities(room);
 	ContainerVec result;
 	for (const auto& e : eArr) {
 		ScriptRef ref = _assets.get(e);
 		if (ref.type == ScriptType::kContainer) {
-			const Container& c = _assets.containers[ref.index];
+			const Container& c = _assets._csa.containers[ref.index];
 			bool eval = true;
 			if (_bridge) {
 				ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _player, NO_ENTITY };
@@ -191,14 +191,14 @@ bool ZoneDriver::filterInteraction(const Interaction& i)
 InteractionVec ZoneDriver::getInteractions(EntityID room)
 {
 	if (room.empty())
-		room = _assets.rooms[_room.index].entityID;
+		room = _assets._csa.rooms[_room.index].entityID;
 
 	const std::vector<EntityID>& eArr = this->entities(room);
 	InteractionVec result;
 	for (const auto& e : eArr) {
 		ScriptRef ref = _assets.get(e);
 		if (ref.type == ScriptType::kInteraction) {
-			const Interaction* iact = &_assets.interactions[ref.index];
+			const Interaction* iact = &_assets._csa.interactions[ref.index];
 			bool done = mapData.coreData.coreBool(iact->entityID, "done", false);
 			if (iact->active(done) && filterInteraction(*iact)) {
 				result.push_back(iact);
@@ -210,12 +210,12 @@ InteractionVec ZoneDriver::getInteractions(EntityID room)
 
 const Interaction* ZoneDriver::getRequiredInteraction()
 {
-	EntityID roomID = _assets.rooms[_room.index].entityID;
+	EntityID roomID = _assets._csa.rooms[_room.index].entityID;
 	const std::vector<EntityID>& eArr = this->entities(roomID);
 	for (const auto& e : eArr) {
 		ScriptRef ref = _assets.get(e);
 		if (ref.type == ScriptType::kInteraction) {
-			const Interaction* iact = &_assets.interactions[ref.index];
+			const Interaction* iact = &_assets._csa.interactions[ref.index];
 			bool done = mapData.coreData.coreBool(iact->entityID, "done", false);
 			if (iact->_required && iact->active(done) && filterInteraction(*iact))
 				return iact;
@@ -247,12 +247,12 @@ void ZoneDriver::markRequiredInteractionComplete(const Interaction* iact)
 
 void ZoneDriver::markRequiredInteractionComplete(const EntityID& scriptID)
 {
-	EntityID roomID = _assets.rooms[_room.index].entityID;
+	EntityID roomID = _assets._csa.rooms[_room.index].entityID;
 	const std::vector<EntityID>& eArr = this->entities(roomID);
 	for (const auto& e : eArr) {
 		ScriptRef ref = _assets.get(e);
 		if (ref.type == ScriptType::kInteraction) {
-			const Interaction* iact = &_assets.interactions[ref.index];
+			const Interaction* iact = &_assets._csa.interactions[ref.index];
 			if (iact->_required && iact->next == scriptID) {
 				mapData.coreData.coreSet(iact->entityID, "done", true, false);
 			}
@@ -267,7 +267,7 @@ void ZoneDriver::teleport(const EntityID& room)
 	_room = _assets.get(room);
 	assert(_room.type == ScriptType::kRoom);
 	
-	const Zone& zone = _assets.zones[_zone.index];
+	const Zone& zone = _assets._csa.zones[_zone.index];
 
 	for (size_t i = 0; i < zone.objects.size(); ++i) {
 		if (zone.objects[i] == room) {
@@ -278,8 +278,8 @@ void ZoneDriver::teleport(const EntityID& room)
 
 	// Need to change zones. Find the new zone.
 	// FIXME: This is a a big slow linear search.
-	for (size_t i = 0; i < _assets.zones.size(); ++i) {
-		const Zone& z = _assets.zones[i];
+	for (size_t i = 0; i < _assets._csa.zones.size(); ++i) {
+		const Zone& z = _assets._csa.zones[i];
 		for (size_t j = 0; j < z.objects.size(); ++j) {
 			if (z.objects[j] == room) {
 				_zone = ScriptRef{ ScriptType::kZone, (int)i };
@@ -301,10 +301,10 @@ bool ZoneDriver::isLocked(const EntityID& id) const
 
 	// Fallback to immutable:
 	if (ref.type == ScriptType::kEdge) {
-		return _assets.edges[ref.index].locked;
+		return _assets._csa.edges[ref.index].locked;
 	}
 	else if (ref.type == ScriptType::kContainer) {
-		return _assets.containers[ref.index].locked;
+		return _assets._csa.containers[ref.index].locked;
 	}
 	return false;
 }
@@ -314,13 +314,13 @@ void ZoneDriver::setLocked(const EntityID& id, bool locked)
 {
 	ScriptRef ref = _assets.get(id);
 	if (ref.type == ScriptType::kEdge) {
-		const Edge& e = _assets.edges[ref.index];
+		const Edge& e = _assets._csa.edges[ref.index];
 		mapData.newsQueue.push(NewsItem::lock(locked, e, nullptr));
 		//e.locked = locked;
 		mapData.coreData.coreSet(e.entityID, "locked", locked, false);
 	}
 	else if (ref.type == ScriptType::kContainer) {
-		const Container& c = _assets.containers[ref.index];
+		const Container& c = _assets._csa.containers[ref.index];
 		mapData.newsQueue.push(NewsItem::lock(locked, c, nullptr));
 		//c.locked = locked;
 		mapData.coreData.coreSet(c.entityID, "locked", locked, false);
@@ -389,14 +389,14 @@ ZoneDriver::MoveResult ZoneDriver::move(const EntityID& roomEntityID)
 {
 	// Find an edge - brute force. May want to optimize. FIXME
 	EntityID a = roomEntityID;
-	EntityID b = _assets.rooms[_room.index].entityID;
+	EntityID b = _assets._csa.rooms[_room.index].entityID;
 
-	const auto it = std::find_if(_assets.edges.begin(), _assets.edges.end(), [&](const Edge& e) {
+	const auto it = std::find_if(_assets._csa.edges.begin(), _assets._csa.edges.end(), [&](const Edge& e) {
 		return (a == e.room1 && b == e.room2) || (a == e.room2 && b == e.room1);
 		});
 
-	assert(it != _assets.edges.end());
-	if (it == _assets.edges.end())
+	assert(it != _assets._csa.edges.end());
+	if (it == _assets._csa.edges.end())
 		return MoveResult::kNoConnection;
 
 	if (locked(*it))
@@ -412,7 +412,7 @@ ZoneDriver::MoveResult ZoneDriver::move(const EntityID& roomEntityID)
 
 ZoneDriver::MoveResult ZoneDriver::move(const Edge& edge)
 {
-	EntityID current = _assets.rooms[_room.index].entityID;
+	EntityID current = _assets._csa.rooms[_room.index].entityID;
 	if (edge.room1 == current)
 		return move(edge.room2);
 	else if (edge.room2 == current)
@@ -423,13 +423,13 @@ ZoneDriver::MoveResult ZoneDriver::move(const Edge& edge)
 
 const EntityID& ZoneDriver::zoneID() const
 {
-	const Zone& zone = _assets.zones[_zone.index];
+	const Zone& zone = _assets._csa.zones[_zone.index];
 	return zone.entityID;
 }
 
 const EntityID& ZoneDriver::roomID() const
 {
-	const Room& room = _assets.rooms[_room.index];
+	const Room& room = _assets._csa.rooms[_room.index];
 	return room.entityID;
 }
 
@@ -440,11 +440,10 @@ void ZoneDriver::save(std::ostream& stream) const
 	ZoneDriver::saveTextRead(stream, mapData.textRead);
 
 	fmt::print(stream, "Map = {{\n");
-	fmt::print(stream, "  currentZone = '{}',\n", _assets.zones[_zone.index].entityID);
-	fmt::print(stream, "  currentRoom = '{}',\n", _assets.rooms[_room.index].entityID);
+	fmt::print(stream, "  currentZone = '{}',\n", _assets._csa.zones[_zone.index].entityID);
+	fmt::print(stream, "  currentRoom = '{}',\n", _assets._csa.rooms[_room.index].entityID);
 	fmt::print(stream, "}}\n");
 }
-
 
 EntityID ZoneDriver::load(ScriptBridge& loader)
 {
