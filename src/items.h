@@ -17,10 +17,25 @@ struct Item {
 
 	bool operator==(const Item& rhs) const { return entityID == rhs.entityID; }
 
-	std::string type() const { return "Item"; }
+	static constexpr ScriptType type{ ScriptType::kItem };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("Item entityID: {} '{}'\n", entityID, name);
+	}
+};
+
+struct Power {
+	EntityID entityID;
+	std::string name;
+	std::string effect;
+	int cost = 1;
+	int range = 1;
+	int strength = 1;
+
+	static constexpr ScriptType type{ ScriptType::kPower };
+	void dump(int depth) const {
+		fmt::print("{: >{}}", "", depth * 2);
+		fmt::print("Power entityID: {} '{}' {} cost={} range={} strength={}\n", entityID, name, effect, cost, range, strength);
 	}
 };
 
@@ -61,7 +76,7 @@ public:
 	// items = { { "GOLD", 10 }, "SWORD" }
 	void save(std::ostream& stream);
 
-	std::string type() const { return "Inventory"; }
+	static constexpr ScriptType type{ ScriptType::kInventory };
 	void dump(int d) const {
 		fmt::print("{: >{}}Inventory", "", d * 2);
 	};

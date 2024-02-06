@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "defs.h"
 #include "items.h"
+#include "battle.h"
 
 namespace lurp {
 
@@ -25,7 +26,7 @@ struct Script
 	int code = -1;	// called when script is started
 	std::vector<Event> events;
 
-	std::string type() const { return "Script"; }
+	static constexpr ScriptType type{ ScriptType::kScript };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("Script entityID: {}\n", entityID);
@@ -68,7 +69,7 @@ struct Text {
 		return t;
 	}
 
-	std::string type() const { return "Text"; }
+	static constexpr ScriptType type{ ScriptType::kText };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("Text entityID: {}\n", entityID);
@@ -107,7 +108,7 @@ struct Choices {
 		return c;
 	}
 
-	std::string type() const { return "Choices"; }
+	static constexpr ScriptType type{ ScriptType::kChoices };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("Choice entityID: {}\n", entityID);
@@ -123,7 +124,7 @@ struct Actor {
 	std::string name;
 	Inventory inventory;
 
-	std::string type() const { return "Actor"; }
+	static constexpr ScriptType type{ ScriptType::kActor };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("Actor {} '{}'\n", entityID, name);
@@ -135,18 +136,40 @@ struct Actor {
 	}
 };
 
+struct Combatant {
+	EntityID entityID;
+	std::string name;
+	int count = 1;
+	int fighting = 0;
+	int shooting = 0;
+	int arcane = 0;
+	int bias = 0;
+
+	Inventory inventory;
+	std::vector<EntityID> powers;
+
+	static constexpr ScriptType type{ ScriptType::kCombatant };
+	void dump(int depth) const {
+		fmt::print("{: >{}}", "", depth * 2);
+		fmt::print("Combatant {} '{}'\n", entityID, name);
+	}
+};
+
 struct Battle {
 	EntityID entityID;
-	EntityID enemy;
+
+	std::string name;
+	std::vector<lurp::swbattle::Region> regions;
+	std::vector<EntityID> combatants;
 
 	std::pair<bool, Variant> get(const std::string&) const {
 		return { false, Variant() };
 	}
 
-	std::string type() const { return "Battle"; }
+	static constexpr ScriptType type{ ScriptType::kBattle };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Battle {} 'player' v {}\n", entityID, enemy);
+		//fmt::print("Battle {} 'player' v {}\n", entityID, enemy);
 	}
 };
 

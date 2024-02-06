@@ -17,6 +17,8 @@ struct Power;
 // - integrate with lua script
 // - reasonable test framework
 
+static constexpr int kMaxNumAces = 4;
+
 struct Die {
 	Die() {}
 	Die(int n, int d, int b) : n(n), d(d), b(b) {}

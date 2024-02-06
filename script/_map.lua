@@ -1,5 +1,7 @@
 Zones = {}
 Items = {}
+Powers = {}
+Combatants = {}
 Scripts = {}
 Actors = {}
 Texts = {}
@@ -160,6 +162,15 @@ function Battle(b)
     return b
 end
 
+function Combatant(c)
+    c.type = "Combatant"
+    -- always generated; ephemeral entityID
+    c.entityID = createEntityID(nil, nil, "COMBATANT")
+    Combatants[c.entityID] = c
+    addToEntities(c)
+    return c
+end
+
 function Choices(c)
     c.type = "Choices"
     c.entityID = createEntityID(c.entityID, c.name, "CHOICES")
@@ -177,6 +188,14 @@ function Item(i)
     Items[i.entityID] = i
     addToEntities(i)
     return i
+end
+
+function Power(p)
+    p.type = "Power"
+    p.entityID = createEntityID(p.entityID, p.name, nil)
+    Powers[p.entityID] = p
+    addToEntities(p)
+    return p
 end
 
 function Zone(z)

@@ -170,9 +170,30 @@ when removing an item from somewhere to add it somewhere else, so it isn't lost.
 ## General Entities
 Entities associated with both the Zones and the Scripts.
 
+#### Die & Dice
+
+When a die or dice needs to be specified, you can do so with a string or number.
+
+  * 6 - a six-sided die
+  * "d6" - a six-sided die
+  * "2d6" - two six-sided dice
+  * "d6+2" - a six-sided die with a +2 bonus
+
 ### Item
   * entityID - required for an Item. ex: "GOLD"
   * name - name as read. ex: "gold coin"
+  * desc - description of the item. ex: "A shiny gold coin."
+
+IF the Item is a melee weapon:
+  * range = 0 
+  * damage = "d6" - the damage die
+
+IF the Item is a ranged weapon:
+  * range = 1 or more - the medium range of the weapon in yards/meters
+  * damage = "d6" - the damage die
+
+IF the Item is armor:
+  * armor = 2 - the armor value
 
 ### Inventory
 Some entitities have an inventory. (Actors and Containers). The inventory is a list of items

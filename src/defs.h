@@ -30,6 +30,7 @@ enum class ScriptType {
 	kText,
 	kChoices,
 	kItem,
+	kPower,
 	kInteraction,
 	kRoom,
 	kZone,
@@ -37,7 +38,11 @@ enum class ScriptType {
 	kContainer,
 	kEdge,
 	kActor,
+	kCombatant,
 	kCallScript,
+
+	// Not technically scripts, but used in the same way.
+	kInventory,
 };
 
 const char* scriptTypeName(ScriptType type);

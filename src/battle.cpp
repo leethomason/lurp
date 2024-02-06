@@ -11,19 +11,26 @@
 namespace lurp {
 namespace swbattle {
 
-int Die::roll(Random& random, int* nAce)
+int Die::roll(Random& random, int* _nAce)
 {
 	int total = 0;
-	if (nAce) *nAce = 0;
+	int nAce = 0;
+
 	while (true) {
 		// All rolls can ace
 		int roll = random.dice(n, d, 0);
+		// But computers can't ace forever
+		if (nAce == kMaxNumAces && roll == n * d) {
+			roll = n * d - 1;
+		}
 		total += roll;
 		if (roll < n * d)
 			break;
-		if (nAce)
-			(*nAce)++;
+		nAce++;
 	}
+	if (_nAce)
+		*_nAce = nAce;
+
 	return total + b;	// bonus only applies to total
 }
 

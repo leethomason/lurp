@@ -16,10 +16,12 @@ struct ConstScriptAssets
 	std::vector<Text> texts;
 	std::vector<Choices> choices;
 	std::vector<Item> items;
+	std::vector<Power> powers;
 	std::vector<Interaction> interactions;
 	std::vector<Room> rooms;
 	std::vector<Zone> zones;
 	std::vector<Actor> actors;
+	std::vector<Combatant> combatants;
 	std::vector<Battle> battles;
 	std::vector<Container> containers;
 	std::vector<Edge> edges;
@@ -29,19 +31,6 @@ struct ConstScriptAssets
 struct ScriptAssets : public IAssetHandler
 {
 	ScriptAssets(const ConstScriptAssets& csa);
-
-	const std::vector<Script>& scripts;
-	const std::vector<Text>& texts;
-	const std::vector<Choices>& choices;
-	const std::vector<Item>& items;
-	const std::vector<Interaction>& interactions;
-	const std::vector<Room>& rooms;
-	const std::vector<Zone>& zones;
-	const std::vector<Actor>& actors;
-	const std::vector<Battle>& battles;
-	const std::vector<Container>& containers;
-	const std::vector<Edge>& edges;
-	const std::vector<CallScript>& callScripts;
 
 	std::map<EntityID, Inventory> inventories;
 
@@ -76,12 +65,17 @@ struct ScriptAssets : public IAssetHandler
 	void load(ScriptBridge& loader);
 
 	virtual std::pair<bool, Variant> assetGet(const std::string& entity, const std::string& path) const;
+	const ConstScriptAssets& _csa;
 
 private:
 	std::map<EntityID, ScriptRef> entityIDToIndex;
-	const ConstScriptAssets& _csa;
 
 	void scan();
+
+	template <typename T>
+	void scan(const std::vector<T>& vec) {
+		for (int i = 0; i < vec.size(); ++i) entityIDToIndex[vec[i].entityID] = { T::type, i };
+	}
 };
 
 } // namespace lurp

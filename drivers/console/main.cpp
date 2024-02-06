@@ -363,7 +363,7 @@ int main(int argc, const char* argv[])
 		std::string saveFile = FindSavePath(scriptFile);
 
 		if (battleSim) {
-			ConsoleBattleDriver(era, playerBS, enemyBS, seed);
+			ConsoleBattleSim(era, playerBS, enemyBS, seed);
 		}
 		else {
 			// Run game.

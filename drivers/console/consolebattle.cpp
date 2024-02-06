@@ -322,7 +322,7 @@ static int AssignCombatant(int era, Combatant* c, int n, const BattleSpec& spec,
 	return index;
 }
 
-void ConsoleBattleDriver(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed)
+void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed)
 {
 	lurp::Random random(seed);
 	BattleSystem system(random);

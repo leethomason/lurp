@@ -72,7 +72,7 @@ public:
 	int getFieldType(const std::string& key) const;
 
 	std::string getStrField(const std::string& key, const std::optional<std::string>& def) const;
-	int getIntField(const std::string& key, const std::optional<int>& def);
+	int getIntField(const std::string& key, const std::optional<int>& def) const;
 	bool getBoolField(const std::string& key, std::optional<bool>) const;
 	std::vector<std::string> getStrArray(const std::string& key) const;
 	std::vector<StringCount> getStrCountArray(const std::string& key) const;
@@ -123,11 +123,13 @@ private:
 	Container readContainer() const;
 
 	Item readItem() const;
+	Power readPower() const;
 	Text readText() const;
 	Choices readChoices() const;
 	Script readScript() const;
 	Interaction readInteraction() const;
 	Actor readActor() const;
+	Combatant readCombatant() const;
 	Battle readBattle() const;
 	CallScript readCallScript() const;
 

@@ -11,5 +11,6 @@ struct BattleSpec {
 	static BattleSpec Parse(const std::string& str);
 };
 
-void ConsoleBattleDriver(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed);
+void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed);
+bool ConsoleBattleDriver();
 void RunConsoleBattleTests();

@@ -24,7 +24,7 @@ struct Container {
 		if (key == "name") return { true, Variant(name) };
 		return { false, Variant() };
 	}
-	std::string type() const { return "Container"; }
+	static constexpr ScriptType type{ ScriptType::kContainer };
 	void dump(int d) const {
 		fmt::print("{: >{}}Container {} {}\n", "", d * 2, entityID, name);
 	};
@@ -58,7 +58,7 @@ struct Edge {
 		return { false, Variant() };
 	}
 
-	std::string type() const { return "Edge"; }
+	static constexpr ScriptType type{ ScriptType::kEdge };
 	void dump(int d) const {
 		fmt::print("{: >{}}Edge {}   {} <-> {}\n", "", d * 2, name, room1, room2);
 	};
@@ -85,7 +85,7 @@ struct Room {
 	std::string desc;
 	std::vector<EntityID> objects;
 
-	std::string type() const { return "Room"; }
+	static constexpr ScriptType type{ ScriptType::kRoom };
 	void dump(int d) const {
 		fmt::print("{: >{}}Room {} {}\n", "", d * 2, entityID, name);
 	};
@@ -99,7 +99,7 @@ struct Zone {
 	// By convention, the first room is the starting room.
 	const Room* firstRoom(const ScriptAssets& assets) const;
 
-	std::string type() const { return "Zone"; }
+	static constexpr ScriptType type{ ScriptType::kZone };
 	void dump(int d) const {
 		fmt::print("{: >{}}Zone name: {}\n", "", d * 2, entityID);
 		for (const auto& r : objects) {
@@ -119,7 +119,7 @@ struct Interaction {
 
 	bool active(bool done) const { return !_required || !done; }
 
-	std::string type() const { return "Interaction"; }
+	static constexpr ScriptType type{ ScriptType::kInteraction };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("Interaction entityID: {} '{}'\n", entityID, name);
@@ -132,7 +132,7 @@ struct CallScript {
 	int code = -1;
 	int eval = -1;
 
-	std::string type() const { return "CallScript"; }
+	static constexpr ScriptType type{ ScriptType::kCallScript };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("CallScript {} calls={}\n", entityID, scriptID);
