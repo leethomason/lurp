@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defs.h"
+#include "die.h"
 
 #include <fmt/core.h>
 #include <string>
@@ -14,9 +15,16 @@ struct ConstScriptAssets;
 struct Item {
 	EntityID entityID;
 	std::string name;
+	std::string desc;
+	int range = 0;
+	int armor = 0;
+	int ap = 0;
+	Die damage = { 0, 0, 0 };
 
-	bool operator==(const Item& rhs) const { return entityID == rhs.entityID; }
-
+	bool isMeleeWeapon() const { return range == 0 && damage.d > 0 && armor == 0; }
+	bool isRangedWeapon() const { return range > 0 && damage.d > 0 && armor == 0; }
+	bool isArmor() const { return armor > 0 && damage.d == 0; }
+	
 	static constexpr ScriptType type{ ScriptType::kItem };
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
@@ -69,6 +77,10 @@ public:
 	void removeItem(const Item& item, int n = 1);
 	void deltaItem(const Item& item, int n);
 
+	const Item* meleeWeapon() const;
+	const Item* rangedWeapon() const;
+	const Item* armor() const;
+
 	int size() const { return (int)_items.size(); }
 
 	const std::vector<ItemRef>& items() const { return _items; }
@@ -82,7 +94,6 @@ public:
 	};
 
 	friend void transfer(const Item& item, Inventory& src, Inventory& dst, int n = INT_MAX);
-	friend void transferAll(Inventory& src, Inventory& dst);
 
 private:
 	auto findIt(const Item& item) {

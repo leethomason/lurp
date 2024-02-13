@@ -336,6 +336,7 @@ Script {
 Script {
     entityID = "TEST_BATTLE_1",
     Battle {
+        entityID = "TEST_BATTLE_1_CURSED_CAVERN",
         name = "Cursed Cavern",
         regions = {
             { "Stalagmites", 0, "light"},

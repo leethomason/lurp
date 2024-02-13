@@ -243,10 +243,10 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 	std::string names[3];
 
 	if (era == 0) {
-		mwPlus = { "longsword", Die(1, 8, 0), 8, true };
-		mw = { "shortsword", Die(1, 6, 0), 6, false };
-		rw = { "bow", Die(1, 6, 0), 0, 6, 24 };
-		armor = { "chain", 3, 8 };
+		mwPlus = { "longsword", Die(1, 8, 0) };
+		mw = { "shortsword", Die(1, 6, 0) };
+		rw = { "bow", Die(1, 6, 0), 0, 24 };
+		armor = { "chain", 3 };
 
 		// type, name, cost, range, effect
 		power0 = { ModType::kBolt, "Fire Bolt", 1, 2 };
@@ -258,8 +258,8 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 		names[2] = "Skeleton Mage";
 	}
 	else if (era == 1) {
-		mw = mwPlus = { "knife", Die(1, 4, 0), 4, false };
-		rw = { "revolver", Die(2, 6, 1), 1, 4, 24 };
+		mw = mwPlus = { "knife", Die(1, 4, 0) };
+		rw = { "revolver", Die(2, 6, 1), 1, 24 };
 
 		power0 = { ModType::kBolt, "Arcane Bolt", 1, 2 };
 		power1 = { ModType::kHeal, "Blessed Heal", 3, 0 };
@@ -270,10 +270,10 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 		names[2] = "Magi";
 	}
 	else {
-		mw = { "knife", Die(1, 4, 0), 4, false };
-		mwPlus = { "plasma sword", Die(1, 8, 0), 6, true };
-		rw = { "blaster", Die(2, 6, 0), 2, 4, 30 };
-		armor = { "plasteel", 4, 10 };
+		mw = { "knife", Die(1, 4, 0) };
+		mwPlus = { "plasma sword", Die(1, 8, 0) };
+		rw = { "blaster", Die(2, 6, 0), 2, 30 };
+		armor = { "plasteel", 4 };
 
 		power0 = { ModType::kPowerCover, "Force Shield", 2, 0, 2 };
 		power1 = { ModType::kBoost, "Focus", 3, 1, 1 };

@@ -122,7 +122,12 @@ struct Choices {
 struct Actor {
 	EntityID entityID;
 	std::string name;
+	bool wild = false;
+	int fighting = 0;
+	int shooting = 0;
+	int arcane = 0;
 	Inventory inventory;
+	std::vector<EntityID> powers;
 
 	static constexpr ScriptType type{ ScriptType::kActor };
 	void dump(int depth) const {
@@ -139,6 +144,7 @@ struct Actor {
 struct Combatant {
 	EntityID entityID;
 	std::string name;
+	bool wild = false;
 	int count = 1;
 	int fighting = 0;
 	int shooting = 0;

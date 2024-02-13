@@ -852,10 +852,104 @@ void TestCombatant()
 
 class BattleTest {
 public:
-	static void Test1();
+	static void Read();
+	static void TestSystem();
+	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
 };
 
-void BattleTest::Test1()
+void BattleTest::Read()
+{
+	ScriptBridge bridge;
+	ConstScriptAssets csa = bridge.readCSA("");
+	ScriptAssets assets(csa);
+
+	const Battle& battle = assets.getBattle("TEST_BATTLE_1_CURSED_CAVERN");
+	TEST(battle.name == "Cursed Cavern");
+	TEST(battle.regions.size() == 4);
+	TEST(battle.regions[1].name == "Shallow Pool");
+	TEST(battle.regions[1].yards == 8);
+
+	TEST(battle.regions[0].cover == Cover::kLightCover);
+
+	TEST(battle.combatants.size() == 3);
+	{
+		const Combatant& c = assets.getCombatant(battle.combatants[1]);
+		TEST(c.name == "Skeleton Archer");
+		TEST(c.count == 1);
+		TEST(c.fighting == 4);
+		TEST(c.shooting == 6);
+		TEST(c.arcane == 0);
+
+		const Item& shortsword = assets.getItem("SHORTSWORD");
+		const Item& bow = assets.getItem("BOW");
+
+		TEST(shortsword.isMeleeWeapon());
+		TEST(!shortsword.isRangedWeapon());
+		TEST(!shortsword.isArmor());
+		TEST(shortsword.range == 0);
+		TEST(shortsword.damage == Die(1, 6, 0));
+
+		TEST(bow.isRangedWeapon());
+		TEST(!bow.isMeleeWeapon());
+		TEST(!bow.isArmor());
+		TEST(bow.range == 24);
+		TEST(bow.damage == Die(1, 6, 0));
+
+		TEST(c.inventory.numItems(shortsword) == 1);
+		TEST(c.inventory.numItems(bow) == 1);
+		TEST(c.inventory.meleeWeapon() == &shortsword);
+		TEST(c.inventory.rangedWeapon() == &bow);
+	}
+	{
+		const Combatant& c = assets.getCombatant(battle.combatants[0]);
+		TEST(c.name == "Skeleton Warrior");
+		TEST(c.count == 2);
+		TEST(c.fighting == 6);
+		TEST(c.shooting == 0);
+		TEST(c.arcane == 0);
+		TEST(c.bias == -1);
+
+		const Item* pArmor = c.inventory.armor();
+		TEST(pArmor != nullptr);
+		TEST(pArmor->armor == 3);
+		TEST(pArmor->isArmor());
+	}
+	{
+		const Combatant& c = assets.getCombatant(battle.combatants[2]);
+		TEST(c.name == "Skeleton Mage");
+		TEST(c.count == 1);
+		TEST(c.fighting == 0);
+		TEST(c.shooting == 0);
+		TEST(c.arcane == 6);
+
+		const Power& p = assets.getPower(c.powers[0]);
+		TEST(p.name == "Fire Bolt");
+		TEST(p.effect == "bolt");
+		TEST(p.cost == 1);
+		TEST(p.range == 2);
+		TEST(p.strength == 1);
+
+		SWPower sp = SWPower::convert(p);
+		TEST(sp.type == ModType::kBolt);
+		TEST(sp.name == "Fire Bolt");
+		TEST(sp.cost == 1);
+		TEST(sp.rangeMult == 2);
+		TEST(sp.effectMult == 1);
+	}
+	{
+		const Actor& player = assets.getActor("testplayer");
+		SWCombatant c = SWCombatant::convert(player, assets);
+		TEST(c.link == "testplayer");
+		TEST(c.name == "Test Player");
+		TEST(c.wild);
+		TEST(c.fighting.d == 4);
+		TEST(c.shooting.d == 8);
+		TEST(c.arcane.d == 4);
+		TEST(c.powers.size() == 1);
+	}
+}
+
+void BattleTest::TestSystem()
 {
 	using namespace lurp::swbattle;
 
@@ -867,12 +961,12 @@ void BattleTest::Test1()
 	system.addRegion({ "Catwalk", 10, Cover::kNoCover });
 	system.addRegion({ "Dock", 20, Cover::kMediumCover });
 
-	RangedWeapon blaster = { "blaster", {2, 6, 0}, 2, 4, 30 };
-	MeleeWeapon baton = { "baton", {1, 4, 0}, 4, false };
-	Armor riotGear = { "riot gear", 2, 6 };
+	RangedWeapon blaster = { "blaster", {2, 6, 0}, 2, 30 };
+	MeleeWeapon baton = { "baton", {1, 4, 0} };
+	Armor riotGear = { "riot gear", 2 };
 	SWPower starCharm = { ModType::kBoost, "StarCharm", 3, 1, 1 };
 	SWPower farCharm = { ModType::kBoost, "FarCharm", 3, 4, 1 };
-	SWPower swol = { ModType::kStrength, "Swol", 1, 1, 1 };
+	SWPower swol = { ModType::kBoost, "Swol", 1, 1, 1 };
 	SWPower spark = { ModType::kBolt, "Spark", 1, 1, 1 };
 
 	SWCombatant a;
@@ -947,6 +1041,19 @@ void BattleTest::Test1()
 
 }
 
+void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	ScriptAssets assets(ca);
+	MapData coreData(&bridge);
+	ScriptEnv env = { "TEST_BATTLE_1", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	ScriptDriver driver(assets, env, coreData, &bridge);
+
+	//TEST(driver.type() == ScriptType::kBattle);
+	//{
+	//	BattleDriver 
+	//}
+}
+
 int RunTests()
 {
 	//fmt::print("sizeof(ConstScriptAssets) = {}\n", sizeof(ConstScriptAssets));
@@ -979,7 +1086,9 @@ int RunTests()
 	RUN_TEST(TestWalkabout(csassets, bridge));
 	RUN_TEST(TestLuaCore());
 	RUN_TEST(TestCombatant());
-	RUN_TEST(BattleTest::Test1());
+	RUN_TEST(BattleTest::Read());
+	RUN_TEST(BattleTest::TestSystem());
+	RUN_TEST(BattleTest::TestScript(csassets, bridge));
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

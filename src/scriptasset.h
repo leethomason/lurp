@@ -51,8 +51,10 @@ struct ScriptAssets : public IAssetHandler
 	const Battle& getBattle(const EntityID& entityID) const;
 	const CallScript& getCallScript(const EntityID& entityID) const;
 	const Actor& getActor(const EntityID& entityID) const;
+	const Combatant& getCombatant(const EntityID& entityID) const;
 	const Container& getContainer(const EntityID& entityID) const;
 	const Edge& getEdge(const EntityID& entityID) const;
+	const Power& getPower(const EntityID& entityID) const;
 
 	template <typename T>
 	Inventory& getInventory(const T& entity) {

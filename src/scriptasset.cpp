@@ -119,7 +119,9 @@ const Zone& ScriptAssets::getZone(const EntityID& entityID) const { TYPE_BODY(zo
 const Battle& ScriptAssets::getBattle(const EntityID& entityID) const { TYPE_BODY(battles, kBattle); }
 const CallScript& ScriptAssets::getCallScript(const EntityID& entityID) const { TYPE_BODY(callScripts, kCallScript); }
 const Actor& ScriptAssets::getActor(const EntityID& entityID) const { TYPE_BODY(actors, kActor); }
+const Combatant& ScriptAssets::getCombatant(const EntityID& entityID) const { TYPE_BODY(combatants, kCombatant); }
 const Container& ScriptAssets::getContainer(const EntityID& entityID) const { TYPE_BODY(containers, kContainer); }
 const Edge& ScriptAssets::getEdge(const EntityID& entityID) const { TYPE_BODY(edges, kEdge); }
+const Power& ScriptAssets::getPower(const EntityID& entityID) const { TYPE_BODY(powers, kPower); }
 
 } // namespace lurp

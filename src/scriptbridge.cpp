@@ -651,7 +651,12 @@ Item ScriptBridge::readItem() const
 	LuaStackCheck check(L);
 	try {
 		item.entityID = getStrField("entityID", {});
-		item.name = getStrField("name", { "" });
+		item.name = getStrField("name", {});
+		item.desc = getStrField("desc", { "" });
+		item.range = getIntField("range", { 0 });
+		item.armor = getIntField("armor", { 0 });
+		item.damage = Die::parse(getStrField("damage", { "" }));
+		item.ap = getIntField("ap", { 0 });
 	}
 	catch (std::exception& e) {
 		FatalReadError(e.what(), item);
@@ -897,8 +902,23 @@ Actor ScriptBridge::readActor() const
 	try {
 		actor.entityID = getStrField("entityID", {});
 		actor.name = getStrField("name", {});
+		actor.wild = getBoolField("wild", { false });
+		actor.fighting = getIntField("fighting", { 0 });
+		actor.shooting = getIntField("shooting", { 0 });
+		actor.arcane = getIntField("arcane", { 0 });
+
 		if (hasField("items")) {
 			actor.inventory = readInventory();
+		}
+		if (hasField("powers")) {
+			lua_pushstring(L, "powers");
+			lua_gettable(L, -2);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				EntityID id = it.value().str;
+				actor.powers.push_back(id);
+			}
+			lua_pop(L, 1);
 		}
 	}
 	catch (std::exception& e) {
@@ -915,6 +935,7 @@ Combatant ScriptBridge::readCombatant() const
 		c.entityID = getStrField("entityID", {});
 		c.name = getStrField("name", {});
 		c.count = getIntField("count", { 1 });
+		c.wild = getBoolField("wild", { false });
 		c.fighting = getIntField("fighting", { 0 });
 		c.shooting = getIntField("shooting", { 0 });
 		c.arcane = getIntField("arcane", { 0 });
@@ -1090,6 +1111,7 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 
 	// Now all the inventories need to be converted.
 	for (auto& i : csa.actors) i.inventory.convert(csa);
+	for (auto& i : csa.combatants) i.inventory.convert(csa);
 	for (auto& i : csa.containers) i.inventory.convert(csa);
 
 	/*

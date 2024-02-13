@@ -1,6 +1,7 @@
 #include "battle.h"
 #include "scriptbridge.h"
 #include "test.h"
+#include "scriptasset.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -10,29 +11,6 @@
 
 namespace lurp {
 namespace swbattle {
-
-int Die::roll(Random& random, int* _nAce)
-{
-	int total = 0;
-	int nAce = 0;
-
-	while (true) {
-		// All rolls can ace
-		int roll = random.dice(n, d, 0);
-		// But computers can't ace forever
-		if (nAce == kMaxNumAces && roll == n * d) {
-			roll = n * d - 1;
-		}
-		total += roll;
-		if (roll < n * d)
-			break;
-		nAce++;
-	}
-	if (_nAce)
-		*_nAce = nAce;
-
-	return total + b;	// bonus only applies to total
-}
 
 Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 {
@@ -52,11 +30,10 @@ Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 	return r;
 }
 
-std::string lurp::swbattle::ModTypeName(ModType type)
+std::string ModTypeName(ModType type)
 {
 	switch (type) {
 	case ModType::kBoost: return "Boost";
-	case ModType::kStrength: return "Strength";
 	case ModType::kArcane: return "Arcane";
 	case ModType::kFighting: return "Fighting";
 	case ModType::kShooting: return "Shooting";
@@ -67,12 +44,33 @@ std::string lurp::swbattle::ModTypeName(ModType type)
 	case ModType::kUnarmed: return "Unarmed";
 	case ModType::kRange: return "Range";
 	case ModType::kNaturalCover: return "Cover";
-
-	case ModType::kBolt: assert(false); break;
-	case ModType::kHeal: assert(false); break;
+	case ModType::kBolt: return "Bolt";
+	case ModType::kHeal: return "Heal";
 	}
+	assert(false);
 	return "";
 }
+
+ModType ModTypeFromName(const std::string& _name)
+{
+	std::string name = toLower(_name);
+
+	// Only things that can be specified as powers in
+	// the game description are valid values here.
+	if (name == "boost") return ModType::kBoost;
+	if (name == "arcane") return ModType::kArcane;
+	if (name == "fighting") return ModType::kFighting;
+	if (name == "shooting") return ModType::kShooting;
+	if (name == "cover") return ModType::kPowerCover;
+	if (name == "powercover") return ModType::kPowerCover;
+	if (name == "armor") return ModType::kArmor;
+	if (name == "bolt") return ModType::kBolt;
+	if (name == "heal") return ModType::kHeal;
+	assert(false);
+	return ModType::kBoost;
+}
+
+
 
 void BattleSystem::setBattlefield(const std::string& name)
 {
@@ -448,6 +446,114 @@ double SWCombatant::baseRanged() const
 	return BattleSystem::chance(4, shooting, wild);
 }
 
+Die SWCombatant::convertFromSkill(int skill)
+{
+	if (skill < 4) return Die(1, 4, -2);
+	if (skill > 12) return Die(1, 12, skill - 12);
+	return Die(1, (skill / 2) * 2, 0);
+}
+
+SWPower SWPower::convert(const lurp::Power& p)
+{
+	SWPower sp;
+
+	sp.type = ModTypeFromName(p.effect);
+	sp.name = p.name;
+	sp.cost = p.cost;
+	sp.effectMult = p.strength;
+	sp.rangeMult = p.range;
+
+	return sp;
+}
+
+SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& assets)
+{
+	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
+
+	SWCombatant r;
+	r.link = c.entityID;
+	r.name = c.name;
+	r.wild = c.wild;
+
+	r.agility = convertFromSkill(std::max(c.fighting, c.shooting) + c.bias);
+	r.smarts = convertFromSkill(c.arcane + c.bias);
+	r.spirit = convertFromSkill(mean(c.fighting, c.shooting, c.arcane) + c.bias);
+	r.strength = convertFromSkill(mean(c.fighting, c.shooting, c.fighting) + c.bias);
+	r.vigor = convertFromSkill(mean(c.fighting, c.shooting, c.arcane) + c.bias);
+
+	r.fighting = convertFromSkill(c.fighting);
+	r.shooting = convertFromSkill(c.shooting);
+	r.arcane = convertFromSkill(c.arcane);
+
+	const Item* mw = c.inventory.meleeWeapon();
+	if (mw) {
+		r.meleeWeapon.name = mw->name;
+		r.meleeWeapon.damageDie = mw->damage;
+	}
+	const Item* rw = c.inventory.rangedWeapon();
+	if (rw) {
+		r.rangedWeapon.name = rw->name;
+		r.rangedWeapon.damageDie = rw->damage;
+		r.rangedWeapon.ap = rw->ap;
+		r.rangedWeapon.range = rw->range;
+	}
+	const Item* armor = c.inventory.armor();
+	if (armor) {
+		r.armor.name = armor->name;
+		r.armor.armor = armor->armor;
+	}
+	for (const EntityID& pid : c.powers) {
+		const Power& p = assets.getPower(pid);
+		SWPower sp = SWPower::convert(p);
+		r.powers.push_back(sp);
+	}
+	return r;
+}
+
+SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& assets)
+{
+	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
+
+	SWCombatant r;
+	r.link = c.entityID;
+	r.name = c.name;
+	r.wild = c.wild;
+
+	r.agility = convertFromSkill(std::max(c.fighting, c.shooting));
+	r.smarts = convertFromSkill(c.arcane);
+	r.spirit = convertFromSkill(mean(c.fighting, c.shooting, c.arcane));
+	r.strength = convertFromSkill(mean(c.fighting, c.shooting, c.fighting));
+	r.vigor = convertFromSkill(mean(c.fighting, c.shooting, c.arcane));
+
+	r.fighting = convertFromSkill(c.fighting);
+	r.shooting = convertFromSkill(c.shooting);
+	r.arcane = convertFromSkill(c.arcane);
+
+	const Item* mw = c.inventory.meleeWeapon();
+	if (mw) {
+		r.meleeWeapon.name = mw->name;
+		r.meleeWeapon.damageDie = mw->damage;
+	}
+	const Item* rw = c.inventory.rangedWeapon();
+	if (rw) {
+		r.rangedWeapon.name = rw->name;
+		r.rangedWeapon.damageDie = rw->damage;
+		r.rangedWeapon.ap = rw->ap;
+		r.rangedWeapon.range = rw->range;
+	}
+	const Item* armor = c.inventory.armor();
+	if (armor) {
+		r.armor.name = armor->name;
+		r.armor.armor = armor->armor;
+	}
+	for (const EntityID& pid : c.powers) {
+		const Power& p = assets.getPower(pid);
+		SWPower sp = SWPower::convert(p);
+		r.powers.push_back(sp);
+	}
+	return r;
+}
+
 BattleSystem::ActionResult BattleSystem::checkAttack(int combatant, int target) const
 {
 	const SWCombatant& src = _combatants[combatant];
@@ -589,7 +695,7 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		if (attack.success) {
 			// FIXME: does boost apply to damage?
 			Die strengthDie = src.strength;
-			strengthDie.b += applyMods(ModType::kStrength, src.activePowers, attack.damageMods);
+			strengthDie.b += applyMods(ModType::kBoost, src.activePowers, attack.damageMods);
 
 			applyDamage(dst, 0, src.meleeWeapon.damageDie, strengthDie, attack.damage);
 		}

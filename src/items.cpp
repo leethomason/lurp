@@ -57,6 +57,31 @@ void Inventory::removeItem(const Item& item, int n) {
 	_items.erase(it);
 }
 
+const Item* Inventory::meleeWeapon() const
+{
+	for (const auto& item : _items) {
+		if (item.pItem->isMeleeWeapon()) return item.pItem;
+	}
+	return nullptr;
+}
+
+const Item* Inventory::rangedWeapon() const
+{
+	for (const auto& item : _items) {
+		if (item.pItem->isRangedWeapon()) return item.pItem;
+	}
+	return nullptr;
+
+}
+const Item* Inventory::armor() const
+{
+	for (const auto& item : _items) {
+		if (item.pItem->isArmor()) return item.pItem;
+	}
+	return nullptr;
+}
+
+
 void transfer(const Item& item, Inventory& src, Inventory& dst, int n)
 {
 	ItemRef ref = src.findRef(item);
