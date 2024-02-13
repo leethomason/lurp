@@ -14,6 +14,7 @@ struct Combatant;
 struct ScriptAssets;
 struct Power;
 struct Actor;
+struct Battle;
 
 namespace swbattle {
 struct SWPower;
@@ -157,22 +158,18 @@ struct Action {
 struct MeleeWeapon {
 	std::string name;		// "longsword"
 	Die damageDie;			// damage = STR + damageDie
-	//int minStrength = 6;
-	//bool twoHands = false;
 };
 
 struct RangedWeapon {
 	std::string name;		// "bow"
 	Die damageDie;			// damage = damageDie
 	int ap = 0;				// armor piercing
-	//int minStrength = 6;
 	int range = 24;			// medium range, yards
 };
 
 struct Armor {
 	std::string name;
 	int armor = 0;
-	//int minStrength = 4;
 };
 
 struct SWCombatant {
@@ -264,6 +261,7 @@ public:
 	static constexpr int kUnarmedTN = 2;
 
 	BattleSystem(Random& r) : _random(r) {}
+	BattleSystem(const ScriptAssets& assets, const lurp::Battle& battle, EntityID player, Random& r);
 
 	// --------- Initialization --------
 	void setBattlefield(const std::string& name);
@@ -309,7 +307,10 @@ public:
 
 	void doEnemyActions();
 	void advance();
+
 	bool done() const;
+	bool victory() const;	// If battle aborted, then neither victory() or defeat().
+	bool defeat() const;	// With normal battle run, one of victory() or defeat() is set
 
 	// --------- Utility --------
 	std::pair<Die, int> calcMelee(int attacker, int target, std::vector<ModInfo>& mods) const;

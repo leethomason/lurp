@@ -12,6 +12,26 @@
 namespace lurp {
 namespace swbattle {
 
+BattleSystem::BattleSystem(const ScriptAssets& assets, const lurp::Battle& battle, EntityID playerID, Random& r)
+	: _random(r)
+{
+	setBattlefield(battle.name);
+	for (const Region& region : battle.regions) {
+		addRegion(region);
+	}
+	const Actor& actor = assets.getActor(playerID);
+	SWCombatant swPlayer = SWCombatant::convert(actor, assets);
+	addCombatant(swPlayer);
+
+	for (const EntityID& comID : battle.combatants) {
+		const Combatant& c = assets.getCombatant(comID);
+		for (int i = 0; i < c.count; i++) {
+			SWCombatant swC = SWCombatant::convert(c, assets);
+			addCombatant(swC);
+		}
+	}
+}
+
 Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 {
 	Roll r;
@@ -339,14 +359,23 @@ void BattleSystem::start(bool shuffleTurnOrder)
 		_random.shuffle(_turnOrder.begin(), _turnOrder.end());
 }
 
-bool BattleSystem::done() const 
+bool BattleSystem::victory() const
 {
-	if (_combatants[0].dead())
-		return true;
 	for (int i = 1; i < _combatants.size(); ++i)
 		if (!_combatants[i].dead())
 			return false;
 	return true;
+}
+
+bool BattleSystem::defeat() const
+{
+	if (_combatants[0].dead())
+		return true;
+}
+
+bool BattleSystem::done() const 
+{
+	return victory() || defeat();
 }
 
 void BattleSystem::filterActivePowers()

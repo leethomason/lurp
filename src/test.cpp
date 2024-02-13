@@ -1048,10 +1048,36 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	ScriptEnv env = { "TEST_BATTLE_1", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
 	ScriptDriver driver(assets, env, coreData, &bridge);
 
-	//TEST(driver.type() == ScriptType::kBattle);
-	//{
-	//	BattleDriver 
-	//}
+	TEST(driver.type() == ScriptType::kBattle);
+	{
+		BattleSystem battle(assets, driver.battle(), "testplayer", coreData.random);
+		TEST(battle.name() == "Cursed Cavern");
+		TEST(battle.combatants().size() == 5);
+		TEST(battle.regions().size() == 4);
+
+		battle.start(false);	// for testing, don't randomize the turn order
+		TEST(battle.turnOrder().size() == 5);
+		TEST(battle.turn() == 0);
+		TEST(battle.playerTurn());
+
+		TEST(battle.checkAttack(0, 1) == BattleSystem::ActionResult::kSuccess);
+		TEST(battle.attack(0, 1) == BattleSystem::ActionResult::kSuccess);
+
+		TEST(battle.queue.size() == 1);	// failure (if random/algo doesn't change)
+		battle.queue.pop();
+
+		battle.advance();
+
+		TEST(battle.turn() == 1);
+		TEST(!battle.playerTurn());
+		battle.doEnemyActions();
+		TEST(battle.queue.size() > 0);
+
+		while (!battle.queue.empty())
+			battle.queue.pop();
+
+		TEST(!battle.done());
+	}
 }
 
 int RunTests()
