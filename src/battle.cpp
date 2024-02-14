@@ -183,29 +183,31 @@ std::pair<Die, int> BattleSystem::calcRanged(int attackerIndex, int defenderInde
 	return std::make_pair(atkDie, 4);
 }
 
-int BattleSystem::applyMods(ModType type, const std::vector<ActivePower>& powers, std::vector<ModInfo>& applied, int mult)
+// Remember that the power is a MULTIPLIER, so the actual mod is double the multiplier.
+// Confusing; but a challenge of the SW rules.
+int BattleSystem::applyMods(ModType type, const std::vector<ActivePower>& powers, std::vector<ModInfo>& applied, int sign)
 {
 	std::vector<ModInfo> mods;
 
 	std::vector<ActivePower> positive, negative;
 	std::copy_if(powers.begin(), powers.end(), std::back_inserter(positive),
-		[type, mult](const ActivePower& ap) { return ap.power->effectMult * mult > 0 && ap.power->type == type; });
+		[type, sign](const ActivePower& ap) { return ap.power->deltaDie(sign) > 0 && ap.power->type == type; });
 	std::sort(positive.begin(), positive.end(),
-		[mult](const ActivePower& a, const ActivePower& b) { return a.power->effectMult * mult > b.power->effectMult * mult; });
+		[sign](const ActivePower& a, const ActivePower& b) { return a.power->deltaDie(sign) > b.power->deltaDie(sign); });
 
 	std::copy_if(powers.begin(), powers.end(), std::back_inserter(negative),
-		[type, mult](const ActivePower& ap) { return ap.power->effectMult * mult < 0 && ap.power->type == type; });
+		[type, sign](const ActivePower& ap) { return ap.power->deltaDie(sign) < 0 && ap.power->type == type; });
 	std::sort(negative.begin(), negative.end(),
-		[mult](const ActivePower& a, const ActivePower& b) { return a.power->effectMult * mult < b.power->effectMult * mult; });
+		[sign](const ActivePower& a, const ActivePower& b) { return a.power->deltaDie(sign) < b.power->deltaDie(sign); });
 
 	int result = 0;
 	if (!positive.empty()) {
-		result += positive[0].power->effectMult * mult;
-		applied.push_back({ positive[0].caster, type, positive[0].power->effectMult * mult, positive[0].power });
+		result += positive[0].power->deltaDie(sign);
+		applied.push_back({ positive[0].caster, type, positive[0].power->deltaDie(sign), positive[0].power });
 	}
 	if (!negative.empty()) {
-		result += negative[0].power->effectMult * mult;
-		applied.push_back({ negative[0].caster, type, negative[0].power->effectMult * mult, negative[0].power });
+		result += negative[0].power->deltaDie(sign);
+		applied.push_back({ negative[0].caster, type, negative[0].power->deltaDie(sign), negative[0].power });
 	}
 	return result;
 }
@@ -369,8 +371,7 @@ bool BattleSystem::victory() const
 
 bool BattleSystem::defeat() const
 {
-	if (_combatants[0].dead())
-		return true;
+	return _combatants[0].dead();
 }
 
 bool BattleSystem::done() const 
@@ -484,14 +485,12 @@ Die SWCombatant::convertFromSkill(int skill)
 
 SWPower SWPower::convert(const lurp::Power& p)
 {
-	SWPower sp;
-
-	sp.type = ModTypeFromName(p.effect);
-	sp.name = p.name;
-	sp.cost = p.cost;
-	sp.effectMult = p.strength;
-	sp.rangeMult = p.range;
-
+	SWPower sp(
+		ModTypeFromName(p.effect),
+		p.name,
+		p.cost,
+		p.range,
+		p.strength);
 	return sp;
 }
 
@@ -786,7 +785,8 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 		// Bolt is WEIRD. The initial roll determines activation, but then modifiers are applied,
 		// and that determines to hit. There's just one roll. But that all adds complexity to the system,
 		// so it's wrapped into "activation" above.
-		Die d(1 + power->effectMult + (action.raise ? 1 : 0), 6, 0);		// fixme: check rules
+		// Note the 'effectMult` is an effect multiplier, not an absolute value
+		Die d(1 + 2 * power->effectMult + (action.raise ? 1 : 0), 6, 0);
 		applyDamage(dst, 0, d, Die(0, 0, 0), action.damage);
 	}
 	else if (power->type == ModType::kHeal) {

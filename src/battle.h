@@ -19,11 +19,6 @@ struct Battle;
 namespace swbattle {
 struct SWPower;
 
-// implement:
-// - integrate with lua script
-// - reasonable test framework
-// - test: power increases by DIE not by value
-
 enum class ModType {
 	// These can be caused by powers, edges, etc.
 	kBoost,		// negative numbers de-buff
@@ -52,11 +47,18 @@ ModType ModTypeFromName(const std::string& name);
 struct ModInfo {
 	int src = 0;
 	ModType type;
-	int delta = 0;						
+	int delta = 0;
 	const SWPower* power = nullptr;
 };
 
 struct SWPower {
+	SWPower() {}
+	SWPower(ModType type, const std::string& name, int cost, int rangeMult, int effectMult = 1)
+		: type(type), name(name), cost(cost), rangeMult(rangeMult), effectMult(effectMult)
+	{
+		assert(!name.empty());
+	}
+
 	ModType type;
 	std::string name;
 	int cost = 1;
@@ -71,6 +73,8 @@ struct SWPower {
 	}
 	bool forEnemies() const { return !forAllies(); }
 	bool doesDamage() const { return type == ModType::kBolt; }
+
+	int deltaDie(int sign) const { return 2 * sign * effectMult; }
 
 	static SWPower convert(const lurp::Power&);
 };
@@ -315,7 +319,6 @@ public:
 	// --------- Utility --------
 	std::pair<Die, int> calcMelee(int attacker, int target, std::vector<ModInfo>& mods) const;
 	std::pair<Die, int> calcRanged(int attacker, int target, std::vector<ModInfo>& mods) const;
-	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied, int mult = 1);
 	
 	int powerTN(int caster, const SWPower& power) const;
 	double powerChance(int caster, const SWPower& power) const;
@@ -337,6 +340,9 @@ public:
 	static double chanceAorBSucceeds(double a, double b) {
 		return 1.0 - (1.0 - a) * (1.0 - b);
 	}
+
+	// internal
+	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied, int mult = 1);
 
 private:
 	int countMaintainedPowers(int combatant) const;

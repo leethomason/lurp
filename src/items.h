@@ -36,9 +36,9 @@ struct Power {
 	EntityID entityID;
 	std::string name;
 	std::string effect;
-	int cost = 1;
-	int range = 1;
-	int strength = 1;
+	int cost = 1;			// 1, 2, 3
+	int range = 1;			// 0, 1, 2+
+	int strength = 1;		// -3, -2, -1, 1, 2, 3
 
 	static constexpr ScriptType type{ ScriptType::kPower };
 	void dump(int depth) const {
