@@ -10,6 +10,8 @@
 #include <vector>
 #include <unordered_set>
 
+namespace lurp {
+
 struct ScriptAssets;
 class ScriptHelper;
 class CoreData;
@@ -92,3 +94,5 @@ private:
 	Choices _mappedChoices;		// Choices: filter down to what passed 'eval'
 	Text _mappedText;			// Text: filter down to what passed 'eval' and 'test'
 };
+
+} // namespace lurp

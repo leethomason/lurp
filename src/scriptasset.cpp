@@ -4,20 +4,10 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 ScriptAssets::ScriptAssets(const ConstScriptAssets& csa) :
-	_csa(csa),
-	scripts(csa.scripts),
-	texts(csa.texts),
-	choices(csa.choices),
-	items(csa.items),
-	interactions(csa.interactions),
-	rooms(csa.rooms),
-	zones(csa.zones),
-	containers(csa.containers),
-	edges(csa.edges),
-	actors(csa.actors),
-	battles(csa.battles),
-	callScripts(csa.callScripts)
+	_csa(csa)
 {
 	scan();
 }
@@ -29,13 +19,13 @@ std::pair<bool, Variant> ScriptAssets::assetGet(const std::string& entity, const
 	ScriptRef ref = get(entity);
 	switch (ref.type) {
 	case ScriptType::kContainer:
-		return containers[ref.index].get(path);
+		return _csa.containers[ref.index].get(path);
 	case ScriptType::kEdge:
-		return edges[ref.index].get(path);
+		return _csa.edges[ref.index].get(path);
 	case ScriptType::kActor:
-		return actors[ref.index].get(path);
+		return _csa.actors[ref.index].get(path);
 	case ScriptType::kBattle:
-		return battles[ref.index].get(path);
+		return _csa.battles[ref.index].get(path);
 	default:
 		return { false, Variant() };
 	}
@@ -54,11 +44,11 @@ void ScriptAssets::save(std::ostream& stream)
 	for (auto& [entityID, inventory] : inventories) {
 		ScriptRef ref = get(entityID);
 		if (ref.type == ScriptType::kContainer) {
-			const Container& container = containers[ref.index];
+			const Container& container = _csa.containers[ref.index];
 			if (container.inventory == inventory) continue;
 		}
 		if (ref.type == ScriptType::kActor) {
-			const Actor& actor = actors[ref.index];
+			const Actor& actor = _csa.actors[ref.index];
 			if (actor.inventory == inventory) continue;
 		}
 
@@ -91,31 +81,33 @@ void ScriptAssets::load(ScriptBridge& loader)
 
 void ScriptAssets::scan()
 {
-	for (int i = 0; i < scripts.size(); ++i) entityIDToIndex[scripts[i].entityID] = { ScriptType::kScript, i };
-	for (int i = 0; i < texts.size(); ++i) entityIDToIndex[texts[i].entityID] = { ScriptType::kText, i };
-	for (int i = 0; i < choices.size(); ++i) entityIDToIndex[choices[i].entityID] = { ScriptType::kChoices, i };
-	for (int i = 0; i < items.size(); ++i) entityIDToIndex[items[i].entityID] = { ScriptType::kItem, i };
-	for (int i = 0; i < interactions.size(); ++i) entityIDToIndex[interactions[i].entityID] = { ScriptType::kInteraction, i };
-	for (int i = 0; i < rooms.size(); ++i) entityIDToIndex[rooms[i].entityID] = { ScriptType::kRoom, i };
-	for (int i = 0; i < zones.size(); ++i) entityIDToIndex[zones[i].entityID] = { ScriptType::kZone, i };
-	for (int i = 0; i < containers.size(); ++i) entityIDToIndex[containers[i].entityID] = { ScriptType::kContainer, i };
-	for (int i = 0; i < edges.size(); ++i) entityIDToIndex[edges[i].entityID] = { ScriptType::kEdge, i };
-	for (int i = 0; i < actors.size(); ++i) entityIDToIndex[actors[i].entityID] = { ScriptType::kActor, i };
-	for (int i = 0; i < battles.size(); ++i) entityIDToIndex[battles[i].entityID] = { ScriptType::kBattle, i };
-	for (int i = 0; i < callScripts.size(); ++i) entityIDToIndex[callScripts[i].entityID] = { ScriptType::kCallScript, i };
+	scan(_csa.scripts);
+	scan(_csa.texts);
+	scan(_csa.choices);
+	scan(_csa.items);
+	scan(_csa.powers);
+	scan(_csa.interactions);
+	scan(_csa.rooms);
+	scan(_csa.zones);
+	scan(_csa.actors);
+	scan(_csa.combatants);
+	scan(_csa.battles);
+	scan(_csa.containers);
+	scan(_csa.edges);
+	scan(_csa.callScripts);
 
-	for (size_t i = 0; i < containers.size(); ++i) {
-		inventories[containers[i].entityID] = containers[i].inventory;
+	for (size_t i = 0; i < _csa.containers.size(); ++i) {
+		inventories[_csa.containers[i].entityID] = _csa.containers[i].inventory;
 	}
-	for (size_t i = 0; i < actors.size(); ++i) {
-		inventories[actors[i].entityID] = actors[i].inventory;
+	for (size_t i = 0; i < _csa.actors.size(); ++i) {
+		inventories[_csa.actors[i].entityID] = _csa.actors[i].inventory;
 	}
 }
 
 #define TYPE_BODY(vecName, itemEnum) \
 	ScriptRef ref = get(entityID); \
 	assert(ref.type == ScriptType::itemEnum); \
-	return vecName[ref.index];
+	return _csa.vecName[ref.index];
 
 const Script& ScriptAssets::getScript(const EntityID& entityID) const { TYPE_BODY(scripts, kScript); }
 const Text& ScriptAssets::getText(const EntityID& entityID) const { TYPE_BODY(texts, kText); }
@@ -127,5 +119,9 @@ const Zone& ScriptAssets::getZone(const EntityID& entityID) const { TYPE_BODY(zo
 const Battle& ScriptAssets::getBattle(const EntityID& entityID) const { TYPE_BODY(battles, kBattle); }
 const CallScript& ScriptAssets::getCallScript(const EntityID& entityID) const { TYPE_BODY(callScripts, kCallScript); }
 const Actor& ScriptAssets::getActor(const EntityID& entityID) const { TYPE_BODY(actors, kActor); }
+const Combatant& ScriptAssets::getCombatant(const EntityID& entityID) const { TYPE_BODY(combatants, kCombatant); }
 const Container& ScriptAssets::getContainer(const EntityID& entityID) const { TYPE_BODY(containers, kContainer); }
 const Edge& ScriptAssets::getEdge(const EntityID& entityID) const { TYPE_BODY(edges, kEdge); }
+const Power& ScriptAssets::getPower(const EntityID& entityID) const { TYPE_BODY(powers, kPower); }
+
+} // namespace lurp

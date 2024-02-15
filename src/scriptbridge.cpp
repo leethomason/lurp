@@ -3,7 +3,6 @@
 
 #include "zone.h"
 #include "scriptasset.h"
-#include "battle.h"
 #include "util.h"
 
 #include <fmt/core.h>
@@ -11,6 +10,8 @@
 #include <assert.h>
 #include <filesystem>
 #include <array>
+
+namespace lurp {
 
 // FIXME: revisit this on a big file
 // In the (small) test these don't do much. 79k -> 66k or so.
@@ -21,7 +22,7 @@
 template<typename T>
 void FatalReadError(const std::string& msg, const T& t)
 {
-	fmt::print("[ERROR] reading {}: '{}'\n", t.type(), msg);
+	fmt::print("[ERROR] reading {}: '{}'\n", scriptTypeName(T::type), msg);
 	t.dump(1);
 	exit(1);
 }
@@ -512,7 +513,7 @@ void ScriptBridge::setStrField(const std::string& key, const std::string& value)
 	return r;
 }
 
-int ScriptBridge::getIntField(const std::string& key, const std::optional<int>& def)
+int ScriptBridge::getIntField(const std::string& key, const std::optional<int>& def) const
 {
 	Variant v = getField(L, key, 0);
 	if (v.type == LUA_TNIL && def) return def.value();
@@ -599,9 +600,11 @@ Inventory ScriptBridge::readInventory() const
 {
 	Inventory inv;
 	try {
-		std::vector<StringCount> arr = getStrCountArray("items");
-		for (const auto& p : arr) {
-			inv.addInitItem(p.str, p.count);
+		if (hasField("items")) {
+			std::vector<StringCount> arr = getStrCountArray("items");
+			for (const auto& p : arr) {
+				inv.addInitItem(p.str, p.count);
+			}
 		}
 	}
 	catch (std::exception& e) {
@@ -648,12 +651,35 @@ Item ScriptBridge::readItem() const
 	LuaStackCheck check(L);
 	try {
 		item.entityID = getStrField("entityID", {});
-		item.name = getStrField("name", { "" });
+		item.name = getStrField("name", {});
+		item.desc = getStrField("desc", { "" });
+		item.range = getIntField("range", { 0 });
+		item.armor = getIntField("armor", { 0 });
+		item.damage = Die::parse(getStrField("damage", { "" }));
+		item.ap = getIntField("ap", { 0 });
 	}
 	catch (std::exception& e) {
 		FatalReadError(e.what(), item);
 	}
 	return item;
+}
+
+Power ScriptBridge::readPower() const
+{
+	Power power;
+	LuaStackCheck check(L);
+	try {
+		power.entityID = getStrField("entityID", {});
+		power.name = getStrField("name", {});
+		power.effect = getStrField("effect", {});
+		power.cost = getIntField("cost", { 1 });
+		power.range = getIntField("range", { 1 });
+		power.strength = getIntField("strength", { 1 });
+	}
+	catch (std::exception& e) {
+		FatalReadError(e.what(), power);
+	}
+	return power;
 }
 
 Text ScriptBridge::readText() const
@@ -869,7 +895,6 @@ Interaction ScriptBridge::readInteraction() const
 	return i;
 }
 
-
 Actor ScriptBridge::readActor() const
 {
 	Actor actor;
@@ -877,8 +902,23 @@ Actor ScriptBridge::readActor() const
 	try {
 		actor.entityID = getStrField("entityID", {});
 		actor.name = getStrField("name", {});
+		actor.wild = getBoolField("wild", { false });
+		actor.fighting = getIntField("fighting", { 0 });
+		actor.shooting = getIntField("shooting", { 0 });
+		actor.arcane = getIntField("arcane", { 0 });
+
 		if (hasField("items")) {
 			actor.inventory = readInventory();
+		}
+		if (hasField("powers")) {
+			lua_pushstring(L, "powers");
+			lua_gettable(L, -2);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				EntityID id = it.value().str;
+				actor.powers.push_back(id);
+			}
+			lua_pop(L, 1);
 		}
 	}
 	catch (std::exception& e) {
@@ -887,15 +927,74 @@ Actor ScriptBridge::readActor() const
 	return actor;
 }
 
+Combatant ScriptBridge::readCombatant() const
+{
+	Combatant c;
+	LuaStackCheck check(L);
+	try {
+		c.entityID = getStrField("entityID", {});
+		c.name = getStrField("name", {});
+		c.count = getIntField("count", { 1 });
+		c.wild = getBoolField("wild", { false });
+		c.fighting = getIntField("fighting", { 0 });
+		c.shooting = getIntField("shooting", { 0 });
+		c.arcane = getIntField("arcane", { 0 });
+		c.bias = getIntField("bias", { 0 });
+
+		c.inventory = readInventory();
+
+		if (hasField("powers")) {
+			lua_pushstring(L, "powers");
+			lua_gettable(L, -2);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				EntityID id = it.value().str;
+				c.powers.push_back(id);
+			}
+			lua_pop(L, 1);
+		}
+	}
+	catch (std::exception& e) {
+		FatalReadError(e.what(), c);
+	}
+	return c;
+}
+
 Battle ScriptBridge::readBattle() const
 {
 	Battle b;
 	LuaStackCheck check(L);
 
 	try {
-		b.entityID = getStrField("entityID", {});
-		//b.player = readEntityID("player", {"player"});
-		b.enemy = readEntityID("enemy", {});
+		b.entityID = readEntityID("entityID", {});
+		b.name = getStrField("name", {"battle"});
+
+		if (hasField("regions")) {
+			lua_pushstring(L, "regions");
+			lua_gettable(L, -2);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				if (it.kType() == LUA_TNUMBER) {
+					lurp::swbattle::Region r;
+					r.name = getField(L, "", 1).str;
+					r.yards = (int)getField(L, "", 2).num;
+					std::string c = getField(L, "", 3).str;
+					if (c == "light") r.cover = lurp::swbattle::Cover::kLightCover;
+					else if (c == "medium") r.cover = lurp::swbattle::Cover::kMediumCover;
+					else if (c == "heavy") r.cover = lurp::swbattle::Cover::kHeavyCover;
+
+					b.regions.push_back(r);
+				}
+			}
+			lua_pop(L, 1);
+
+			for (TableIt it(L, -1); !it.done(); it.next()) {
+				if (it.kType() == LUA_TNUMBER) {
+					EntityID id = readEntityID("entityID", {});
+					b.combatants.push_back(id);
+				}
+			}
+		}
 	}
 	catch (std::exception& e) {
 		FatalReadError(e.what(), b);
@@ -997,6 +1096,7 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	READ_ASSET("Texts", "Text", texts, readText);
 	READ_ASSET("AllChoices", "Choices", choices, readChoices);
 	READ_ASSET("Items", "Item", items, readItem);
+	READ_ASSET("Powers", "Power", powers, readPower);
 	READ_ASSET("Interactions", "Interaction", interactions, readInteraction);
 
 	READ_ASSET("Containers", "Container", containers, readContainer);
@@ -1005,11 +1105,13 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	READ_ASSET("Zones", "Zone", zones, readZone);
 
 	READ_ASSET("Actors", "Actor", actors, readActor);
+	READ_ASSET("Combatants", "Combatant", combatants, readCombatant);
 	READ_ASSET("Battles", "Battle", battles, readBattle);
 	READ_ASSET("CallScripts", "CallScript", callScripts, readCallScript);
 
 	// Now all the inventories need to be converted.
 	for (auto& i : csa.actors) i.inventory.convert(csa);
+	for (auto& i : csa.combatants) i.inventory.convert(csa);
 	for (auto& i : csa.containers) i.inventory.convert(csa);
 
 	/*
@@ -1155,5 +1257,4 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	return 0;
 }
 
-
-
+} // namespace lurp

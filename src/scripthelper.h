@@ -4,6 +4,8 @@
 #include "util.h"
 #include "iscript.h"
 
+namespace lurp {
+
 class ScriptBridge;
 class CoreData;
 
@@ -50,3 +52,4 @@ private:
 	void corePath(const std::string& in, EntityID& entityID, std::string& path) const;
 };
 
+} // namespace lurp

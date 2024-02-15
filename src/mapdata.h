@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <queue>
 
+namespace lurp {
+
 class ScriptBridge;
 struct Item;
 struct Edge;
@@ -90,3 +92,5 @@ struct MapData
 	CoreData coreData;
 	NewsQueue newsQueue;
 };
+
+} // namespace lurp

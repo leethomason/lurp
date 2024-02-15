@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <vector>
 
+namespace lurp {
+
 struct ScriptAssets;
 class TreeIt;
 
@@ -70,3 +72,4 @@ private:
 	int _index = 0;
 };
 
+} // namespace lurp

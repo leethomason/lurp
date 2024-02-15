@@ -3,6 +3,7 @@
 
 #include <assert.h>
 
+namespace lurp {
 
 void walkTree(const ScriptAssets& assets, const EntityID& entityID, int depth, std::vector<NodeRef>& tree)
 {
@@ -25,33 +26,33 @@ void walkTree(const ScriptAssets& assets, const EntityID& entityID, int depth, s
 
 	switch (ref.type) {
 	case ScriptType::kScript: {
-		const Script& script = assets.scripts[ref.index];
+		const Script& script = assets._csa.scripts[ref.index];
 		for (const Script::Event& e : script.events) {
 			walkTree(assets, e.entityID, depth + 1, tree);
 		}
 		break;
 	}
 	case ScriptType::kChoices: {
-		const Choices& choices = assets.choices[ref.index];
+		const Choices& choices = assets._csa.choices[ref.index];
 		for (const Choices::Choice& c : choices.choices) {
 			walkTree(assets, c.next, depth + 1, tree);
 		}
 		break;
 	}
 	case ScriptType::kInteraction: {
-		const Interaction& interaction = assets.interactions[ref.index];
+		const Interaction& interaction = assets._csa.interactions[ref.index];
 		walkTree(assets, interaction.next, depth + 1, tree);
 		break;
 	}
 	case ScriptType::kZone: {
-		const Zone& zone = assets.zones[ref.index];
+		const Zone& zone = assets._csa.zones[ref.index];
 		for (const EntityID& e : zone.objects) {
 			walkTree(assets, e, depth + 1, tree);
 		}
 		break;
 	}
 	case ScriptType::kCallScript: {
-		const CallScript& callScript = assets.callScripts[ref.index];
+		const CallScript& callScript = assets._csa.callScripts[ref.index];
 		walkTree(assets, callScript.scriptID, depth + 1, tree);
 		break;
 	}
@@ -101,9 +102,9 @@ void Tree::dump(const ScriptAssets& assets) const
 		std::string name = scriptTypeName(ref.ref.type);
 		std::string id;
 		if (ref.ref.type == ScriptType::kScript)
-			id = assets.scripts[ref.ref.index].entityID;
+			id = assets._csa.scripts[ref.ref.index].entityID;
 		else if (ref.ref.type == ScriptType::kChoices)
-			id = assets.choices[ref.ref.index].entityID;
+			id = assets._csa.choices[ref.ref.index].entityID;
 		fmt::print("{} {} {} {}\n", name, ref.ref.index, id, ref.leading ? "L" : "T");
 	}
 }
@@ -221,3 +222,5 @@ ScriptRef TreeIt::getParent() const
 	int index = _tree.getParentTE(_index);
 	return _tree.get(index);
 }
+
+} // namespace lurp

@@ -7,6 +7,8 @@
 #include <string>
 #include <iostream>
 
+namespace lurp{
+
 struct ScriptAssets;
 class ScriptBridge;
 class ScriptHelper;
@@ -50,3 +52,5 @@ private:
 	std::map<Flag, Variant> _coreData;
 	ScriptBridge* _bridge = nullptr;
 };
+
+} // namespace lurp

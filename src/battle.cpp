@@ -1,6 +1,7 @@
 #include "battle.h"
 #include "scriptbridge.h"
 #include "test.h"
+#include "scriptasset.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -11,41 +12,28 @@
 namespace lurp {
 namespace swbattle {
 
-int Die::roll(Random& random, int* nAce)
-{
-	int total = 0;
-	if (nAce) *nAce = 0;
-	while (true) {
-		// All rolls can ace
-		int roll = random.dice(n, d, 0);
-		total += roll;
-		if (roll < n * d)
-			break;
-		if (nAce)
-			(*nAce)++;
-	}
-	return total + b;	// bonus only applies to total
-}
-
 Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 {
 	Roll r;
 	r.die = d;
-	int n = useWild ? 2 : 1;
 
-	for (int i = 0; i < n; i++) {
-		int nAce = 0;
-		r.total[i] = d.roll(random, &nAce);
-		TEST(r.nAce(i) == nAce);
+	int nAce = 0;
+	r.total[0] = d.roll(random, &nAce);
+	TEST(r.nAce(0) == nAce);
+
+	if (useWild) {
+		Die wild = Die(1, 6, d.b);
+		r.total[1] = wild.roll(random, &nAce);
+		TEST(r.nAce(1) == nAce);
 	}
+
 	return r;
 }
 
-std::string lurp::swbattle::ModTypeName(ModType type)
+std::string ModTypeName(ModType type)
 {
 	switch (type) {
 	case ModType::kBoost: return "Boost";
-	case ModType::kStrength: return "Strength";
 	case ModType::kArcane: return "Arcane";
 	case ModType::kFighting: return "Fighting";
 	case ModType::kShooting: return "Shooting";
@@ -56,12 +44,33 @@ std::string lurp::swbattle::ModTypeName(ModType type)
 	case ModType::kUnarmed: return "Unarmed";
 	case ModType::kRange: return "Range";
 	case ModType::kNaturalCover: return "Cover";
-
-	case ModType::kBolt: assert(false); break;
-	case ModType::kHeal: assert(false); break;
+	case ModType::kBolt: return "Bolt";
+	case ModType::kHeal: return "Heal";
 	}
+	assert(false);
 	return "";
 }
+
+ModType ModTypeFromName(const std::string& _name)
+{
+	std::string name = toLower(_name);
+
+	// Only things that can be specified as powers in
+	// the game description are valid values here.
+	if (name == "boost") return ModType::kBoost;
+	if (name == "arcane") return ModType::kArcane;
+	if (name == "fighting") return ModType::kFighting;
+	if (name == "shooting") return ModType::kShooting;
+	if (name == "cover") return ModType::kPowerCover;
+	if (name == "powercover") return ModType::kPowerCover;
+	if (name == "armor") return ModType::kArmor;
+	if (name == "bolt") return ModType::kBolt;
+	if (name == "heal") return ModType::kHeal;
+	assert(false);
+	return ModType::kBoost;
+}
+
+
 
 void BattleSystem::setBattlefield(const std::string& name)
 {
@@ -75,7 +84,7 @@ void BattleSystem::addRegion(const Region& r)
 	std::sort(_regions.begin(), _regions.end(), [](const Region& a, const Region& b) { return a.yards < b.yards; });
 }
 
-void BattleSystem::addCombatant(Combatant add)
+void BattleSystem::addCombatant(SWCombatant add)
 {
 	add.team = _combatants.empty() ? 0 : 1;
 	add.index = (int)_combatants.size();
@@ -90,8 +99,8 @@ void BattleSystem::addCombatant(Combatant add)
 
 std::pair<Die, int> BattleSystem::calcMelee(int attackerIndex, int defenderIndex, std::vector<ModInfo>& mods) const
 {
-	const Combatant& attacker = _combatants[attackerIndex];
-	const Combatant& defender = _combatants[defenderIndex];
+	const SWCombatant& attacker = _combatants[attackerIndex];
+	const SWCombatant& defender = _combatants[defenderIndex];
 	Die atkDie = attacker.fighting;
 
 	int nAttackers = (int)combatants(attacker.team, attacker.region, true, -1).size();
@@ -116,8 +125,8 @@ std::pair<Die, int> BattleSystem::calcMelee(int attackerIndex, int defenderIndex
 
 std::pair<Die, int> BattleSystem::calcRanged(int attackerIndex, int defenderIndex, std::vector<ModInfo>& mods) const
 {
-	const Combatant& attacker = _combatants[attackerIndex];
-	const Combatant& defender = _combatants[defenderIndex];
+	const SWCombatant& attacker = _combatants[attackerIndex];
+	const SWCombatant& defender = _combatants[defenderIndex];
 	if (!attacker.hasRanged())
 		return std::make_pair(Die(0, 0, 0), 0);
 
@@ -213,7 +222,7 @@ double BattleSystem::wildChance(int tn, Die die)
 	return chanceAorBSucceeds(c, w);
 }
 
-bool Combatant::autoLevelFighting()
+bool SWCombatant::autoLevelFighting()
 {
 	// fighting / agility	 0
 	// strength				-2
@@ -236,7 +245,7 @@ bool Combatant::autoLevelFighting()
 	return false;
 }
 
-bool Combatant::autoLevelShooting()
+bool SWCombatant::autoLevelShooting()
 {
 	// shooting / agility	 0
 	// vigor				-2
@@ -259,7 +268,7 @@ bool Combatant::autoLevelShooting()
 	return false;
 }
 
-bool Combatant::autoLevelArcane()
+bool SWCombatant::autoLevelArcane()
 {
 	// arcane / smarts		0
 	// vigor				-4
@@ -279,7 +288,7 @@ bool Combatant::autoLevelArcane()
 	return false;
 }
 
-void Combatant::autoLevel(int n, int f, int s, int a, uint32_t seed)
+void SWCombatant::autoLevel(int n, int f, int s, int a, uint32_t seed)
 {
 	while (n--) {
 		int fightingScore = fighting.d + fighting.b + strength.d / 2 + shooting.d / 4 + agility.d / 4;
@@ -294,19 +303,23 @@ void Combatant::autoLevel(int n, int f, int s, int a, uint32_t seed)
 		int shootingPriority = s - shootingScore;
 		int arcanePriority = a - arcaneScore;
 
-		if (s > 0 && shootingPriority >= fightingPriority && shootingPriority >= arcanePriority) {
+		if (s == 0) fightingPriority = INT_MIN;
+		if (f == 0) shootingPriority = INT_MIN;
+		if (a == 0) arcanePriority = INT_MIN;
+
+		if (shootingPriority >= fightingPriority && shootingPriority >= arcanePriority) {
 			autoLevelShooting();
 		}
-		else if (f > 0 && fightingPriority >= arcanePriority) {
+		else if (fightingPriority >= arcanePriority) {
 			autoLevelFighting();
 		}
-		else if (a > 0) {
+		else {
 			autoLevelArcane();
 		}
 	}
 }
 
-void Combatant::endTurn()
+void SWCombatant::endTurn()
 {
 	if (!shaken && !flags[kHasUsedAction]) {
 		flags.reset();
@@ -338,26 +351,28 @@ bool BattleSystem::done() const
 
 void BattleSystem::filterActivePowers()
 {
-	for (Combatant& c : _combatants) {
-		for (auto it = c.activePowers.begin(); it != c.activePowers.end(); ) {
-			const Combatant& caster = _combatants[it->caster];
+	for (SWCombatant& c : _combatants) {
+		size_t i = 0;
+		while(i < c.activePowers.size()) {
+			const ActivePower& ap = c.activePowers[i];
+			const SWCombatant& caster = _combatants[ap.caster];
 			if (caster.dead()) {
-				it = c.activePowers.erase(it);
+				c.activePowers.erase(c.activePowers.begin() + i);
 			}
 			else {
-				++it;
+				++i;
 			}
 		}
 	}
 }
 
-double BattleSystem::powerChance(int caster, const Power& power) const
+double BattleSystem::powerChance(int caster, const SWPower& power) const
 {
 	int tn = powerTN(caster, power);
 	return chance(tn, _combatants[caster].arcane);
 }
 
-int BattleSystem::powerTN(int caster, const Power& power) const
+int BattleSystem::powerTN(int caster, const SWPower& power) const
 {
 	return power.tn() + countMaintainedPowers(caster);
 }
@@ -365,7 +380,7 @@ int BattleSystem::powerTN(int caster, const Power& power) const
 int BattleSystem::countMaintainedPowers(int index) const
 {
 	int n = 0;
-	for (const Combatant& c : _combatants) {
+	for (const SWCombatant& c : _combatants) {
 		for (const ActivePower& ap : c.activePowers) {
 			if (ap.caster == index)
 				n++;
@@ -390,11 +405,11 @@ void BattleSystem::advance() {
 	//}
 }
 
-std::vector<Combatant> BattleSystem::combatants(int team, int region, bool alive, int exclude) const
+std::vector<SWCombatant> BattleSystem::combatants(int team, int region, bool alive, int exclude) const
 {
-	std::vector<Combatant> r;
+	std::vector<SWCombatant> r;
 	int idx = 0;
-	for (const Combatant& c : _combatants) {
+	for (const SWCombatant& c : _combatants) {
 		if (idx++ == exclude)
 			continue;
 		if ((team < 0 || c.team == team) && (region < 0 || c.region == region)) {
@@ -405,7 +420,7 @@ std::vector<Combatant> BattleSystem::combatants(int team, int region, bool alive
 	return r;
 }
 
-bool Combatant::buffed() const
+bool SWCombatant::buffed() const
 {
 	for(const ActivePower& ap : activePowers)
 		if (ap.power->forAllies())
@@ -413,7 +428,7 @@ bool Combatant::buffed() const
 	return false;
 }
 
-bool Combatant::debuffed() const
+bool SWCombatant::debuffed() const
 {
 	for (const ActivePower& ap : activePowers)
 		if (ap.power->forEnemies())
@@ -421,20 +436,128 @@ bool Combatant::debuffed() const
 	return false;
 }
 
-double Combatant::baseMelee() const 
+double SWCombatant::baseMelee() const 
 {
 	return BattleSystem::chance(4, fighting, wild);
 }
 
-double Combatant::baseRanged() const
+double SWCombatant::baseRanged() const
 {
 	return BattleSystem::chance(4, shooting, wild);
 }
 
+Die SWCombatant::convertFromSkill(int skill)
+{
+	if (skill < 4) return Die(1, 4, -2);
+	if (skill > 12) return Die(1, 12, skill - 12);
+	return Die(1, (skill / 2) * 2, 0);
+}
+
+SWPower SWPower::convert(const lurp::Power& p)
+{
+	SWPower sp;
+
+	sp.type = ModTypeFromName(p.effect);
+	sp.name = p.name;
+	sp.cost = p.cost;
+	sp.effectMult = p.strength;
+	sp.rangeMult = p.range;
+
+	return sp;
+}
+
+SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& assets)
+{
+	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
+
+	SWCombatant r;
+	r.link = c.entityID;
+	r.name = c.name;
+	r.wild = c.wild;
+
+	r.agility = convertFromSkill(std::max(c.fighting, c.shooting) + c.bias);
+	r.smarts = convertFromSkill(c.arcane + c.bias);
+	r.spirit = convertFromSkill(mean(c.fighting, c.shooting, c.arcane) + c.bias);
+	r.strength = convertFromSkill(mean(c.fighting, c.shooting, c.fighting) + c.bias);
+	r.vigor = convertFromSkill(mean(c.fighting, c.shooting, c.arcane) + c.bias);
+
+	r.fighting = convertFromSkill(c.fighting);
+	r.shooting = convertFromSkill(c.shooting);
+	r.arcane = convertFromSkill(c.arcane);
+
+	const Item* mw = c.inventory.meleeWeapon();
+	if (mw) {
+		r.meleeWeapon.name = mw->name;
+		r.meleeWeapon.damageDie = mw->damage;
+	}
+	const Item* rw = c.inventory.rangedWeapon();
+	if (rw) {
+		r.rangedWeapon.name = rw->name;
+		r.rangedWeapon.damageDie = rw->damage;
+		r.rangedWeapon.ap = rw->ap;
+		r.rangedWeapon.range = rw->range;
+	}
+	const Item* armor = c.inventory.armor();
+	if (armor) {
+		r.armor.name = armor->name;
+		r.armor.armor = armor->armor;
+	}
+	for (const EntityID& pid : c.powers) {
+		const Power& p = assets.getPower(pid);
+		SWPower sp = SWPower::convert(p);
+		r.powers.push_back(sp);
+	}
+	return r;
+}
+
+SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& assets)
+{
+	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
+
+	SWCombatant r;
+	r.link = c.entityID;
+	r.name = c.name;
+	r.wild = c.wild;
+
+	r.agility = convertFromSkill(std::max(c.fighting, c.shooting));
+	r.smarts = convertFromSkill(c.arcane);
+	r.spirit = convertFromSkill(mean(c.fighting, c.shooting, c.arcane));
+	r.strength = convertFromSkill(mean(c.fighting, c.shooting, c.fighting));
+	r.vigor = convertFromSkill(mean(c.fighting, c.shooting, c.arcane));
+
+	r.fighting = convertFromSkill(c.fighting);
+	r.shooting = convertFromSkill(c.shooting);
+	r.arcane = convertFromSkill(c.arcane);
+
+	const Item* mw = c.inventory.meleeWeapon();
+	if (mw) {
+		r.meleeWeapon.name = mw->name;
+		r.meleeWeapon.damageDie = mw->damage;
+	}
+	const Item* rw = c.inventory.rangedWeapon();
+	if (rw) {
+		r.rangedWeapon.name = rw->name;
+		r.rangedWeapon.damageDie = rw->damage;
+		r.rangedWeapon.ap = rw->ap;
+		r.rangedWeapon.range = rw->range;
+	}
+	const Item* armor = c.inventory.armor();
+	if (armor) {
+		r.armor.name = armor->name;
+		r.armor.armor = armor->armor;
+	}
+	for (const EntityID& pid : c.powers) {
+		const Power& p = assets.getPower(pid);
+		SWPower sp = SWPower::convert(p);
+		r.powers.push_back(sp);
+	}
+	return r;
+}
+
 BattleSystem::ActionResult BattleSystem::checkAttack(int combatant, int target) const
 {
-	const Combatant& src = _combatants[combatant];
-	const Combatant& dst = _combatants[target];
+	const SWCombatant& src = _combatants[combatant];
+	const SWCombatant& dst = _combatants[target];
 
 	assert(combatant != target);
 	if (!src.canAttack())
@@ -448,8 +571,8 @@ BattleSystem::ActionResult BattleSystem::checkAttack(int combatant, int target) 
 
 BattleSystem::ActionResult BattleSystem::checkMove(int combatant, int dir) const
 {
-	const Combatant& src = _combatants[combatant];
-	if (src.flags[Combatant::kHasMoved])
+	const SWCombatant& src = _combatants[combatant];
+	if (src.flags[SWCombatant::kHasMoved])
 		return ActionResult::kNoAction;
 	if (!within(src.region + dir, 0, (int)_regions.size()))
 		return ActionResult::kInvalid;
@@ -458,9 +581,9 @@ BattleSystem::ActionResult BattleSystem::checkMove(int combatant, int dir) const
 
 BattleSystem::ActionResult BattleSystem::checkPower(int combatant, int target, int pIndex) const
 {
-	const Combatant& src = _combatants[combatant];
-	const Combatant& dst = _combatants[target];
-	const Power* power = &src.powers[pIndex];
+	const SWCombatant& src = _combatants[combatant];
+	const SWCombatant& dst = _combatants[target];
+	const SWPower* power = &src.powers[pIndex];
 
 	int powerRange = power->rangeMult * src.smarts.d;
 	int targetRange = distance(src.region, dst.region);
@@ -470,6 +593,8 @@ BattleSystem::ActionResult BattleSystem::checkPower(int combatant, int target, i
 	if (src.team != dst.team && power->forAllies())
 		return ActionResult::kInvalid;
 	if (src.team == dst.team && power->forEnemies())
+		return ActionResult::kInvalid;
+	if (power->type == ModType::kHeal && dst.wounds == 0)
 		return ActionResult::kInvalid;
 
 	return ActionResult::kSuccess;
@@ -482,9 +607,9 @@ void BattleSystem::place(int combataint, int region)
 
 BattleSystem::ActionResult BattleSystem::move(int id, int dir)
 {
-	Combatant& src = _combatants[id];
+	SWCombatant& src = _combatants[id];
 
-	if (src.flags[Combatant::kHasMoved])
+	if (src.flags[SWCombatant::kHasMoved])
 		return ActionResult::kNoAction;
 	if (!within(src.region + dir, 0, (int)_regions.size()))
 		return ActionResult::kInvalid;
@@ -501,7 +626,7 @@ BattleSystem::ActionResult BattleSystem::move(int id, int dir)
 	}
 	if (!src.canMove()) return ActionResult::kNoAction;
 
-	src.flags[Combatant::kHasMoved] = true;
+	src.flags[SWCombatant::kHasMoved] = true;
 
 	MoveAction move = { id, src.region, src.region + dir };
 	src.region += dir;
@@ -510,13 +635,14 @@ BattleSystem::ActionResult BattleSystem::move(int id, int dir)
 	return ActionResult::kSuccess;
 }
 
-void BattleSystem::applyDamage(Combatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report)
+void BattleSystem::applyDamage(SWCombatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report)
 {
 	report.damageRoll = doRoll(die, false);
 	if (strDie.isValid())
 		report.strengthRoll = doRoll(strDie, false);
 
 	report.damage = report.damageRoll.value() + report.strengthRoll.value();
+	report.ap = ap;
 
 	int armor = std::max(0, defender.armor.armor - ap);	// remove ap from armor
 	int toughness = defender.toughness() + armor;
@@ -538,6 +664,7 @@ void BattleSystem::applyDamage(Combatant& defender, int ap, const Die& die, cons
 	}
 	if (defender.dead()) {
 		report.defenderDead = true;
+		filterActivePowers();
 	}
 }
 
@@ -547,18 +674,16 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 	if (result != ActionResult::kSuccess)
 			return result;
 
-	Combatant& src = _combatants[attacker];
-	Combatant& dst = _combatants[defender];
+	SWCombatant& src = _combatants[attacker];
+	SWCombatant& dst = _combatants[defender];
 
-	src.flags[Combatant::kHasUsedAction] = true;
+	src.flags[SWCombatant::kHasUsedAction] = true;
 
 	AttackAction attack;
 	attack.attacker = attacker;
 	attack.defender = defender;
 	attack.melee = (src.region == dst.region);
 	attack.freeAttack = freeAttack;
-
-	int ap = 0;
 
 	if (attack.melee) {
 		// fixme: free attack should affect melee odds
@@ -569,10 +694,10 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		attack.success = !attack.attackRoll.criticalFailure() && value >= tn;
 		if (attack.success) {
 			// FIXME: does boost apply to damage?
-			Die strength = src.strength;
-			strength.b += applyMods(ModType::kStrength, src.activePowers, attack.damageMods);
+			Die strengthDie = src.strength;
+			strengthDie.b += applyMods(ModType::kBoost, src.activePowers, attack.damageMods);
 
-			applyDamage(dst, 0, src.meleeWeapon.damageDie, strength, attack.damage);
+			applyDamage(dst, 0, src.meleeWeapon.damageDie, strengthDie, attack.damage);
 		}
 	}
 	else {
@@ -582,11 +707,7 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		int value = attack.attackRoll.value();
 		attack.success = !attack.attackRoll.criticalFailure() && value >= tn;
 		if (attack.success) {
-			attack.damage.damageRoll = doRoll(src.rangedWeapon.damageDie, false);
-			attack.damage.damage = attack.damage.damageRoll.value();
-			ap = src.rangedWeapon.ap;
-
-			applyDamage(dst, ap, src.rangedWeapon.damageDie, Die(0, 0, 0), attack.damage);
+			applyDamage(dst, src.rangedWeapon.ap, src.rangedWeapon.damageDie, Die(0, 0, 0), attack.damage);
 		}
 	}
 	queue.push({ Action::Type::kAttack, attack });
@@ -595,9 +716,9 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 
 BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, int pIndex)
 {
-	Combatant& src = _combatants[srcIndex];
-	Combatant& dst = _combatants[targetIndex];
-	const Power* power = &src.powers[pIndex];
+	SWCombatant& src = _combatants[srcIndex];
+	SWCombatant& dst = _combatants[targetIndex];
+	const SWPower* power = &src.powers[pIndex];
 
 	PowerAction action;
 	action.src = srcIndex;
@@ -615,7 +736,7 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 		return ActionResult::kInvalid;
 
 	int tn = power->tn() + countMaintainedPowers(src.index);
-	src.flags[Combatant::kHasUsedAction] = true;
+	src.flags[SWCombatant::kHasUsedAction] = true;
 
 	if (power->type == ModType::kBolt) {
 		// See notes on Bolt below.
@@ -652,7 +773,7 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 
 std::pair<int, int> BattleSystem::findPower(int combatant) const
 {
-	const Combatant& src = _combatants[combatant];
+	const SWCombatant& src = _combatants[combatant];
 
 	std::vector<int> powers(src.powers.size());
 	std::iota(powers.begin(), powers.end(), 0);
@@ -665,7 +786,7 @@ std::pair<int, int> BattleSystem::findPower(int combatant) const
 	for (size_t i = 0; i < powers.size(); i++) {
 		for (size_t j = 0; j < targets.size(); j++) {
 			if (checkPower(combatant, targets[j], powers[i]) == ActionResult::kSuccess) {
-				const Power& power = src.powers[powers[i]];
+				const SWPower& power = src.powers[powers[i]];
 				if (power.type == ModType::kBolt) {
 					// can repeat.
 					return std::make_pair(powers[i], targets[j]);
@@ -700,17 +821,22 @@ void BattleSystem::doEnemyActions()
 
 	assert(turn() != 0);
 
-	const Combatant& src = _combatants[turn()];
-	const Combatant& player = _combatants[0];
+	const SWCombatant& src = _combatants[turn()];
+	const SWCombatant& player = _combatants[0];
 
 	bool isMelee = src.region == player.region;
-	int powerScore = src.arcane.d - (isMelee ? src.fighting.d : src.shooting.d) - countMaintainedPowers(turn());
-	int usePower = isMelee ? 5 : 3;
+	int powerScore =
+		src.arcane.summary()
+		- (isMelee ? src.fighting.summary() : src.shooting.summary())
+		- countMaintainedPowers(turn()) * 2;
+	int usePower = powerScore > 0;
+	bool usedPower = false;
 
 	if (powerScore > usePower && src.canPowers()) {
 		auto [power, target] = findPower(turn());
 		if (power >= 0 && target >= 0) {
 			this->power(turn(), target, power);
+			usedPower = true;
 		}
 	}
 
@@ -724,7 +850,13 @@ void BattleSystem::doEnemyActions()
 			}
 		}
 	}
-	else {
+	bool doMove = true;
+	if (src.hasRanged() && src.shooting.summary() > src.fighting.summary())
+		doMove = false;
+	if (usedPower)
+		doMove = false;
+
+	if (doMove) {
 		if (src.region != _combatants[0].region) {
 			move(turn(), src.region < _combatants[0].region ? 1 : -1);
 		}
@@ -737,11 +869,11 @@ void BattleSystem::doEnemyActions()
 
 void BattleSystem::recover(int combatant)
 {
-	Combatant& src = _combatants[combatant];
-	if (src.dead() || !src.shaken || src.flags[Combatant::kHasRecovered])
+	SWCombatant& src = _combatants[combatant];
+	if (src.dead() || !src.shaken || src.flags[SWCombatant::kHasRecovered])
 		return;
 
-	src.flags[Combatant::kHasRecovered] = true;
+	src.flags[SWCombatant::kHasRecovered] = true;
 	Die spirit = src.spirit;
 	spirit.b -= src.wounds;
 	Roll roll = doRoll(src.spirit, src.wild);

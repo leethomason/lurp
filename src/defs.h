@@ -3,6 +3,7 @@
 #include <string>
 #include "lua.hpp"
 
+namespace lurp {
 
 using EntityID = std::string;
 
@@ -29,6 +30,7 @@ enum class ScriptType {
 	kText,
 	kChoices,
 	kItem,
+	kPower,
 	kInteraction,
 	kRoom,
 	kZone,
@@ -36,7 +38,11 @@ enum class ScriptType {
 	kContainer,
 	kEdge,
 	kActor,
+	kCombatant,
 	kCallScript,
+
+	// Not technically scripts, but used in the same way.
+	kInventory,
 };
 
 const char* scriptTypeName(ScriptType type);
@@ -84,3 +90,5 @@ struct Variant {
 	double num = 0;
 	bool boolean = false;
 };
+
+} // namespace lurp

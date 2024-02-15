@@ -2,6 +2,7 @@
 
 #include "util.h"
 #include "defs.h"
+#include "die.h"
 
 #include <string>
 #include <variant>
@@ -9,77 +10,22 @@
 #include <bitset>
 
 namespace lurp {
-namespace swbattle {
-
+struct Combatant;
+struct ScriptAssets;
 struct Power;
+struct Actor;
+
+namespace swbattle {
+struct SWPower;
 
 // implement:
 // - integrate with lua script
 // - reasonable test framework
-// T impact of wounds on rolls
-// T opportunity attacks
-// T defend
-// T multiple attackers
-// T unarmed
-// T clean up output (cover, range)
-// T armor
-// T powers
-// D edges / mods
-// D how to handle news - same as how to handle combat events? the inconsistency is annoying
-// X namespaces
-// T free attacks
-
-struct Die {
-	Die() {}
-	Die(int n, int d, int b) : n(n), d(d), b(b) {}
-	int roll(Random&, int* nAce);
-
-	int n = 1;
-	int d = 4;
-	int b = 0;
-
-	bool isValid() const { return n > 0 && d > 0; }
-	static Die noDie() { return Die(0, 0, 0); }
-
-	bool operator==(const Die& rhs) const {
-		return n == rhs.n && d == rhs.d && b == rhs.b;
-	}
-	bool operator!=(const Die& rhs) const {
-		return !(*this == rhs);
-	}
-};
-
-struct Roll {
-	// Note that the ace system is only used for the n=1
-	Die die;				// what was rolled
-
-	int total[2] = { std::numeric_limits<int>::min(), std::numeric_limits<int>::min() };
-
-	int value() const { return std::max(total[0], total[1]); }
-	int nAce(int which) const {
-		if (die.n != 1) return 0;
-		int base = total[which] - die.b;	// roll w/ aces
-		return base / die.d;
-	}
-	int finalRoll(int which) const {
-		return total[which] - die.b - nAce(which) * die.d;
-	}
-	bool hasWild() const { return total[1] != std::numeric_limits<int>::min(); }
-
-	bool criticalFailure() const {
-		for (int i = 0; i < 2; i++) {
-			if (total[i] == std::numeric_limits<int>::min()) continue;
-			if (nAce(i) > 0) return false;
-			if (finalRoll(i) != 1) return false;
-		}
-		return true;
-	}
-};
+// - test: power increases by DIE not by value
 
 enum class ModType {
 	// These can be caused by powers, edges, etc.
 	kBoost,		// negative numbers de-buff
-	kStrength,
 	kArcane,
 	kFighting,	// affects attack but not parry
 	kShooting,
@@ -100,15 +46,16 @@ enum class ModType {
 
 // "Boost", "Defend", "Cover", etc. 
 std::string ModTypeName(ModType type);
+ModType ModTypeFromName(const std::string& name);
 
 struct ModInfo {
 	int src = 0;
 	ModType type;
 	int delta = 0;						
-	const Power* power = nullptr;
+	const SWPower* power = nullptr;
 };
 
-struct Power {
+struct SWPower {
 	ModType type;
 	std::string name;
 	int cost = 1;
@@ -123,12 +70,14 @@ struct Power {
 	}
 	bool forEnemies() const { return !forAllies(); }
 	bool doesDamage() const { return type == ModType::kBolt; }
+
+	static SWPower convert(const lurp::Power&);
 };
 
 struct ActivePower {
 	int caster = 0;
 	//int raise = 0;	// fixme: not currently implemented. Plenty of complexity here.
-	const Power* power = nullptr;
+	const SWPower* power = nullptr;
 };
 
 enum class Cover {
@@ -155,6 +104,7 @@ struct MoveAction {
 struct DamageReport {
 	Roll damageRoll;					// always used if attack was successful
 	Roll strengthRoll;					// for melee only - adds to the total damage
+	int ap = 0;							// armor piercing component of the attack
 	int damage = 0;
 	bool defenderShaken = false;
 	int defenderWounds = 0;
@@ -183,7 +133,7 @@ struct RecoverAction {
 struct PowerAction {
 	int src = 0;
 	int target = 0;
-	const Power* power = nullptr;
+	const SWPower* power = nullptr;
 	bool activated = false;
 	int raise = 0;
 	DamageReport damage;
@@ -207,25 +157,25 @@ struct Action {
 struct MeleeWeapon {
 	std::string name;		// "longsword"
 	Die damageDie;			// damage = STR + damageDie
-	int minStrength = 6;
-	bool twoHands = false;
+	//int minStrength = 6;
+	//bool twoHands = false;
 };
 
 struct RangedWeapon {
 	std::string name;		// "bow"
 	Die damageDie;			// damage = damageDie
 	int ap = 0;				// armor piercing
-	int minStrength = 6;
+	//int minStrength = 6;
 	int range = 24;			// medium range, yards
 };
 
 struct Armor {
 	std::string name;
 	int armor = 0;
-	int minStrength = 4;
+	//int minStrength = 4;
 };
 
-struct Combatant {
+struct SWCombatant {
 	EntityID link;
 	std::string name;
 	int index = 0;
@@ -244,24 +194,10 @@ struct Combatant {
 	Die shooting = Die(1, 4, -2);	// agility
 	Die arcane = Die(1, 4, -2);		// smarts
 
-	// Auto "level" where n is the number of advances (although this system much
-	// more narrowly defines advances than Savage Worlds, so that isn't quite correct either.)
-	// Very roughly: an advance will increase a die, witht the priorities given. So calling with:
-	//    `autoLevel(n, 6, 4, 2)`
-	// Will generally move to a fighting die 2 higher than the shooting, and the shooting 2 higher than 
-	// the arcane. `n` should be in the range of 1 to ~20. If any of fighting/shooting/arcane are
-	// 0, that skill tree will be ignored.
-	// The `seed` adds a little wiggle randomness to the auto-level.
-	void autoLevel(int n, int fighting, int shooting, int arcane, uint32_t seed=0);
-	
-	bool autoLevelFighting();
-	bool autoLevelShooting();
-	bool autoLevelArcane();
-
 	MeleeWeapon meleeWeapon;
 	RangedWeapon rangedWeapon;
 	Armor armor;
-	std::vector<Power> powers;
+	std::vector<SWPower> powers;
 
 	int wounds = 0;
 	bool shaken = false;
@@ -296,6 +232,24 @@ struct Combatant {
 
 	double baseMelee() const;
 	double baseRanged() const;
+
+	// Auto "level" where n is the number of advances (although this system much
+	// more narrowly defines advances than Savage Worlds, so that isn't quite correct either.)
+	// Very roughly: an advance will increase a die, witht the priorities given. So calling with:
+	//    `autoLevel(n, 6, 4, 2)`
+	// Will generally move to a fighting die 2 higher than the shooting, and the shooting 2 higher than 
+	// the arcane. `n` should be in the range of 1 to ~20. If any of fighting/shooting/arcane are
+	// 0, that skill tree will be ignored.
+	// The `seed` adds a little wiggle randomness to the auto-level.
+	void autoLevel(int n, int fighting, int shooting, int arcane, uint32_t seed = 0);
+
+	bool autoLevelFighting();
+	bool autoLevelShooting();
+	bool autoLevelArcane();
+
+	static SWCombatant convert(const lurp::Combatant& c, const ScriptAssets&);
+	static SWCombatant convert(const lurp::Actor& c, const ScriptAssets&);
+	static Die convertFromSkill(int skill);
 };
 
 struct Region {
@@ -315,17 +269,17 @@ public:
 	void setBattlefield(const std::string& name);
 	void addRegion(const Region& region);
 	// Player must be first!
-	void addCombatant(Combatant c);
+	void addCombatant(SWCombatant c);
 	void start(bool randomTurnOrder = true);
 
 	// --------- Status --------
 	const std::string& name() const { return _name; }
 	const std::vector<Region>& regions() const { return _regions; }
-	const std::vector<Combatant>& combatants() const { return _combatants; }
+	const std::vector<SWCombatant>& combatants() const { return _combatants; }
 	const int distance(int region0, int region1) const {
 		return std::abs(_regions[region0].yards - _regions[region1].yards);
 	}
-	std::vector<Combatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
+	std::vector<SWCombatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
 
 	std::queue<Action> queue;
 
@@ -362,8 +316,8 @@ public:
 	std::pair<Die, int> calcRanged(int attacker, int target, std::vector<ModInfo>& mods) const;
 	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied, int mult = 1);
 	
-	int powerTN(int caster, const Power& power) const;
-	double powerChance(int caster, const Power& power) const;
+	int powerTN(int caster, const SWPower& power) const;
+	double powerChance(int caster, const SWPower& power) const;
 
 	Roll doRoll(Die d, bool useWild) { return doRoll(_random, d, useWild); }
 	static Roll doRoll(Random& random, Die d, bool useWild);
@@ -391,13 +345,13 @@ private:
 	// power, target
 	std::pair<int, int> findPower(int combatant) const;
 
-	void applyDamage(Combatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report);
+	void applyDamage(SWCombatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report);
 
 	Random& _random;
 	int _length = 0;
 	int _orderIndex = 0;
 	std::string _name;
-	std::vector<Combatant> _combatants;
+	std::vector<SWCombatant> _combatants;
 	std::vector<Region> _regions;
 	std::vector<int> _turnOrder;
 	std::vector<ActivePower> _activePowers;

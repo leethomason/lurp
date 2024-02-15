@@ -1,9 +1,52 @@
+Item {
+    entityID = "LONGSWORD",
+    name = "longsword",
+    desc = "A basic but very effective sword.",
+    range = 0,
+    damage = "d8",
+}
+
+Item {
+    entityID = "SHORTSWORD",
+    name = "shortsword",
+    desc = "A short sword for close combat.",
+    range = 0,
+    damage = "d6",
+}
+
+Item {
+    entityID = "BOW",
+    name = "bow",
+    range = 24,
+    damage = "d6",
+}
+
+Item {
+    entityID = "CHAINMAIL",
+    name = "chainmail",
+    armor = 3,
+}
+
+Power {
+    entityID = "FIRE_BOLT",
+    name = "Fire Bolt",
+    effect = "bolt",
+    cost = 1,
+    range = 2,
+    strength = 1,
+}
+
 Actor {
     entityID = "testplayer",
     name = "Test Player",
-    level = 1,
-    maxHP = 10,
-    hp = 9
+    wild = true,
+
+    fighting = 4,
+    shooting = 8,
+    arcane = 4,
+
+    items = { "LONGSWORD", "BOW", "CHAINMAIL"},
+    powers = { "FIRE_BOLT" },
 }
 
 Script {
@@ -19,7 +62,7 @@ Script {
     },
     Text{
         eval = function()
-            return player.arcane
+            return player.arcaneGlow
         end,
         s="narrator", "You have an arcane glow.",
     },
@@ -36,7 +79,7 @@ Script {
     Choices {
         { text = "Read another book", next = "rewind" },
         { text = "Read the arcane book", next = "done", code = function()
-            player.arcane = true
+            player.arcaneGlow = true
         end },
         { text = "Repeat the choices...", next = "repeat"},
         { text = "Leave", next = "pop" },
@@ -58,7 +101,7 @@ Script {
                 Choices {
                     { text = "Read another book", next = "rewind" },
                     { text = "Read the arcane book", next = "done", code = function()
-                        player.arcane = true
+                        player.arcaneGlow = true
                     end },
                     { text = "Repeat the choices...", next = "repeat"},
                     { text = "Leave", next = "pop" },
@@ -70,7 +113,7 @@ Script {
     },
     Text{
         eval = function()
-            return player.arcane
+            return player.arcaneGlow
         end,
         { s="narrator", "You have an arcane glow." },
     },
@@ -99,27 +142,13 @@ Script {
         },
         { eval = function () return player.class == "wizard" end,
           text = "Cast identify",
-          code = function () player.arcane = true end,
+          code = function () player.arcaneGlow = true end,
           next = Script { Text {
                 { s="narrator", "You seen an arcane glow."}
             }
           }
         }
     },
-}
-
-Script {
-    entityID = "_TEST_BATTLE",
-    Battle {
-        player = "testplayer",
-        enemy = Actor {
-            name = "Skeleton",
-            desc = "Bone warrior",
-            class = "fighter",
-            level = 1,
-            boost = 0.7,
-        }
-    }
 }
 
 Actor {
@@ -287,7 +316,7 @@ Script {
     entityID = "TEST_LUA_CORE",
     Script {
         code = function()
-            e = Entity("ACTOR_01")
+            local e = Entity("ACTOR_01")
             assert(e.entityID == "ACTOR_01", "npc should be ACTOR_01")
             assert(e.STR == 16, "npc.STR should be 16")
             e.STR = 17
@@ -298,7 +327,8 @@ Script {
     Text { "waiting..."},
     Script {
         code = function()
-            assert(e.STR == 18, "npc.STR should be 18 now")
+            local e = Entity("ACTOR_01")
+            assert(e.STR == 18, "npc.STR should be 18 now") -- fixme: this doesn't make sense
         end
     }
 }
@@ -306,12 +336,37 @@ Script {
 Script {
     entityID = "TEST_BATTLE_1",
     Battle {
-        player = "testplayer",
-        enemy = Actor {
-            entityID = "ENEMY_01",
-            name = "Skeleton",
-            desc = "Skeleton warrior",
-            strengh = "d6",
-        }
+        entityID = "TEST_BATTLE_1_CURSED_CAVERN",
+        name = "Cursed Cavern",
+        regions = {
+            { "Stalagmites", 0, "light"},
+            { "Shallow Pool", 8, "none"},
+            { "Crumbling Stones", 16, "medium"},
+            { "Wide Steps", 24, "none"},
+        },
+        Combatant {
+            name = "Skeleton Warrior",
+            count = 2,
+            fighting = 6,
+            shooting = 0,
+            arcane = 0,
+            bias = -1,
+            items = { "LONGSWORD", "CHAINMAIL"},
+        },
+        Combatant {
+            name = "Skeleton Archer",
+            fighting = 4,
+            shooting = 6,
+            arcane = 0,
+            items = { "SHORTSWORD", "BOW"},
+        },
+        Combatant {
+            name = "Skeleton Mage",
+            fighting = 0,
+            shooting = 0,
+            arcane = 6,
+            bias = 1,
+            powers = { "FIRE_BOLT"},
+        },
     }
 }

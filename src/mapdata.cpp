@@ -1,6 +1,8 @@
 #include "mapdata.h"
 #include "scriptbridge.h"
 
+namespace lurp {
+
 MapData::MapData(ScriptBridge* bridge, uint32_t seed) : coreData(bridge)
 {
 	random.setSeed(seed ? seed : clock() + 123);
@@ -29,3 +31,5 @@ std::string NewsItem::object() const {
 	}
 	return "";
 }
+
+} // namespace lurp

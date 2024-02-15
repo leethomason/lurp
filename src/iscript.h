@@ -2,6 +2,8 @@
 
 #include "defs.h"
 
+namespace lurp {
+
 // Provided by the Map
 class IMapHandler {
 public:
@@ -34,3 +36,5 @@ class ITextHandler {
 public:
 	virtual bool allTextRead(const EntityID& id) const = 0;
 };
+
+} // namespace lurp

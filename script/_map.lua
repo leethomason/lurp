@@ -1,5 +1,7 @@
 Zones = {}
 Items = {}
+Powers = {}
+Combatants = {}
 Scripts = {}
 Actors = {}
 Texts = {}
@@ -160,6 +162,16 @@ function Battle(b)
     return b
 end
 
+function Combatant(c)
+    c.type = "Combatant"
+    -- always generated; ephemeral entityID. actually having a specified
+    -- entityID is potentially a dangerous conflict.
+    c.entityID = createEntityID(nil, nil, "COMBATANT")
+    Combatants[c.entityID] = c
+    addToEntities(c)
+    return c
+end
+
 function Choices(c)
     c.type = "Choices"
     c.entityID = createEntityID(c.entityID, c.name, "CHOICES")
@@ -177,6 +189,14 @@ function Item(i)
     Items[i.entityID] = i
     addToEntities(i)
     return i
+end
+
+function Power(p)
+    p.type = "Power"
+    p.entityID = createEntityID(p.entityID, p.name, nil)
+    Powers[p.entityID] = p
+    addToEntities(p)
+    return p
 end
 
 function Zone(z)
@@ -369,23 +389,11 @@ end
 
 function ClearScriptEnv()
     coreCache[script.entityID] = nil
-    --setmetatable(script, nil)
     script = nil
-    --setmetatable(player, nil)
     player = nil
-    --if (npc) then
-    --    setmetatable(npc, nil)
-        npc = nil
-    --end
-    --if zone then
-    --    setmetatable(zone, nil)
-        zone = nil
-    --end
-    --if room then
-    --    setmetatable(room, nil)
-        room = nil
-    --end
-    --assert(script == nil)
+    npc = nil
+    zone = nil
+    room = nil
 end
 
 if DIR == nil then
@@ -396,16 +404,6 @@ if DIR == nil then
     CRandom = function()
         return math.random(0, 1024 * 1024 * 1024)
     end
-
-    --[[CIsLocked = function(entityID)
-        print("CIsLocked", entityID)
-        return false
-    end
-
-    CSetLocked = function(entityID, locked)
-        print("CSetLocked", entityID, locked)
-    end
-    ]]--
 
     CDeltaItem = function(containerID, itemID, n)
         print("CDeltaItem", containerID, itemID, n)

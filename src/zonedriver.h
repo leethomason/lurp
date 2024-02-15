@@ -12,6 +12,8 @@
 #include <optional>
 #include <set>
 
+namespace lurp {
+
 struct ScriptAssets;
 class ScriptBridge;
 class ScriptDriver;
@@ -163,3 +165,5 @@ private:
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;
 };
+
+} // namespace lurp

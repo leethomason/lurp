@@ -9,6 +9,8 @@
 
 #define TRACK 0
 
+namespace lurp {
+
 CoreData::CoreData(ScriptBridge* bridge)
 	: _bridge(bridge)
 {
@@ -148,3 +150,5 @@ void CoreData::load(ScriptBridge& loader)
 	}
 	lua_pop(L, 1);
 }
+
+} // namespace lurp

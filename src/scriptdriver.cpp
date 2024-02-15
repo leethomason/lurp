@@ -9,6 +9,8 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+namespace lurp {
+
 bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) const
 {
 	action = Choices::Action::kDone;
@@ -247,17 +249,17 @@ void ScriptDriver::processTree(bool step)
 		if (node.leading) {
 			ScriptRef ref = node.ref;
 			if (ref.type == ScriptType::kScript) {
-				const Script& script = _assets.scripts[ref.index];
+				const Script& script = _assets._csa.scripts[ref.index];
 				if (_helper) _helper->call(script.code, 0);
 			}
 			else if (ref.type == ScriptType::kText) {
-				const Text& text = _assets.texts[ref.index];
+				const Text& text = _assets._csa.texts[ref.index];
 				_mappedText = filterText(text);
 				_textSubIndex = 0;
 				done = !_mappedText.lines.empty();
 			}
 			else if (ref.type == ScriptType::kChoices) {
-				const Choices& choices = _assets.choices[ref.index];
+				const Choices& choices = _assets._csa.choices[ref.index];
 				_mappedChoices = filterChoices(choices);
 				_choicesStack.push_back(choices.action);
 
@@ -274,7 +276,7 @@ void ScriptDriver::processTree(bool step)
 				done = true;
 			}
 			else if (ref.type == ScriptType::kCallScript) {
-				const CallScript& callScript = _assets.callScripts[ref.index];
+				const CallScript& callScript = _assets._csa.callScripts[ref.index];
 				bool eval = true;
 				if (_helper) eval = _helper->call(callScript.eval, true);
 				if (eval) {
@@ -367,7 +369,7 @@ const Battle& ScriptDriver::battle() const
 	assert(type() == ScriptType::kBattle);
 	ScriptRef ref = _treeIt.get();
 	assert(ref.type == ScriptType::kBattle);
-	return _assets.battles[ref.index];
+	return _assets._csa.battles[ref.index];
 }
 
 void ScriptDriver::choose(int i)
@@ -410,7 +412,7 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 	int end = _tree.getNodeTE(index) + 1;
 	for (int i = index; i < end; ++i) {
 		if (tree[i].leading && tree[i].ref.type == ScriptType::kText) {
-			const Text& text = _assets.texts[tree[i].ref.index];
+			const Text& text = _assets._csa.texts[tree[i].ref.index];
 			Text filtered = filterText(text);
 			for (const Text::Line& line : filtered.lines) {
 				uint64_t hash = Hash(line.speaker, line.text);
@@ -526,3 +528,4 @@ const char* scriptTypeName(ScriptType type)
 	return "error";
 }
 
+} // namespace lurp
