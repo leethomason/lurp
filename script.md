@@ -1,8 +1,8 @@
 # Lua Interface
 
 LuRP is a game engine written in C++ (the Core) that uses Lua to describe the game. All the parts of the game
-you write will be in Lua. This document is the reference and explanation for declaring the game and
-how the Lua interface works.
+you write will be in Lua, although the use of Lua is very  This document is the reference and explanation 
+for declaring the game and how the Lua interface works.
 
 ## General
 
@@ -11,8 +11,11 @@ Generally speaking, the Lua code is declarative. You are describing the game, no
 that you can use the standard environment to develop your game. (I use Visual Studio Code, but any
 editor with Lua support should work.)
 
-The Lua game code is read when the game starts. Which implies an important point: naively changing
+The Lua game code is read when the game starts. Which implies an important point: changing
 something in Lua code after start won't do anything, because it has already been read and processed.
+
+Repeating this important point: changing the Lua tables after the game starts won't do anything.
+It has already been read.
 
 ```lua
 local myContainer = Container {
@@ -24,17 +27,17 @@ local myContainer = Container {
 }
 ```
 
-If in a `code()` function for example you later write:
+If in a `code()` function (for example) you write:
 
 ```lua
 myContainer.locked = false  -- this won't do anything!!
 ```
 
-Because that references the immutable, already read Lua data. There are convenience objects (below)
-to help, but this will work:
+Because that references the immutable, already read Lua data. This is what a working
+version looks like:
 
 ```lua
-Entity("myContainer").locked = false
+Entity("myContainer").locked = false -- this will unlock the door
 ```
 
 Because the `Entity()` function returns a "core table" that is mutable and tied into the game state.
@@ -111,15 +114,14 @@ BUT! There are drawbacks.
 ## Lua calls
 
 Lua is used to declare the game. However, you can declare functions that get called. These functions
-are eval() and code(). When the Lua functions are called, certain core tables are set in the global
+are `eval()` and `code()`. When the Lua functions are called, certain core tables are set in the global
 scope for you to use:
 
 * `script` - a table that exists for the duration of the script and all sub-scripts. When the
-    script is complete the `script` table is destroyed.
+  script is complete the `script` table is destroyed.
 * `player` - the player Actor
-* `npc` - the Actor that is specified in the Interaction. nil if not specified. (Contextual: you
-    expect the player to be talking to someone, but this can be nil if the player is perusing a
-    bookcase.)
+* `npc` - the Actor that is specified in the Interaction. nil if not specified. In a conversation,
+  you would expect `npc` to be a table, but if browsing books it's likely `nil`.
 * `zone` - the Zone that the player is currently in.
 * `room` - the Room that the player is currently in.
 
@@ -192,30 +194,31 @@ when removing an item from somewhere to add it somewhere else, so it isn't lost.
   Moves the player to the room specified by its EntityID. If teleport is false/nil, then
   locks etc. will be checked, and MovePlayer works just like the player moving to an
   adjacent room.
+
   If teleport is true, then the player is moved without checking locks. The destination
   room does not need to be adjacaent or even in the same Zone. This allows for travelling
   to a new Zone.
 * `EndGame(reason)` - flags the driver the game is over, for the 'reason' string specified.
   The driver will then exit the game.
 
-# Entities
-
 ## General Entities
 
 Entities associated with both the Zones and the Scripts.
 
-### Die & Dice
+### General Entity Notes
+
+#### Die & Dice
 
 When a die or dice needs to be specified, you can do so with a string or number.
 
-* 6 - a six-sided die
+* "6" - a six-sided die
 * "d6" - a six-sided die
 * "2d6" - two six-sided dice
 * "d6+2" - a six-sided die with a +2 bonus
 
 ### Item
 
-* entityID - required for an Item. ex: "GOLD"
+* entityID
 * name - name as read. ex: "gold coin"
 * desc - description of the item. ex: "A shiny gold coin."
 
@@ -236,8 +239,7 @@ IF the Item is armor:
 
 ### Inventory
 
-Some entitities have an inventory. (Actors and Containers). The inventory is a list of items
-that the Entity starts with. It is a Lua table.
+Some entitities have an inventory. (Actors, Combatants, and Containers). The inventory is a list of items that the Entity starts with. It is a Lua table.
 
 ```lua
     items = {
@@ -250,7 +252,7 @@ that the Entity starts with. It is a Lua table.
 
 An Actor is an NPC, character, or player in the game.
 
-* entityID - usually the name, but can be any string. ex: "Grom" or "GROM"
+* entityID
 * name - name as it appears in game. ex: "Grom"
 * items - an Inventory of (initial, starting) items for this Actor
 
@@ -263,40 +265,63 @@ Zones (using the `MovePlayer()` API).
 
 ### Zone
 
+The Zone is a top level group of Rooms. You should
+interpret "Zone" and "Room" to make sense for your
+game. Perhaps a Zone is a dungeon full of rooms...
+or perhaps a Zone is a contintent with countries
+you can visit.
+
 * entityID
 * name
 
 ### Room
 
+A Room is a place your player can be, and they
+can travel to other rooms. An Edge connects
+Rooms together.
+
 * entityID
 * name
 * desc
 
-### Container
-
-* entityID
-* name
-* locked: *initial* locked state
-* key: itemID to unlock
-* items[]: list of itemIDs or {itemID, count} in *initial* state
-* eval()
-
 ### Edge
 
+An Edge allows travel between rooms.
+
 * entityID
-* dir: 'n', 's', 'e', 'w' etc., optional direction from room1 to room2
-* name: "door", "window", etc.
-* room1: entityID
-* room2: entityID
-* locked: *initial* locked state
-* key: itemID to unlock
+* name - "door", "window", etc.
+* dir - an optional direction ('n', 'ne', 'e', 'w' etc.) optional from room1 to room2. If not specified,
+the Rooms are still connected, but without a 
+particular direction.
+* room1 - entityID (required)
+* room2 - entityID (required)
+* locked - initial locked state
+* key - entityID of the Item to unlock. A Room can also be locked
+  or unlocked via script, but specifying the key
+  is often easier.
 
 ### EdgeGroup
 
-A tool to generate edges. Has no entityID, although the edges it generates do.
+A tool to generate edges. Has no entityID, although the edges it generates do. This allows you to connect
+a group of Rooms to each other. For instance,
+a central plaza may connect to many buildings,
+and this allows you to set up all the connections
+at once.
 
 * name to display - the same for each room, but {dest} can be used to specialize.
 * rooms[] list of entityID for each room in the group
+
+### Container
+
+Containers hold stuff the player can interact with.
+
+* entityID
+* name - "iron chest" for example
+* `eval()` - is the container visible?
+* locked - initial locked state
+* key: itemID to unlock
+* items[]: list of itemIDs or {itemID, count} in *initial* state
+* eval()
 
 ### Interaction
 
@@ -305,22 +330,67 @@ A required Interaction will be activated when the player enters the Room. Otherw
 allow the player to select Interactions in the Room.
 (Very similar to a CallScript, but with some extra features for working with Maps/Zones.)
 
-* entityID/name
-* eval() - determines if the interaction is avaibable. If not, will be hidden.
-* code() - called when the interaction is activated
-* next - script (table on entityID) to call when the interaction is activated
+* entityID
+* name
+* `eval()` - determines if the interaction is avaibable. If not, will be hidden.
+* `code()` - called when the interaction is activated
+* next - script (table or entityID) to call when the interaction is activated
 * actor - npc to use for the Interaction, if appropriate
 * required - if true this Interaction will automaticall be run when the player enters the room. If there are multiple 'required' Interactions, they will be run in the order they are defined.
 
 ## Script Interface
 
+Entities that work inside Scripts.
+
 ### Script
 
+A Script is a sequence of actions and events. A mini
+story. Scripts can call other scripts, further the
+plot, and are the building block of the game.
+
 * entityID
-* code()
-* events[] in the script, which can be other scripts or the types below.
+* `code()` - called when this Script is activated
 
 ### Text
+
+Many games contain lots of text, and Text is a very
+flexible object. Start simple if you are learning.
+
+The simplest example:
+
+```lua
+Text {
+  "Hello, there."
+}
+```
+
+Is a block of text, shown to the player. You can show
+multiple lines of text:
+
+```lua
+Text {
+  { "Hello, there." },
+  { "You've travelled far." }
+}
+-- OR --
+Text {
+  "Hello, there", "You've travelled far."
+}
+```
+
+The difference in how they are displayed is left
+to the driver.
+
+You may want to specify a speaker, which you can with `s`:
+
+```lua
+Text {
+  s = "Ben", "Hello, there"
+}
+```
+
+
+
 
 * entityID
 * eval()

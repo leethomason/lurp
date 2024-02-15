@@ -2,7 +2,8 @@
 
 ## Open Issues
 
-* Fix the die vs. step thing plaguing powers
+* Edgegroup: useful, but weirdly specified with {dest}
+* Container: eval(), locked? key???
 * Simple: minimal but complete
 * Docs
 * Deployment
@@ -14,6 +15,7 @@
 
 ## Done
 
+* Fix the die vs. step thing plaguing powers
 * CallSCript: with the current approach to Script (sharing a table) does this do anything?
   It barely does - scriptID vs. entityID
 * Battle: what is the interace? Savage worlds here we come.
