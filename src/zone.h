@@ -10,7 +10,6 @@ namespace lurp {
 
 struct ScriptAssets;
 class ScriptBridge;
-struct NewsQueue;
 
 struct Container {
 	EntityID entityID;

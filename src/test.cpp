@@ -1057,7 +1057,7 @@ void BattleTest::TestSystem()
 	system.place(0, 0);
 	TEST(system.attack(0, 1) == BattleSystem::ActionResult::kSuccess);
 	TEST(system.queue.size() == 1);
-	const Action& action = system.queue.front();
+	Action action = system.queue.pop();
 	TEST(action.type == Action::Type::kAttack);
 	const AttackAction& aa = std::get<AttackAction>(action.data);
 	TEST(aa.attacker == 0);

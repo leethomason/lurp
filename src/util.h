@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_set>
+#include <queue>
 
 namespace lurp {
 
@@ -109,5 +110,40 @@ T sign(T a) {
 	if (a < 0) return T(-1);
 	return T(0);
 }
+
+template<typename T>
+struct Queue {
+	static constexpr size_t kMaxSize = 32;
+
+	void push(const T& ni) {
+		while (queue.size() >= kMaxSize)
+			queue.pop();
+		queue.push(ni);
+	}
+
+	T pop() {
+		if (queue.empty())
+			return T();
+		T ni = queue.front();
+		queue.pop();
+		return ni;
+	}
+
+	bool empty() const {
+		return queue.empty();
+	}
+
+	size_t size() const {
+		return queue.size();
+	}
+
+	void clear() {
+		while (!queue.empty())
+			queue.pop();
+	}
+
+	std::queue<T> queue;
+};
+
 
 } // namespace lurp

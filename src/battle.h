@@ -6,7 +6,6 @@
 
 #include <string>
 #include <variant>
-#include <queue>
 #include <bitset>
 
 namespace lurp {
@@ -17,11 +16,6 @@ struct Actor;
 
 namespace swbattle {
 struct SWPower;
-
-// implement:
-// - integrate with lua script
-// - reasonable test framework
-// - test: power increases by DIE not by value
 
 enum class ModType {
 	// These can be caused by powers, edges, etc.
@@ -106,8 +100,8 @@ struct DamageReport {
 	Roll strengthRoll;					// for melee only - adds to the total damage
 	int ap = 0;							// armor piercing component of the attack
 	int damage = 0;
-	bool defenderShaken = false;
 	int defenderWounds = 0;
+	bool defenderShaken = false;
 	bool defenderDead = false;
 };
 
@@ -153,6 +147,8 @@ struct Action {
 		RecoverAction,
 		PowerAction> data;
 };
+
+using ActionQueue = Queue<Action>;
 
 struct MeleeWeapon {
 	std::string name;		// "longsword"
@@ -281,7 +277,7 @@ public:
 	}
 	std::vector<SWCombatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
 
-	std::queue<Action> queue;
+	ActionQueue queue;
 
 	// --------- Turn Order --------
 	int turn() const { return _turnOrder[_orderIndex]; }

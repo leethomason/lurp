@@ -8,7 +8,6 @@
   * Script
 * Deployment
 * EdgeGroup is a mess
-* NewsQueue and BattleQueue should be the same class
 
 ## Ideas / Icebox
 
@@ -17,6 +16,7 @@
 
 ## Done
 
+* NewsQueue and BattleQueue should be the same class
 * Container: key
 * CallSCript: with the current approach to Script (sharing a table) does this do anything?
   It barely does - scriptID vs. entityID

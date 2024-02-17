@@ -165,7 +165,7 @@ static void PrintDamageReport(const SWCombatant& defender,
 static void PrintActions(BattleSystem& system)
 {
 	while (!system.queue.empty()) {
-		const Action& action = system.queue.front();
+		Action action = system.queue.pop();
 		switch (action.type) {
 		case Action::Type::kMove: {
 			const MoveAction& a = std::get<MoveAction>(action.data);
@@ -230,7 +230,6 @@ static void PrintActions(BattleSystem& system)
 		}
 
 		}
-		system.queue.pop();
 	}
 }
 
