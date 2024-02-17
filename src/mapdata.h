@@ -81,6 +81,11 @@ struct NewsQueue {
 		return queue.size();
 	}
 
+	void clear() {
+		while (!queue.empty())
+			queue.pop();
+	}
+
 	std::queue<NewsItem> queue;
 };
 

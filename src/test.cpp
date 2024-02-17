@@ -60,21 +60,21 @@ static void BasicTest(const ConstScriptAssets& ca)
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, nullptr, "testplayer");
 
-	map.setZone("TestZone0", "TestZone0_ROOM_A");
+	map.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
 	TEST(map.currentRoom().name == "RoomA");
 	TEST(map.dirEdges().size() == 1);
-	TEST(map.dirEdges()[0].dstRoom == "TestZone0_ROOM_B");
+	TEST(map.dirEdges()[0].dstRoom == "TEST_ZONE_0_ROOM_B");
 
 	// Teleport to B and back to A
-	map.teleport("TestZone0_ROOM_B");
+	map.teleport("TEST_ZONE_0_ROOM_B");
 	TEST(map.currentRoom().name == "RoomB");
-	map.teleport("TestZone0_ROOM_A");
+	map.teleport("TEST_ZONE_0_ROOM_A");
 	TEST(map.currentRoom().name == "RoomA");
 
 	// Do a proper walk from A to B
 	// 1. check door is lock
 	TEST(map.mapData.newsQueue.empty());
-	auto moveResult = map.move("TestZone0_ROOM_B");
+	auto moveResult = map.move("TEST_ZONE_0_ROOM_B");
 	TEST(moveResult == ZoneDriver::MoveResult::kLocked);
 	TEST(map.currentRoom().name == "RoomA");
 	TEST(map.mapData.newsQueue.empty());
@@ -94,7 +94,7 @@ static void BasicTest(const ConstScriptAssets& ca)
 
 	// 3. unlock the door, go to RoomB
 	TEST(map.mapData.newsQueue.empty());
-	moveResult = map.move("TestZone0_ROOM_B");
+	moveResult = map.move("TEST_ZONE_0_ROOM_B");
 	TEST(moveResult == ZoneDriver::MoveResult::kSuccess);
 	TEST(map.currentRoom().name == "RoomB");
 	TEST(map.mapData.newsQueue.size() == 1);
@@ -104,7 +104,7 @@ static void BasicTest(const ConstScriptAssets& ca)
 	TEST(map.mapData.newsQueue.empty());
 
 	// 4. back to RoomA
-	moveResult = map.move("TestZone0_ROOM_A");
+	moveResult = map.move("TEST_ZONE_0_ROOM_A");
 	TEST(moveResult == ZoneDriver::MoveResult::kSuccess);
 	TEST(map.currentRoom().name == "RoomA");
 }
@@ -254,7 +254,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge, bool inn
 	map.mapData.coreData.coreSet("testplayer", "attrib.str", Variant(10.0), false);
 	map.mapData.coreData.coreSet("testplayer", "name", Variant("Gromm"), false);
 
-	map.setZone("TestZone0", "TestZone0_ROOM_A");
+	map.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
 	ContainerVec containerVec = map.getContainers();
 	const Container* chest = map.getContainer(containerVec[0]->entityID);
 	Inventory& chestInventory = assets.inventories.at(chest->entityID);
@@ -268,7 +268,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge, bool inn
 	transfer(key01, chestInventory, playerInventory);
 	TEST(chestInventory.hasItem(key01) == false);
 
-	map.move("TestZone0_ROOM_B");
+	map.move("TEST_ZONE_0_ROOM_B");
 	TEST(map.currentRoom().name == "RoomB");
 
 	const InteractionVec& interactionVec = map.getInteractions();
@@ -705,19 +705,47 @@ static void TestInventoryScript(const ConstScriptAssets& ca, ScriptBridge& bridg
 	TEST(map.numItems("testplayer", "SKELETON_KEY") == 1);
 }
 
+static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	ScriptAssets assets(ca);
+	ZoneDriver zone(assets, &bridge, "testplayer");
+	zone.setZone("TEST_ZONE_2", "TEST_ROOM_2");
+
+	const Actor& player = zone.getPlayer();
+
+	TEST(zone.currentRoom().name == "TestRoom2");
+	TEST(zone.getContainers().size() == 2);
+
+	// 1. Makes sure we can't open the locked chest.
+	ContainerVec containerVec = zone.getContainers();
+	const Container& chestA = *containerVec[0];
+	const Container& chestB = *containerVec[1];
+
+	TEST(zone.transferAll(chestA, player) == ZoneDriver::TransferResult::kLocked);
+	TEST(zone.mapData.newsQueue.empty());
+
+	TEST(zone.transferAll(chestB, player) == ZoneDriver::TransferResult::kSuccess);
+	TEST(zone.mapData.newsQueue.size() == 1); // got a key
+	zone.mapData.newsQueue.clear();
+
+	TEST(zone.transferAll(chestA, player) == ZoneDriver::TransferResult::kSuccess);
+	TEST(zone.getInventory(player).numItems(assets.getItem("GOLD")) == 100);
+	TEST(zone.mapData.newsQueue.size() == 2);	// unlocked and have gold
+}
+
 static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
 	ZoneDriver zone(assets, &bridge, "testplayer");
-	zone.setZone("TestZone0", "TestZone0_ROOM_A");
-	zone.move("TestZone0_ROOM_B");
+	zone.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
+	zone.move("TEST_ZONE_0_ROOM_B");
 	// failed:
-	TEST(zone.currentRoom().entityID == "TestZone0_ROOM_A");
+	TEST(zone.currentRoom().entityID == "TEST_ZONE_0_ROOM_A");
 	Inventory& inv = assets.getInventory(zone.getPlayer());
 	inv.addItem(assets.getItem("KEY_01"));
-	zone.move("TestZone0_ROOM_B");
+	zone.move("TEST_ZONE_0_ROOM_B");
 	// success:
-	TEST(zone.currentRoom().entityID == "TestZone0_ROOM_B");
+	TEST(zone.currentRoom().entityID == "TEST_ZONE_0_ROOM_B");
 
 	// Push the move button:
 	{
@@ -729,8 +757,8 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		driver.advance();
 		TEST(driver.done());
 	}
-	TEST(zone.currentRoom().entityID == "TestZone0_ROOM_A");
-	zone.move("TestZone0_ROOM_B");
+	TEST(zone.currentRoom().entityID == "TEST_ZONE_0_ROOM_A");
+	zone.move("TEST_ZONE_0_ROOM_B");
 
 	// Push the teleport button:
 	{
@@ -1085,6 +1113,7 @@ int RunTests()
 	RUN_TEST(TestInventoryScript(csassets, bridge));
 	RUN_TEST(TestWalkabout(csassets, bridge));
 	RUN_TEST(TestLuaCore());
+	RUN_TEST(TestContainers(csassets, bridge));
 	RUN_TEST(TestCombatant());
 	RUN_TEST(BattleTest::Read());
 	RUN_TEST(BattleTest::TestSystem());

@@ -377,9 +377,24 @@ bool ZoneDriver::unlock(const Edge& e)
 	Inventory& inv = _assets.inventories.at(_player);
 
 	if (inv.hasItem(key)) {
-		//e.locked = false;
 		mapData.coreData.coreSet(e.entityID, "locked", false, false);
 		mapData.newsQueue.push(NewsItem::lock(false, e, &key));
+		return true;
+	}
+	return false;
+}
+
+bool ZoneDriver::unlock(const Container& c)
+{
+	if (!locked(c))
+		return true;
+	if (c.key.empty())
+		return false;
+	const Item& key = _assets.getItem(c.key);
+	Inventory& inv = _assets.inventories.at(_player);
+	if (inv.hasItem(key)) {
+		mapData.coreData.coreSet(c.entityID, "locked", false, false);
+		mapData.newsQueue.push(NewsItem::lock(false, c, &key));
 		return true;
 	}
 	return false;

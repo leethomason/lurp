@@ -587,6 +587,7 @@ Container ScriptBridge::readContainer() const
 		c.entityID = getStrField("entityID", {});
 		c.name = getStrField("name", {});
 		c.locked = getBoolField("locked", { false });
+		c.key = getStrField("key", { "" });
 		c.eval = getFuncField(L, "eval");
 		c.inventory = readInventory();
 	}

@@ -65,9 +65,32 @@ public:
 	const Container* getContainer(const EntityID& id);
 	void startInteraction(const Interaction* interaction);
 
-	// ------ Internal / Here Be Dragons ------
 	void setZone(const EntityID& zone, EntityID room);
 
+	template<typename ENTITY>
+	bool locked(const ENTITY& e) {
+		return mapData.coreData.coreBool(e.entityID, "locked", e.locked);
+	}
+	bool unlock(const Edge& e);
+	bool unlock(const Container& c);
+
+	enum class TransferResult {
+		kSuccess,
+		kLocked
+	};
+
+	template<typename E>
+	const Inventory& getInventory(const E& e) const {
+		return _assets.getInventory(e);
+	}
+
+	template<typename S, typename T>
+	TransferResult transferAll(const S& srcEntity, const T& dstEntity);
+
+	template<typename S, typename T>
+	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n = INT_MAX);
+
+	// ------ Internal / Here Be Dragons ------
 	// empty 'room' will return edges for the current room
 	const std::vector<EntityID>& entities(EntityID room = "") const;
 
@@ -82,53 +105,6 @@ public:
 
 	// go anywhere; don't check for locks
 	void teleport(const EntityID& roomID);
-
-	template<typename ENTITY>
-	bool locked(const ENTITY& e) {
-		return mapData.coreData.coreBool(e.entityID, "locked", e.locked);
-	}
-	bool unlock(const Edge& e);
-
-	enum class TransferResult {
-		kSuccess,
-		kLocked
-	};
-
-	template<typename E>
-	const Inventory& getInventory(const E& e) const {
-		return _assets.getInventory(e);
-	}
-
-	template<typename S, typename T>
-	TransferResult transferAll(const S& srcEntity, const T& dstEntity) {
-		if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
-			return TransferResult::kLocked;
-
-		Inventory& src = _assets.getInventory(srcEntity);
-		while (!src.emtpy()) {
-			this->transfer(*src.items()[0].pItem, srcEntity, dstEntity, INT_MAX);
-		}
-		return TransferResult::kSuccess;
-	}
-
-	template<typename S, typename T>
-	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n = INT_MAX) {
-		if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
-			return TransferResult::kLocked;
-
-		Inventory& src = _assets.getInventory(srcEntity);
-		Inventory& dst = _assets.getInventory(dstEntity);
-		int delta = src.numItems(item);
-		::transfer(item, src, dst, n);
-		int count = dst.numItems(item);
-
-		const EntityID& playerID = getPlayer().entityID;
-		if (srcEntity.entityID == playerID || dstEntity.entityID == playerID) {
-			mapData.newsQueue.push(NewsItem::itemDelta(item, delta, count));
-		}
-		return TransferResult::kSuccess;
-	}
-
 	// IMapHandler
 	virtual uint32_t getRandom() { return mapData.random.rand(); }
 	virtual bool isLocked(const EntityID& id) const;
@@ -165,5 +141,39 @@ private:
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;
 };
+
+template<typename S, typename T>
+ZoneDriver::TransferResult ZoneDriver::transferAll(const S& srcEntity, const T& dstEntity) {
+	if (isLocked(srcEntity.entityID))
+		unlock(srcEntity);
+
+	if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
+		return TransferResult::kLocked;
+
+	Inventory& src = _assets.getInventory(srcEntity);
+	while (!src.emtpy()) {
+		this->transfer(*src.items()[0].pItem, srcEntity, dstEntity, INT_MAX);
+	}
+	return TransferResult::kSuccess;
+}
+
+template<typename S, typename T>
+ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n) {
+	if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
+		return TransferResult::kLocked;
+
+	Inventory& src = _assets.getInventory(srcEntity);
+	Inventory& dst = _assets.getInventory(dstEntity);
+	int delta = src.numItems(item);
+	::transfer(item, src, dst, n);
+	int count = dst.numItems(item);
+
+	const EntityID& playerID = getPlayer().entityID;
+	if (srcEntity.entityID == playerID || dstEntity.entityID == playerID) {
+		mapData.newsQueue.push(NewsItem::itemDelta(item, delta, count));
+	}
+	return TransferResult::kSuccess;
+}
+
 
 } // namespace lurp
