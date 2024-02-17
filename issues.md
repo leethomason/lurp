@@ -1,17 +1,24 @@
+# Issues
+
 ## Open Issues
 
-* Battle: what is the interace? Savage worlds here we come.
-* test: cycle
 * Simple: minimal but complete
-* docs
-* CallSCript: with the current approach to Script (sharing a table) does this do anything?
-  It barely does - scriptID vs. entityID
+* Docs
+  * Readme
+  * Script
+* Deployment
 
 ## Ideas / Icebox
+
 * error if calling random in eval() or test()
 * multi-threaded driver
 
 ## Done
+
+* CallSCript: with the current approach to Script (sharing a table) does this do anything?
+  It barely does - scriptID vs. entityID
+* Battle: what is the interace? Savage worlds here we come.
+* test: cycle
 * Auto-EntityID: will stability be a problem?
 * start, end, dying, winning
 * save, load, cycle
