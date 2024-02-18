@@ -280,7 +280,6 @@ Zone {
     },
 
     EdgeGroup {
-        name = "{dest}",
         rooms = { "Your Apartment", "SF_LIBRARY", "SF_CAFE", "SFO" },
     },
 

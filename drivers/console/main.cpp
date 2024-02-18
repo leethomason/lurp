@@ -26,6 +26,17 @@
 
 using namespace lurp;
 
+static constexpr const char* textDye = dye::yellow;
+static constexpr const char* choiceDye = dye::yellow;
+
+static void PrintText(const std::string& speaker, const std::string& text)
+{
+	if (speaker.empty())
+		fmt::print("{}{}{}\n", textDye, text, dye::reset);
+	else
+		fmt::print("{}: {}{}{}\n", speaker, textDye, text, dye::reset);
+}
+
 static void PrintNews(NewsQueue& queue)
 {
 	while (!queue.empty()) {
@@ -55,10 +66,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 	while (!dd.done()) {
 		while (dd.type() == ScriptType::kText) {
 			TextLine line = dd.line();
-			if (line.speaker.empty())
-				fmt::print("{}\n", line.text);
-			else
-				fmt::print("{}: {}\n", line.speaker, line.text);
+			PrintText(line.speaker, line.text);
 			dd.advance();
 			PrintNews(mapData.newsQueue);
 		}
@@ -69,7 +77,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 			const Choices& choices = dd.choices();
 			int i = 0;
 			for (const Choices::Choice& c : choices.choices) {
-				fmt::print("{}: {}\n", i, c.text);
+				fmt::print("{}: {}{}{}\n", i, choiceDye, c.text, dye::reset);
 				i++;
 			}
 			Value v2 = Value::ParseValue(ReadString());
@@ -206,7 +214,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			while (driver.mode() == ZoneDriver::Mode::kText) {
 				// FIXME: support speaker mode
 				TextLine tl = driver.text();
-				fmt::print("{}\n", tl.text);
+				//fmt::print("{}\n", tl.text);
+				PrintText(tl.speaker, tl.text);
 				driver.advance();
 			}
 			PrintNews(driver.mapData.newsQueue);
@@ -349,12 +358,15 @@ int main(int argc, const char* argv[])
 		}
 		else {
 			// Run game.
-			if (!scriptFile.empty() && !startingZone.empty()) {
+			if (!scriptFile.empty()) {
 				ScriptBridge bridge;
 				ConstScriptAssets csassets = bridge.readCSA(scriptFile);
 				ScriptAssets assets(csassets);
 
-				ScriptRef ref = assets.get(argv[2]);
+				ScriptRef ref;
+				if (argc > 2)
+					ref = assets.get(argv[2]);
+
 				if (ref.type == ScriptType::kScript) {
 					ScriptEnv env;
 					env.script = argv[2];
@@ -362,11 +374,11 @@ int main(int argc, const char* argv[])
 					MapData mapData(&bridge, 567 + clock());
 					ConsoleScriptDriver(assets, bridge, env, mapData);
 				}
-				else if (ref.type == ScriptType::kZone) {
-					fmt::print("\n\n");
+				else {
 					std::string dir = GameFileToDir(scriptFile);
 					std::string savePath = SavePath(dir, "saves");
 					fmt::print("Save path: {}\n", savePath);
+					fmt::print("\n\n");
 
 					ConsoleZoneDriver(assets, bridge, startingZone, dir);
 				}

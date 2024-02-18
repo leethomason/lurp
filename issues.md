@@ -7,8 +7,13 @@
   * Readme
   * Script
 * Deployment
-* EdgeGroup is a mess
-* Reasonable save/load location
+* Better looking console output
+* Turn battle driver on
+* Auto-save before battle
+* Examples:
+  * simplest zone
+  * simplest script
+  * simplest battle
 
 ## Ideas / Icebox
 
@@ -17,9 +22,11 @@
 
 ## Done
 
+* EdgeGroup is a mess
+* Reasonable save/load location
 * NewsQueue and BattleQueue should be the same class
 * Container: key
-* CallSCript: with the current approach to Script (sharing a table) does this do anything?
+* CallScript: with the current approach to Script (sharing a table) does this do anything?
   It barely does - scriptID vs. entityID
 * Battle: what is the interace? Savage worlds here we come.
 * test: cycle

@@ -15,4 +15,6 @@ std::string GameFileToDir(const std::string& gameFile);
 std::ofstream OpenSaveStream(const std::string& path);
 std::ifstream OpenLoadStream(const std::string& path);
 
+bool CheckPath(const std::string& path, std::string& cwd);
+
 } // namespace lurp

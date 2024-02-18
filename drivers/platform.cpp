@@ -40,6 +40,19 @@ std::ifstream OpenLoadStream(const std::string& path)
     return stream;
 }
 
+bool CheckPath(const std::string& path, std::string& cwd)
+{
+    std::ofstream stream;
+    stream.open(path, std::ios::in);
+    if (!stream.is_open()) {
+		fmt::print("ERROR: could not open file '{}'\n", path);
+        cwd = std::filesystem::current_path().string();
+        fmt::print("       Current working directory: '{}'\n", cwd);
+		return false;
+	}
+    return true;
+}
+
 #ifdef _WIN32
 
 std::string OSSavePath()

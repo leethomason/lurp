@@ -47,8 +47,13 @@ const Container* ZoneDriver::getContainer(const EntityID& id)
 	return nullptr;
 }
 
-void ZoneDriver::setZone(const EntityID& zone, EntityID room)
+void ZoneDriver::setZone(const EntityID& cz, EntityID room)
 {
+	EntityID zone = cz;
+	if (zone.empty()) {
+		zone = _assets._csa.zones[0].entityID;
+	}
+
 	if (room.empty()) {
 		const Zone& z = _assets.getZone(zone);
 		const Room* r = z.firstRoom(_assets);
