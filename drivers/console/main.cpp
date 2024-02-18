@@ -14,6 +14,8 @@
 #include "argh.h"
 #include "crtdbg.h"
 #include <fmt/core.h>
+#include <tabulate/tabulate.hpp>
+#include <tabulate/table.hpp>
 
 // C++
 #include <stdio.h>
@@ -29,12 +31,57 @@ using namespace lurp;
 static constexpr const char* textDye = dye::yellow;
 static constexpr const char* choiceDye = dye::yellow;
 
-static void PrintText(const std::string& speaker, const std::string& text)
+static void StreamText(const std::string& s, const std::string& speaker, tabulate::Table& table)
 {
-	if (speaker.empty())
-		fmt::print("{}{}{}\n", textDye, text, dye::reset);
-	else
-		fmt::print("{}: {}{}{}\n", speaker, textDye, text, dye::reset);
+	// We want to ignore single \n, but keep \n\n
+	// We want to ignore \r
+	// The \n at the end of a line is a space.
+	// I hope that's all correct. Text is fiddly.
+
+	std::string buf;
+	buf.reserve(s.size());
+
+	for (size_t i = 0; i < s.size(); i++) {
+		if (s[i] == '\r')
+			continue;
+		if (s[i] == '\n' && i < s.size() - 1 && s[i + 1] == '\n') {
+			buf.push_back(' ');
+			
+			if (speaker.empty()) {
+				table.add_row({ buf });
+			}
+			else {
+				table.add_row({ speaker, buf });
+			}
+			buf.clear();
+			i++;
+		}
+		if (s[i] == '\n')
+			continue;
+		buf.push_back(s[i]);
+	}
+}
+
+static void PrintText(std::string speaker, const std::string& text)
+{
+	static constexpr int kSpeakerWidth = 12;
+	int w = ConsoleWidth();
+
+	tabulate::Table table;
+	table.format().width(w - 2);
+	table.format().border("").corner("").padding(0);
+	table.format().padding_bottom(1);
+	table.format().color(tabulate::Color::yellow);
+
+	//speaker = "foo";
+	StreamText(text, speaker, table);
+	if (speaker.empty()) {
+	}
+	else {
+		table.column(0).format().width(kSpeakerWidth);
+		table.column(1).format().width(w - 3 - kSpeakerWidth);
+	}
+	std::cout << table << std::endl;
 }
 
 static void PrintNews(NewsQueue& queue)

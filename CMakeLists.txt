@@ -22,7 +22,12 @@ FetchContent_Declare(
   URL      https://www.lua.org/ftp/lua-5.4.6.tar.gz
   URL_HASH SHA256=7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88
 )
-FetchContent_MakeAvailable(lua fmt argh)
+FetchContent_Declare(
+  tabulate
+  GIT_REPOSITORY https://github.com/p-ranav/tabulate.git
+  GIT_TAG        b35db4cce50a4b296290b0ae827305cdeb23751e
+)
+FetchContent_MakeAvailable(lua fmt argh tabulate)
 
 file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
 file(GLOB SOURCES "src/*.cpp")
@@ -43,7 +48,7 @@ add_test(
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")
 
 add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC})
-target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
+target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${tabulate_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
 
 add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
 target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)

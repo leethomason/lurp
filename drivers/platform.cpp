@@ -78,6 +78,13 @@ std::string OSSavePath()
     exit(-1);
 }
 
+int ConsoleWidth()
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+}
+
 std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
 {
     std::string savePath = OSSavePath();

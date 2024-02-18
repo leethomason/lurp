@@ -17,4 +17,6 @@ std::ifstream OpenLoadStream(const std::string& path);
 
 bool CheckPath(const std::string& path, std::string& cwd);
 
+int ConsoleWidth();
+
 } // namespace lurp
