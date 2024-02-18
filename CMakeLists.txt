@@ -24,7 +24,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(lua fmt argh)
 
-file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" )
+file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "src/*.h")
 file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")

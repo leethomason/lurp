@@ -6,6 +6,7 @@
 #include "scriptbridge.h"
 #include "battle.h"
 #include "tree.h"
+#include "../drivers/platform.h"
 
 #include <fmt/core.h>
 #include <iostream>
@@ -220,7 +221,8 @@ static void TestLoad(bool inner)
 
 	{
 		ScriptBridge loader;
-		loader.loadLUA("save.lua");
+		std::string path = SavePath("test", "testsave");
+		loader.loadLUA(path);
 		EntityID scriptID = map.load(loader);
 
 		TEST(!scriptID.empty());
@@ -290,15 +292,9 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge, bool inn
 		TEST(driver.type() == ScriptType::kChoices);
 	}
 
-	std::ofstream stream;
-	stream.open("save.lua", std::ios::out);
-	assert(stream.is_open());
+	std::string path = SavePath("test", "testsave");
+	std::ofstream stream = OpenSaveStream(path);
 
-	// - coreData
-	// - assets
-	// - read list
-	// - current map / script
-	//
 	map.save(stream);
 	driver.save(stream);
 
@@ -800,14 +796,11 @@ void TestLuaCore()
 	TEST(driver.helper()->get("ACTOR_01.attributes.sings").boolean == true);
 	TEST(driver.helper()->get("player.name").str == "Test Player");
 
-#if 0
 	// Save to a file for debugging
-	std::ofstream stream;
-	stream.open("save2.lua", std::ios::out);
-	assert(stream.is_open());
+	std::string path = SavePath("test", "testluacore");
+	std::ofstream stream = OpenSaveStream(path);
 	zoneDriver.save(stream);
 	stream.close();
-#endif
 
 	std::ostringstream buffer;
 	zoneDriver.save(buffer);
@@ -815,7 +808,6 @@ void TestLuaCore()
 
 	TEST(str.find("STR") != std::string::npos);
 	TEST(str.find("DEX") == std::string::npos);
-
 }
 
 void TestCombatant()
