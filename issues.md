@@ -8,6 +8,7 @@
   * Script
 * Deployment
 * EdgeGroup is a mess
+* Reasonable save/load location
 
 ## Ideas / Icebox
 

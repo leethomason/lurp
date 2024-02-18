@@ -153,22 +153,18 @@ using ActionQueue = Queue<Action>;
 struct MeleeWeapon {
 	std::string name;		// "longsword"
 	Die damageDie;			// damage = STR + damageDie
-	//int minStrength = 6;
-	//bool twoHands = false;
 };
 
 struct RangedWeapon {
 	std::string name;		// "bow"
 	Die damageDie;			// damage = damageDie
 	int ap = 0;				// armor piercing
-	//int minStrength = 6;
 	int range = 24;			// medium range, yards
 };
 
 struct Armor {
 	std::string name;
 	int armor = 0;
-	//int minStrength = 4;
 };
 
 struct SWCombatant {
