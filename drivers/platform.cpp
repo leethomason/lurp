@@ -55,6 +55,16 @@ bool CheckPath(const std::string& path, std::string& cwd)
 
 #ifdef _WIN32
 
+void InitConsole()
+{
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD oldMode = 0;
+    //SetConsoleMode(hStdin, ENABLE_EXTENDED_FLAGS | ENABLE_QUICK_EDIT_MODE | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    GetConsoleMode(handle, &oldMode);
+    DWORD mode = oldMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(handle, mode);
+}
+
 std::string OSSavePath()
 {
     PWSTR path = NULL;

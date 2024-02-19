@@ -6,6 +6,8 @@
 
 namespace lurp {
 
+void InitConsole();
+
 // Given dir="default" and stem="auto" return "c:/user/thedude/Saved Games/default/auto.lua"
 std::string SavePath(const std::string& dir, const std::string& stem, bool createDirectories = true);
 
