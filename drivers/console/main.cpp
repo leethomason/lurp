@@ -294,6 +294,8 @@ void RunConsoleTests()
 
 int main(int argc, const char* argv[])
 {
+	InitConsole();
+
 	fmt::print("LuRP\n");
 	if (argc == 1) {
 		fmt::print("LuRP story engine. This is the console line runner.\n");
