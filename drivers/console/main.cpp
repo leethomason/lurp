@@ -10,7 +10,7 @@
 #include "../platform.h"
 
 // Console driver includes
-#include "dye.h"
+//#include "dye.h"
 #include "argh.h"
 #include "crtdbg.h"
 #include <fmt/core.h>
@@ -30,7 +30,7 @@ using namespace lurp;
 
 static constexpr int configSpeakerWidth = 12;
 static constexpr tabulate::Color configTextColor = tabulate::Color::yellow;
-static constexpr tabulate::Color configChoiceColor = tabulate::Color::blue;
+static constexpr tabulate::Color configChoiceColor = tabulate::Color::cyan;
 
 static void StreamText(const std::string& s, const std::string& speaker, tabulate::Table& table)
 {
@@ -67,6 +67,22 @@ static void StreamText(const std::string& s, const std::string& speaker, tabulat
 	}
 }
 
+static void PrintTextLine(const std::string& text, tabulate::Color color, bool bold = false)
+{
+	assert(color != tabulate::Color::grey); // Grey doesn't print. Bug in tabulate?
+
+	int w = ConsoleWidth();
+	tabulate::Table table;
+	table.format().width(w - 2);
+	table.format().border("").corner("").padding(0);
+	table.format().padding_bottom(0);
+	table.format().color(color);
+	if (bold)
+		table.format().font_style({ tabulate::FontStyle::bold });
+	table.add_row({ text });
+	std::cout << table << std::endl;
+}
+
 static void PrintText(std::string speaker, const std::string& text)
 {
 	int w = ConsoleWidth();
@@ -90,23 +106,17 @@ static void PrintText(std::string speaker, const std::string& text)
 
 static void PrintChoices(const Choices& choices)
 {
-	int w = ConsoleWidth();
+	//int w = ConsoleWidth();
 	tabulate::Table table;
 	int i = 0;
 
-	table.format().width(w - 2);
-	table.format().border("").corner("").padding(0);
-	table.format().padding_bottom(1);
 	table.format().color(configChoiceColor);
 
 	for (const Choices::Choice& c : choices.choices) {
-		//fmt::print("{}: {}{}{}\n", i, dye::green, c.text, dye::reset);
 		table.add_row({ std::to_string(i), c.text });
 		i++;
 	}
 	static constexpr int choiceWidth = 2;
-	table.column(0).format().width(choiceWidth);
-	table.column(1).format().width(w - 3 - choiceWidth);
 	std::cout << table << std::endl;
 }
 
@@ -117,17 +127,17 @@ static void PrintNews(NewsQueue& queue)
 		if (ni.type == NewsType::kItemDelta) {
 			assert(ni.item);
 			int bias = ni.delta < 0 ? -1 : 1;
-			fmt::print("{}You {} {} {}{}\n", 
-				bias > 0 ? dye::green : dye::red,
-				ni.verb(), ni.delta * bias, ni.item->name,
-				dye::reset
+			tabulate::Color color = ni.delta < 0 ? tabulate::Color::red : tabulate::Color::green;
+			PrintTextLine(
+				fmt::format("You {} {} {}", ni.verb(), ni.delta * bias, ni.item->name),
+				color
 			);
 		}
 		else if (ni.type == NewsType::kLocked || ni.type == NewsType::kUnlocked) {
-			fmt::print("{}The {} was {}", dye::green, ni.noun(), ni.verb());
+			std::string s = fmt::format("The {} was {}",ni.noun(), ni.verb());
 			if (ni.item)
-				fmt::print(" by the {}", ni.item->name);
-			fmt::print("{}\n", dye::reset);
+				s += fmt::format(" by the {}", ni.item->name);
+			PrintTextLine(s, tabulate::Color::green);
 		}
 	}
 }
@@ -259,10 +269,10 @@ static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver
 
 static void PrintRoomDesc(const Zone& zone, const Room& room)
 {
-	fmt::print("{}{}{}\n", dye::white, room.name, dye::reset);
-	fmt::print("{}{}{}\n", dye::reset,  zone.name, dye::reset);
-	if (!room.desc.empty()) fmt::print("{}{}{}\n", dye::reset, room.desc, dye::reset);
-	fmt::print("\n");
+	PrintTextLine(room.name, tabulate::Color::white, true);
+	PrintTextLine(zone.name, tabulate::Color::white);
+	if (!room.desc.empty()) 
+		PrintTextLine(room.desc, tabulate::Color::white);
 }
 
 static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
@@ -333,7 +343,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				
 				ZoneDriver::TransferResult tr = driver.transferAll(*c, player);
 				if (tr == ZoneDriver::TransferResult::kLocked)
-					fmt::print("{}Container is locked.{}\n", dye::red, dye::reset);
+					PrintTextLine("The container is locked.", tabulate::Color::red);
+					//fmt::print("{}Container is locked.{}\n", dye::red, dye::reset);
 			}
 			else if (v.charIntInRange('i', (int)interactionVec.size())) {
 				driver.startInteraction(interactionVec[v.intVal]);
@@ -342,7 +353,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				int dirIdx = SelectEdge(v, edges);
 				if (dirIdx >= 0) {
 					if (driver.move(edges[dirIdx].dstRoom) == ZoneDriver::MoveResult::kLocked)
-						fmt::print("{}That way is locked.{}\n", dye::red, dye::reset);
+						PrintTextLine("That way is locked.", tabulate::Color::red);
+					//fmt::print("{}That way is locked.{}\n", dye::red, dye::reset);
 				}
 			}
 			if (driver.mode() == ZoneDriver::Mode::kNavigation) {
@@ -355,7 +367,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		}
 	}
 	if (!driver.endGameMsg().empty()) {
-		fmt::print("{}{}{}\n", dye::white, driver.endGameMsg(), dye::reset);
+		PrintTextLine(driver.endGameMsg(), tabulate::Color::white);
+		//fmt::print("{}{}{}\n", dye::white, driver.endGameMsg(), dye::reset);
 	}
 }
 
@@ -371,9 +384,9 @@ static void RunOutputTests()
 	printf("******\n");
 	static const char* para =
 		"You order your usual coffee and sit at a table outside the cafe. The morning sun warms you\n"
-		"even though the San Francisco air is cool. The note reads :\n"
+		"even though the San Francisco air is cool. The note reads:\n"
 		"\n"
-		"\"Cairo.Meet me at the library. Research section in back. - G\"\n"
+		"\"Cairo. Meet me at the library. Research section in back. - G\"\n"
 		"\n"
 		"Giselle was with you on the mission to Cairo. A good researcher, a good shot, and a good friend.";
 	PrintText("", para);
@@ -386,9 +399,22 @@ static void RunOutputTests()
 	queue.push(NewsItem::itemDelta(gold, -10, 5));
 	queue.push(NewsItem::itemDelta(gold, 10, 15));
 	PrintNews(queue);
+	printf("******\n");
 
 	Choices choices;
+	choices.choices.push_back({ "Go this way" });
+	choices.choices.push_back({ "Go that way..." });
+	choices.choices.push_back({ "Ponder." });
+	PrintChoices(choices);
+	printf("******\n");
 
+	Zone zone;
+	zone.name = "The Zone";
+	Room room;
+	room.name = "The Room";
+	room.desc = "The description of the room.";
+	PrintRoomDesc(zone, room);
+	printf("******\n");
 }
 
 int main(int argc, const char* argv[])
