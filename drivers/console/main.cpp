@@ -28,8 +28,9 @@
 
 using namespace lurp;
 
-static constexpr const char* textDye = dye::yellow;
-static constexpr const char* choiceDye = dye::yellow;
+static constexpr int configSpeakerWidth = 12;
+static constexpr tabulate::Color configTextColor = tabulate::Color::yellow;
+static constexpr tabulate::Color configChoiceColor = tabulate::Color::blue;
 
 static void StreamText(const std::string& s, const std::string& speaker, tabulate::Table& table)
 {
@@ -45,42 +46,67 @@ static void StreamText(const std::string& s, const std::string& speaker, tabulat
 		if (s[i] == '\r')
 			continue;
 		if (s[i] == '\n' && i < s.size() - 1 && s[i + 1] == '\n') {
-			buf.push_back(' ');
-			
-			if (speaker.empty()) {
+			if (speaker.empty())
 				table.add_row({ buf });
-			}
-			else {
+			else
 				table.add_row({ speaker, buf });
-			}
 			buf.clear();
 			i++;
 		}
-		if (s[i] == '\n')
+		if (s[i] == '\n') {
+			buf.push_back(' ');
 			continue;
+		}
 		buf.push_back(s[i]);
+	}
+	if (!buf.empty()) {
+		if (speaker.empty())
+			table.add_row({ buf });
+		else
+			table.add_row({ speaker, buf });
 	}
 }
 
 static void PrintText(std::string speaker, const std::string& text)
 {
-	static constexpr int kSpeakerWidth = 12;
 	int w = ConsoleWidth();
-
 	tabulate::Table table;
+
 	table.format().width(w - 2);
 	table.format().border("").corner("").padding(0);
 	table.format().padding_bottom(1);
-	table.format().color(tabulate::Color::yellow);
+	table.format().color(configTextColor);
 
 	//speaker = "foo";
 	StreamText(text, speaker, table);
 	if (speaker.empty()) {
 	}
 	else {
-		table.column(0).format().width(kSpeakerWidth);
-		table.column(1).format().width(w - 3 - kSpeakerWidth);
+		table.column(0).format().width(configSpeakerWidth);
+		table.column(1).format().width(w - 3 - configSpeakerWidth);
 	}
+	std::cout << table << std::endl;
+}
+
+static void PrintChoices(const Choices& choices)
+{
+	int w = ConsoleWidth();
+	tabulate::Table table;
+	int i = 0;
+
+	table.format().width(w - 2);
+	table.format().border("").corner("").padding(0);
+	table.format().padding_bottom(1);
+	table.format().color(configChoiceColor);
+
+	for (const Choices::Choice& c : choices.choices) {
+		//fmt::print("{}: {}{}{}\n", i, dye::green, c.text, dye::reset);
+		table.add_row({ std::to_string(i), c.text });
+		i++;
+	}
+	static constexpr int choiceWidth = 2;
+	table.column(0).format().width(choiceWidth);
+	table.column(1).format().width(w - 3 - choiceWidth);
 	std::cout << table << std::endl;
 }
 
@@ -122,11 +148,12 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 
 		if (dd.type() == ScriptType::kChoices) {
 			const Choices& choices = dd.choices();
-			int i = 0;
-			for (const Choices::Choice& c : choices.choices) {
-				fmt::print("{}: {}{}{}\n", i, choiceDye, c.text, dye::reset);
-				i++;
-			}
+			//int i = 0;
+			//for (const Choices::Choice& c : choices.choices) {
+			//	fmt::print("{}: {}{}{}\n", i, dye::green, c.text, dye::reset);
+			//	i++;
+			//}
+			PrintChoices(choices);
 			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				dd.choose(v2.intVal);
@@ -332,12 +359,37 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	}
 }
 
-void RunConsoleTests()
+static void RunConsoleTests()
 {
 	RUN_TEST(Value::Test());
 	RunConsoleBattleTests();
 }
 
+static void RunOutputTests()
+{
+	PrintText("narrator", "output");
+	printf("******\n");
+	static const char* para =
+		"You order your usual coffee and sit at a table outside the cafe. The morning sun warms you\n"
+		"even though the San Francisco air is cool. The note reads :\n"
+		"\n"
+		"\"Cairo.Meet me at the library. Research section in back. - G\"\n"
+		"\n"
+		"Giselle was with you on the mission to Cairo. A good researcher, a good shot, and a good friend.";
+	PrintText("", para);
+	printf("******\n");
+	PrintText("narrator", para);
+	printf("******\n");
+
+	NewsQueue queue;
+	Item gold = { "GOLD", "gold" };
+	queue.push(NewsItem::itemDelta(gold, -10, 5));
+	queue.push(NewsItem::itemDelta(gold, 10, 15));
+	PrintNews(queue);
+
+	Choices choices;
+
+}
 
 int main(int argc, const char* argv[])
 {
@@ -396,6 +448,9 @@ int main(int argc, const char* argv[])
 				fmt::print("LuRP tests run successfully.\n");
 			else
 				fmt::print("LuRP tests failed.\n");
+		}
+		{
+			RunOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;

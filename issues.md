@@ -14,6 +14,7 @@
   * simplest zone
   * simplest script
   * simplest battle
+* tests suite should have a flag (for verbose output)
 
 ## Ideas / Icebox
 

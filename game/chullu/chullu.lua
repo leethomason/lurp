@@ -56,7 +56,7 @@ You enter your local coffee shop. The barista sees you come in. "Morning {player
 you. A woman was looking for you a few minutes ago. Left you a note." She hands you a folded piece
 of paper.
 
-You order your usual coffee and sit at a table outside the cafe. The morning sun is warms you 
+You order your usual coffee and sit at a table outside the cafe. The morning sun warms you 
 even though the San Francisco air is cool. The note reads:
 
     Cairo. Meet me at the library. Research section in back. -G
