@@ -10,7 +10,6 @@
 #include "../platform.h"
 
 // Console driver includes
-//#include "dye.h"
 #include "argh.h"
 #include "crtdbg.h"
 #include <fmt/core.h>
@@ -32,33 +31,75 @@ static constexpr int configSpeakerWidth = 12;
 static constexpr tabulate::Color configTextColor = tabulate::Color::yellow;
 static constexpr tabulate::Color configChoiceColor = tabulate::Color::cyan;
 
+static const char* doubleNL(const char* p, const char* end)
+{
+	if (p + 1 < end && p[0] == '\n' && p[1] == '\n')
+		return p + 2;
+
+	int nl = 0;
+	int cr = 0;
+	if (p + 3 < end) {
+		for(int i=0; i<4; i++) {
+			if (p[i] == '\n')
+				nl++;
+			if (p[i] == '\r')
+				cr++;
+		}
+	}
+	if (nl == 2 && cr == 2)
+		return p + 4;
+	return nullptr;
+}
+
+static const char* skipWS(const char* p, const char* end)
+{
+	if (!isspace(*p))
+		return nullptr;
+
+	while (p < end && isspace(*p))
+		p++;
+	return p;
+}
+
 static void StreamText(const std::string& s, const std::string& speaker, tabulate::Table& table)
 {
-	// We want to ignore single \n, but keep \n\n
-	// We want to ignore \r
-	// The \n at the end of a line is a space.
-	// I hope that's all correct. Text is fiddly.
+	// Trying to get all the text rules right - so very difficult.
+	// Especially since the text coming in could be a long string literal (without new lines)
+	// or new line separated strings. And we want to handle both. And the \n \r mess.
+	// Try - just try - to treat all whitespace as a space.
+	// There are exceptions, of course.
 
 	std::string buf;
 	buf.reserve(s.size());
 
-	for (size_t i = 0; i < s.size(); i++) {
-		if (s[i] == '\r')
-			continue;
-		if (s[i] == '\n' && i < s.size() - 1 && s[i + 1] == '\n') {
+	const char* p = s.c_str();
+	const char* end = p + s.size();
+
+	while (p < end) {
+		const char* q = doubleNL(p, end);
+		if (q) {
 			if (speaker.empty())
 				table.add_row({ buf });
 			else
 				table.add_row({ speaker, buf });
 			buf.clear();
-			i++;
-		}
-		if (s[i] == '\n') {
-			buf.push_back(' ');
+			p = q;
 			continue;
 		}
-		buf.push_back(s[i]);
+		q = skipWS(p, end);
+		if (q) {
+			buf += ' ';
+			p = q;
+		}
+		else {
+			buf += *p;
+			p++;
+		}
 	}
+	// Remove trailing white space.
+	if (!buf.empty() && buf.back() == ' ')
+		buf.pop_back();
+
 	if (!buf.empty()) {
 		if (speaker.empty())
 			table.add_row({ buf });
@@ -158,11 +199,6 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 
 		if (dd.type() == ScriptType::kChoices) {
 			const Choices& choices = dd.choices();
-			//int i = 0;
-			//for (const Choices::Choice& c : choices.choices) {
-			//	fmt::print("{}: {}{}{}\n", i, dye::green, c.text, dye::reset);
-			//	i++;
-			//}
 			PrintChoices(choices);
 			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
@@ -190,24 +226,44 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 	}
 }
 
-static void PrintInventory(const Inventory& inv, bool label, const std::string& lead)
+static std::vector<std::string> wrapAlgo(const std::vector<std::string>& words, const std::string& sep, int width)
 {
-	if (label) fmt::print("Inventory:\n");
-	static int COLS = 4;
-	int nItem = 0;
-	for (const auto& itemRef : inv.items()) {
-		const Item& item = *itemRef.pItem;
-		std::string t = fmt::format("{}: {}", item.name, itemRef.count);
-		if (nItem % COLS == 0)
-			fmt::print("{}", lead);
-		fmt::print("{:<19}", t);
-		if (nItem % COLS == COLS - 1)
-			fmt::print("\n");
-		++nItem;
+	std::vector<std::string> lines;
+	std::string line;
+	for (const std::string& word : words) {
+		if (line.empty()) {
+			line = word;
+		}
+		else if (line.size() + word.size() > width) {
+			lines.push_back(line);
+			line = word;
+		}
+		else {
+			line += sep + word;
+		}
 	}
-	if (nItem == 0)
-		fmt::print("{}(empty)\n", lead);
-	fmt::print("\n");
+	if (!line.empty()) {
+		lines.push_back(line);
+	}
+	return lines;
+}
+
+static void PrintInventory(const Inventory& inv)
+{
+	if (inv.emtpy()) {
+		fmt::print("Inventory empty.\n");
+		return;
+	}
+
+	int w = ConsoleWidth();
+	std::vector<std::string> words;
+	for (const auto& itemRef : inv.items()) {
+		words.push_back(fmt::format("{}: {}", itemRef.pItem->name, itemRef.count));
+	}
+	std::vector<std::string> lines = wrapAlgo(words, " | ", w - 4);
+	for (const std::string& line : lines) {
+		fmt::print("| {} |\n", line);
+	}
 }
 
 static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
@@ -219,7 +275,9 @@ static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
 		fmt::print("  c{}: {} {}\n", idx++, container->name, locked ? "(locked)" : "");
 		if (!locked) {
 			const Inventory& inv = driver.getInventory(*container);
-			PrintInventory(inv, false, "    ");
+			fmt::print("      ");
+			if (!inv.emtpy())
+				PrintInventory(inv);
 		}
 	}
 }
@@ -269,10 +327,18 @@ static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver
 
 static void PrintRoomDesc(const Zone& zone, const Room& room)
 {
-	PrintTextLine(room.name, tabulate::Color::white, true);
-	PrintTextLine(zone.name, tabulate::Color::white);
-	if (!room.desc.empty()) 
-		PrintTextLine(room.desc, tabulate::Color::white);
+	tabulate::Table table;
+
+	table.add_row({ room.name });
+	table.add_row({ zone.name });
+	if (!room.desc.empty())
+		table.add_row({ room.desc });
+
+	table.row(1).format().hide_border_top();
+	if (!room.desc.empty())
+		table.row(2).format().hide_border_top();
+
+	std::cout << table << std::endl;
 }
 
 static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
@@ -307,9 +373,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		else if (mode == ZoneDriver::Mode::kChoices)
 		{
 			const Choices& choices = driver.choices();
-			for (size_t i = 0; i < choices.choices.size(); i++) {
-				fmt::print("{}: {}\n", i, choices.choices[i].text);
-			}
+			PrintChoices(choices);
 			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				driver.choose(v2.intVal);
@@ -319,14 +383,13 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			if (!driver.endGameMsg().empty())
 				break;
 
-			fmt::print("\n");
 			PrintRoomDesc(driver.currentZone(), driver.currentRoom());
 			const Actor& player = driver.getPlayer();
 			const ContainerVec& containerVec = driver.getContainers();
 			const InteractionVec& interactionVec = driver.getInteractions();
 			std::vector<DirEdge> edges = driver.dirEdges();
 
-			PrintInventory(assets.getInventory(player), true, "  ");
+			PrintInventory(assets.getInventory(player));
 			PrintContainers(driver, containerVec);
 			PrintInteractions(interactionVec, assets);
 			PrintEdges(edges);
@@ -396,6 +459,10 @@ static void RunOutputTests()
 
 	NewsQueue queue;
 	Item gold = { "GOLD", "gold" };
+	Item silver = { "SILVER", "silver" };
+	Item sword = { "SWORD", "sword" };
+	Item armor = { "ARMOR", "armor" };
+
 	queue.push(NewsItem::itemDelta(gold, -10, 5));
 	queue.push(NewsItem::itemDelta(gold, 10, 15));
 	PrintNews(queue);
@@ -414,6 +481,12 @@ static void RunOutputTests()
 	room.name = "The Room";
 	room.desc = "The description of the room.";
 	PrintRoomDesc(zone, room);
+	printf("******\n");
+	Inventory inv;
+	inv.addItem(gold, 10);
+	inv.addItem(silver, 5);
+	inv.addItem(sword, 1);
+	PrintInventory(inv);
 	printf("******\n");
 }
 
@@ -478,7 +551,8 @@ int main(int argc, const char* argv[])
 				fmt::print("LuRP tests failed.\n");
 		}
 		{
-			RunOutputTests();
+			// fixme: add flag
+			//RunOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;

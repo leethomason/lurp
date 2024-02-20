@@ -56,13 +56,13 @@ You enter your local coffee shop. The barista sees you come in. "Morning {player
 you. A woman was looking for you a few minutes ago. Left you a note." She hands you a folded piece
 of paper.
 
-You order your usual coffee and sit at a table outside the cafe. The morning sun warms you 
+You order your usual coffee and sit at a table outside the cafe. The morning sun warms you
 even though the San Francisco air is cool. The note reads:
 
-    Cairo. Meet me at the library. Research section in back. -G
+    "Cairo. Meet me at the library. Research section in back. -G"
 
 Giselle was with you on the mission to Cairo. A good researcher, a good shot, and a good friend.
-You both hoped to never see the Octal Eye again after that cursed tomb and its visions. But here 
+You both hoped to never see the Octal Eye again after that cursed tomb and its visions. But here
 you are. She must have had the same dream - vision - last night.
 
 You finish the coffee. You suspect you'll need it.
