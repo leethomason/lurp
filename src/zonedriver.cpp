@@ -236,7 +236,7 @@ ScriptEnv ZoneDriver::getScriptEnv(const Interaction* interaction)
 	env.zone = currentZone().entityID;
 	env.room = currentRoom().entityID;
 	env.player = _player;
-	env.npc = interaction->actor;
+	env.npc = interaction->npc;
 	return env;
 }
 

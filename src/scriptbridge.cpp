@@ -888,7 +888,7 @@ Interaction ScriptBridge::readInteraction() const
 		i.entityID = getStrField("entityID", {});
 		i.name = getStrField("name", { "" });
 		i.next = readEntityID("next", {});
-		i.actor = readEntityID("actor", { "" });
+		i.npc = readEntityID("npc", { "" });
 		i._required = getBoolField("required", { false });
 		i.eval = getFuncField(L, "eval");
 		i.code = getFuncField(L, "code");

@@ -69,6 +69,9 @@ static void StreamText(const std::string& s, const std::string& speaker, tabulat
 	// Try - just try - to treat all whitespace as a space.
 	// There are exceptions, of course.
 
+	if (s.empty())
+		return;
+
 	std::string buf;
 	buf.reserve(s.size());
 
@@ -147,17 +150,16 @@ static void PrintText(std::string speaker, const std::string& text)
 
 static void PrintChoices(const Choices& choices)
 {
-	//int w = ConsoleWidth();
 	tabulate::Table table;
 	int i = 0;
 
 	table.format().color(configChoiceColor);
+	table.format().hide_border();
 
 	for (const Choices::Choice& c : choices.choices) {
 		table.add_row({ std::to_string(i), c.text });
 		i++;
 	}
-	static constexpr int choiceWidth = 2;
 	std::cout << table << std::endl;
 }
 
@@ -268,32 +270,70 @@ static void PrintInventory(const Inventory& inv)
 
 static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
 {
+	if (vec.empty())
+		return;
+
+	tabulate::Table table;
+	table.format().hide_border();
+	table.format().color(configChoiceColor);
+
 	int idx = 0;
 	for (const auto container : vec) {
 		if (idx == 0) fmt::print("Containers: \n");
 		bool locked = driver.locked(*container);
-		fmt::print("  c{}: {} {}\n", idx++, container->name, locked ? "(locked)" : "");
+		std::string istr;
 		if (!locked) {
 			const Inventory& inv = driver.getInventory(*container);
-			fmt::print("      ");
-			if (!inv.emtpy())
-				PrintInventory(inv);
+			for (const auto& itemRef : inv.items()) {
+				if (!istr.empty())
+					istr += " | ";
+					istr += fmt::format("{}: {}", itemRef.pItem->name, itemRef.count);
+			}
 		}
+		std::string option = fmt::format("c{}", idx);
+		table.add_row({ option, container->name, locked ? "(locked)" : "", istr });
+		idx++;
 	}
+	std::cout << table << std::endl;
 }
 
 static void PrintInteractions(const InteractionVec& vec, const ScriptAssets&)
 {
-	int idx = 0;
-	for (const auto i : vec) {
-		if (idx == 0) fmt::print("Here: \n");
-		fmt::print("  i{}: {}\n", idx++, i->name);
+	if (vec.empty())
+		return;
+
+	tabulate::Table table;
+	table.format().hide_border();
+	table.format().color(configChoiceColor);
+
+	int i = 0;
+	for (const auto iact : vec) {
+		std::string s = fmt::format("i{}", i);
+		table.add_row({ s, iact->name });
+		i++;
 	}
+	std::cout << table << std::endl;
+
 }
 
 static void PrintEdges(const std::vector<DirEdge>& edges) {
 	int idx = 0;
 	fmt::print("Go:\n");
+
+	tabulate::Table table;
+	table.format().hide_border();
+	table.format().color(configChoiceColor);
+
+	for (const DirEdge& e : edges) {
+		if (e.dir != Edge::Dir::kUnknown)
+			table.add_row({ e.dirShort, e.name, e.locked ? " (locked)" : "" });
+		else
+			table.add_row({ std::to_string(idx), e.name, e.locked ? " (locked)" : "" });
+		idx++;
+	}
+	std::cout << table << std::endl;
+
+	/*
 	for (const DirEdge& e : edges) {
 		if (e.dir != Edge::Dir::kUnknown)
 			fmt::print("  {}: {} {}\n", e.dirShort, e.name, e.locked ? " (locked)" : "");
@@ -301,6 +341,7 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 			fmt::print("  {}: {} {}\n", idx, e.name, e.locked ? " (locked)" : "");
 		idx++;
 	}
+	*/
 
 }
 
@@ -328,6 +369,7 @@ static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver
 static void PrintRoomDesc(const Zone& zone, const Room& room)
 {
 	tabulate::Table table;
+	int w = ConsoleWidth();
 
 	table.add_row({ room.name });
 	table.add_row({ zone.name });
@@ -335,8 +377,13 @@ static void PrintRoomDesc(const Zone& zone, const Room& room)
 		table.add_row({ room.desc });
 
 	table.row(1).format().hide_border_top();
-	if (!room.desc.empty())
+	if (!room.desc.empty()) {
 		table.row(2).format().hide_border_top();
+		// I really don't like the magic values - I hope 4 - to use tabulate.  
+		int cellWidth = std::max(10, w - 4);
+		if (room.desc.size() > cellWidth)
+			table.format().width(cellWidth);
+	}
 
 	std::cout << table << std::endl;
 }
@@ -552,7 +599,7 @@ int main(int argc, const char* argv[])
 		}
 		{
 			// fixme: add flag
-			//RunOutputTests();
+			RunOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;

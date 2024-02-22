@@ -112,7 +112,7 @@ struct Interaction {
 	EntityID entityID;
 	std::string name;
 	EntityID next;
-	EntityID actor;
+	EntityID npc;
 	int eval = -1;
 	int code = -1;
 	bool _required = false;

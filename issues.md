@@ -7,7 +7,6 @@
   * Readme
   * Script
 * Deployment
-* Better looking console output
 * Turn battle driver on
 * Auto-save before battle
 * Examples:
@@ -23,6 +22,7 @@
 
 ## Done
 
+* Better looking console output
 * EdgeGroup is a mess
 * Reasonable save/load location
 * NewsQueue and BattleQueue should be the same class
