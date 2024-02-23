@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <fmt/format.h>
 
 #include "zone.h"
 #include "scripttypes.h"
@@ -35,8 +36,11 @@ struct ScriptAssets : public IAssetHandler
 	std::map<EntityID, Inventory> inventories;
 
 	ScriptRef get(const EntityID& entityID) const {
-		return entityIDToIndex.at(entityID);
+		auto it = entityIDToIndex.find(entityID);
+		FatalError(fmt::format("entity '{}' does not exist.\n", entityID));
+		return it->second;
 	}
+
 	bool isAsset(const EntityID& entityID) const {
 		return entityIDToIndex.find(entityID) != entityIDToIndex.end();
 	}

@@ -202,6 +202,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 		if (dd.type() == ScriptType::kChoices) {
 			const Choices& choices = dd.choices();
 			PrintChoices(choices);
+			fmt::print("> ");
 			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				dd.choose(v2.intVal);
@@ -421,6 +422,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		{
 			const Choices& choices = driver.choices();
 			PrintChoices(choices);
+			fmt::print("> ");
 			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				driver.choose(v2.intVal);
@@ -443,7 +445,6 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			fmt::print("Menu: (/s)ave (/l)oad (/c)ycle (/q)uit\n");
 
 			fmt::print("> ");
-
 			Value v = Value::ParseValue(ReadString());
 			if (ProcessMenu(v.rawStr, dir, driver)) {
 				break;
@@ -599,7 +600,7 @@ int main(int argc, const char* argv[])
 		}
 		{
 			// fixme: add flag
-			RunOutputTests();
+			//RunOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;
