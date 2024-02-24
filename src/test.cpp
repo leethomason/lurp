@@ -56,6 +56,21 @@ static void PrintForest(const ScriptAssets& assets, const std::vector<NodeRef>& 
 }
 */
 
+void BridgeWorkingTest(const ScriptBridge& bridge)
+{
+	TEST(bridge.getLuaState());
+
+}
+
+void HaveCAssetsTest(const ConstScriptAssets& ca)
+{
+	TEST(ca.zones.size() > 0);
+	TEST(ca.scripts.size() > 0);
+
+	ScriptAssets assets(ca);
+	TEST(assets.getZone("TEST_ZONE_0").name == "TestDungeon");
+}
+
 static void BasicTest(const ConstScriptAssets& ca)
 {
 	ScriptAssets assets(ca);
@@ -1105,6 +1120,8 @@ int RunTests()
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("");
 
+	RUN_TEST(BridgeWorkingTest(bridge));
+	RUN_TEST(HaveCAssetsTest(csassets));
 	RUN_TEST(BasicTest(csassets));
 	RUN_TEST(TestScriptBridge(bridge));
 	RUN_TEST(DialogTest_Bookcase(csassets, "DIALOG_BOOKCASE_V1", bridge));
