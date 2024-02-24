@@ -1076,8 +1076,6 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 
 int RunTests()
 {
-	//fmt::print("sizeof(ConstScriptAssets) = {}\n", sizeof(ConstScriptAssets));
-
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("");
 
