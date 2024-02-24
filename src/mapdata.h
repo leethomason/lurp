@@ -56,33 +56,7 @@ struct NewsItem {
 	}
 };
 
-struct NewsQueue {
-	static constexpr size_t kMaxSize = 16;
-
-	void push(const NewsItem& ni) {
-		while (queue.size() >= kMaxSize)
-			queue.pop();
-		queue.push(ni);
-	}
-
-	NewsItem pop() {
-		if (queue.empty())
-			return NewsItem();
-		NewsItem ni = queue.front();
-		queue.pop();
-		return ni;
-	}
-
-	bool empty() const {
-		return queue.empty();
-	}
-
-	size_t size() const {
-		return queue.size();
-	}
-
-	std::queue<NewsItem> queue;
-};
+using NewsQueue  = Queue<NewsItem>;
 
 struct MapData
 {

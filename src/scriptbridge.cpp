@@ -4,6 +4,7 @@
 #include "zone.h"
 #include "scriptasset.h"
 #include "util.h"
+#include "../drivers/platform.h"
 
 #include <fmt/core.h>
 #include <vector>
@@ -204,9 +205,11 @@ void ScriptBridge::doFile(const std::string& filename)
 {
 
 	LuaStackCheck check(L);
+
+	std::string cwd;
+	CheckPath(filename, cwd);
 	int error = luaL_loadfile(L, filename.c_str());
 	if (error) {
-		fmt::print("Error loading file '{}'. Is the working directory set to the root?\n", filename);
 		fmt::print("Error occurs when calling luaL_loadfile() 0x{:x}\n", error);
 		fmt::print("Error: '{}'\n", lua_tostring(L, -1));
 	}
@@ -244,7 +247,7 @@ void ScriptBridge::pushNewTable(const std::string& key, int index)
 
 		lua_pushstring(L, key.c_str());
 		int t = lua_gettable(L, -2);
-		assert(t == LUA_TTABLE);
+		CHECK(t == LUA_TTABLE);
 	}
 	else {
 		lua_newtable(L);
@@ -252,7 +255,7 @@ void ScriptBridge::pushNewTable(const std::string& key, int index)
 
 		lua_pushinteger(L, index);
 		int t = lua_gettable(L, -2);
-		assert(t == LUA_TTABLE);
+		CHECK(t == LUA_TTABLE);
 	}
 }
 
@@ -261,7 +264,7 @@ void ScriptBridge::pushGlobal(const std::string& key)
 {
 	LuaStackCheck check(L, 1);
 	int t = lua_getglobal(L, key.c_str());
-	assert(t != LUA_TNIL);
+	CHECK(t != LUA_TNIL);
 }
 
 void ScriptBridge::nilGlobal(const std::string& key)
@@ -587,6 +590,7 @@ Container ScriptBridge::readContainer() const
 		c.entityID = getStrField("entityID", {});
 		c.name = getStrField("name", {});
 		c.locked = getBoolField("locked", { false });
+		c.key = getStrField("key", { "" });
 		c.eval = getFuncField(L, "eval");
 		c.inventory = readInventory();
 	}
@@ -833,7 +837,7 @@ EntityID ScriptBridge::readEntityID(const std::string& key, const std::optional<
 	else if (v.type == LUA_TTABLE) {
 		lua_pushstring(L, key.c_str());
 		int t = lua_gettable(L, -2);
-		assert(t == LUA_TTABLE);
+		CHECK(t == LUA_TTABLE);
 		id = getStrField("entityID", {});
 		lua_pop(L, 1);
 	}

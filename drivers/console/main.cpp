@@ -7,6 +7,8 @@
 #include "consolebattle.h"
 #include "scriptasset.h"
 
+#include "../platform.h"
+
 // Console driver includes
 #include "dye.h"
 #include "argh.h"
@@ -17,15 +19,23 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <array>
-#include <filesystem>
 
 using namespace lurp;
+
+static constexpr const char* textDye = dye::yellow;
+static constexpr const char* choiceDye = dye::yellow;
+
+static void PrintText(const std::string& speaker, const std::string& text)
+{
+	if (speaker.empty())
+		fmt::print("{}{}{}\n", textDye, text, dye::reset);
+	else
+		fmt::print("{}: {}{}{}\n", speaker, textDye, text, dye::reset);
+}
 
 static void PrintNews(NewsQueue& queue)
 {
@@ -56,10 +66,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 	while (!dd.done()) {
 		while (dd.type() == ScriptType::kText) {
 			TextLine line = dd.line();
-			if (line.speaker.empty())
-				fmt::print("{}\n", line.text);
-			else
-				fmt::print("{}: {}\n", line.speaker, line.text);
+			PrintText(line.speaker, line.text);
 			dd.advance();
 			PrintNews(mapData.newsQueue);
 		}
@@ -70,7 +77,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 			const Choices& choices = dd.choices();
 			int i = 0;
 			for (const Choices::Choice& c : choices.choices) {
-				fmt::print("{}: {}\n", i, c.text);
+				fmt::print("{}: {}{}{}\n", i, choiceDye, c.text, dye::reset);
 				i++;
 			}
 			Value v2 = Value::ParseValue(ReadString());
@@ -155,17 +162,17 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 
 }
 
-static bool ProcessMenu(const std::string& s, const std::string& path, ZoneDriver& zd)
+static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver& zd)
 {
+	std::string path = SavePath(dir, "save");
+
 	if (s == "/s" || s == "/c") {
-		fmt::print("Saving...\n");
-		std::ofstream stream;
-		stream.open(path, std::ios::out);
-		assert(stream.is_open());
+		fmt::print("Saving to '{}'...\n", path);
+		std::ofstream stream = OpenSaveStream(path);
 		zd.save(stream);
 	}
 	if (s == "/l" || s == "/c") {
-		fmt::print("Loading...\n");
+		fmt::print("Loading from '{}'...\n", path);
 		ScriptBridge loader;
 		loader.loadLUA(path);
 		zd.load(loader);
@@ -197,7 +204,7 @@ static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
 	return -1;
 }
 
-static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string saveFile)
+static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string dir)
 {
 	ZoneDriver driver(assets, &bridge, zone, "player");
 	while (true) {
@@ -207,7 +214,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			while (driver.mode() == ZoneDriver::Mode::kText) {
 				// FIXME: support speaker mode
 				TextLine tl = driver.text();
-				fmt::print("{}\n", tl.text);
+				//fmt::print("{}\n", tl.text);
+				PrintText(tl.speaker, tl.text);
 				driver.advance();
 			}
 			PrintNews(driver.mapData.newsQueue);
@@ -243,7 +251,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			fmt::print("> ");
 
 			Value v = Value::ParseValue(ReadString());
-			if (ProcessMenu(v.rawStr, saveFile, driver)) {
+			if (ProcessMenu(v.rawStr, dir, driver)) {
 				break;
 			}
 			else if (v.charIntInRange('c', (int)containerVec.size())) {
@@ -277,22 +285,6 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	}
 }
 
-std::string FindSavePath(const std::string& scriptFile)
-{
-	std::ifstream stream;
-	stream.open("game/saves/saves.md", std::ios::in);
-	if (!stream.is_open()) {
-		fmt::print("WARNING - no save path found\n");
-		fmt::print("Save and load will be to the current directory.\n");
-		return "save.lua";
-	}
-	stream.close();
-	std::filesystem::path p = scriptFile;
-	std::string result = std::string("game/saves/save-") + p.stem().string() + ".lua";
-	fmt::print("Save path: {}\n", result);
-	return result;
-}
-
 void RunConsoleTests()
 {
 	RUN_TEST(Value::Test());
@@ -315,6 +307,7 @@ int main(int argc, const char* argv[])
 		fmt::print("  -r, --era         0: ancient, 1: west, 2: future\n");
 		fmt::print("  --seed            Random number seed\n");
 	}
+
 	int rc = 0;
 
 #ifdef  _DEBUG
@@ -360,19 +353,20 @@ int main(int argc, const char* argv[])
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;
 
-		std::string saveFile = FindSavePath(scriptFile);
-
 		if (battleSim) {
 			ConsoleBattleSim(era, playerBS, enemyBS, seed);
 		}
 		else {
 			// Run game.
-			if (!scriptFile.empty() && !startingZone.empty()) {
+			if (!scriptFile.empty()) {
 				ScriptBridge bridge;
 				ConstScriptAssets csassets = bridge.readCSA(scriptFile);
 				ScriptAssets assets(csassets);
 
-				ScriptRef ref = assets.get(argv[2]);
+				ScriptRef ref;
+				if (argc > 2)
+					ref = assets.get(argv[2]);
+
 				if (ref.type == ScriptType::kScript) {
 					ScriptEnv env;
 					env.script = argv[2];
@@ -380,9 +374,13 @@ int main(int argc, const char* argv[])
 					MapData mapData(&bridge, 567 + clock());
 					ConsoleScriptDriver(assets, bridge, env, mapData);
 				}
-				else if (ref.type == ScriptType::kZone) {
+				else {
+					std::string dir = GameFileToDir(scriptFile);
+					std::string savePath = SavePath(dir, "saves");
+					fmt::print("Save path: {}\n", savePath);
 					fmt::print("\n\n");
-					ConsoleZoneDriver(assets, bridge, startingZone, saveFile);
+
+					ConsoleZoneDriver(assets, bridge, startingZone, dir);
 				}
 			}
 		}

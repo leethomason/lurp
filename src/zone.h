@@ -10,18 +10,18 @@ namespace lurp {
 
 struct ScriptAssets;
 class ScriptBridge;
-struct NewsQueue;
 
 struct Container {
 	EntityID entityID;
 	std::string name;
 	int eval = -1;
 	bool locked = false;
+	EntityID key;
 	Inventory inventory;
 
-	std::pair<bool, Variant> get(const std::string& key) const {
-		if (key == "locked") return { true, Variant(locked) };
-		if (key == "name") return { true, Variant(name) };
+	std::pair<bool, Variant> get(const std::string& k) const {
+		if (k == "locked") return { true, Variant(locked) };
+		if (k == "name") return { true, Variant(name) };
 		return { false, Variant() };
 	}
 	static constexpr ScriptType type{ ScriptType::kContainer };

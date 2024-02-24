@@ -302,14 +302,24 @@ particular direction.
 
 ### EdgeGroup
 
-A tool to generate edges. Has no entityID, although the edges it generates do. This allows you to connect
+A tool to generate edges. Has no entityID. This allows you to connect
 a group of Rooms to each other. For instance,
 a central plaza may connect to many buildings,
-and this allows you to set up all the connections
-at once.
+and this allows you to set up all the connections at once.
+Rooms can have other Edges that you set up.
 
-* name to display - the same for each room, but {dest} can be used to specialize.
-* rooms[] list of entityID for each room in the group
+* rooms - table of entityIDs to connect.
+
+### Container
+
+Containers hold stuff the player can interact with. Chests, barrels, etc.
+
+* entityID
+* name - "iron chest" for example
+* `eval()` - is the container visible?
+* locked - initial locked state
+* key - itemID to unlock
+* items - table of items initially present in the container
 
 ### Container
 
@@ -328,7 +338,6 @@ Containers hold stuff the player can interact with.
 An Interaction is something on the map you can talk to, investigate, look at, or otherwise interact with.
 A required Interaction will be activated when the player enters the Room. Otherwise, the driver will
 allow the player to select Interactions in the Room.
-(Very similar to a CallScript, but with some extra features for working with Maps/Zones.)
 
 * entityID
 * name
@@ -356,6 +365,11 @@ plot, and are the building block of the game.
 Many games contain lots of text, and Text is a very
 flexible object. Start simple if you are learning.
 
+* entityID
+* `eval()` - determines if the text is available. If not, will be hidden.
+* `code()` - called when the text is about to be read
+* `test` - a test to determine if the text should be shown (see examples below)
+
 The simplest example:
 
 ```lua
@@ -369,12 +383,12 @@ multiple lines of text:
 
 ```lua
 Text {
-  { "Hello, there." },
-  { "You've travelled far." }
+  "Hello, there", "You've travelled far."
 }
 -- OR --
 Text {
-  "Hello, there", "You've travelled far."
+  { "Hello, there." },
+  { "You've travelled far." }
 }
 ```
 
@@ -389,19 +403,34 @@ Text {
 }
 ```
 
+You can use `eval()` and `code()`
 
-
-
-* entityID
-* eval()
-* code()
-* lines[]
-
-### Lines
-
-* {test}
-* speaker
-* text []
+```lua
+Text {
+  eval = function() return player:hasItem("ARTIFACT") end,
+  s = "Guardian",
+  "You've found the artifact."
+}
+-- OR --
+Text {
+  { s = "Guardian", "Welcome to the temple." },
+  {
+      eval = function() return player:hasItem("ARTIFACT") end,
+      s = "Guardian",
+      "You've found the artifact."
+  }  
+}
+-- OR even... ---
+Text {
+  eval = function() return zone.guardianAwake end
+  { s = "Guardian", "Welcome to the temple." },
+  {
+      eval = function() return player:hasItem("ARTIFACT") end,
+      s = "Guardian",
+      "You've found the artifact."
+  }  
+}
+```
 
 ### Choices
 

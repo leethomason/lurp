@@ -164,8 +164,6 @@ end
 
 function Combatant(c)
     c.type = "Combatant"
-    -- always generated; ephemeral entityID. actually having a specified
-    -- entityID is potentially a dangerous conflict.
     c.entityID = createEntityID(nil, nil, "COMBATANT")
     Combatants[c.entityID] = c
     addToEntities(c)
@@ -234,7 +232,7 @@ function EdgeGroup(g)
             e.entityID = "_GEN_EDGE::" .. g.rooms[i] .. "-" .. g.rooms[j]
             e.room1 = g.rooms[i]
             e.room2 = g.rooms[j]
-            e.name = g.name
+            e.name = "{dest}"       -- small hack; used to assign dest name in dirEdges. magic value.
             Edges[e.entityID] = e
             addToEntities(e)
             -- can't lock edges in a group

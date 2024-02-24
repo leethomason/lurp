@@ -32,11 +32,11 @@ void ScriptHelper::setupScriptEnv()
 	ScriptBridge::LuaStackCheck check(L);
 
 	int exists = lua_getglobal(L, "script");
-	assert(exists == LUA_TNIL);
+	CHECK(exists == LUA_TNIL); 
 	lua_pop(L, 1);
 
 	int t = lua_getglobal(L, "SetupScriptEnv");
-	assert(t == LUA_TFUNCTION);
+	CHECK(t == LUA_TFUNCTION);
 
 	lua_pushstring(L, _SCRIPTENV);
 	lua_pushstring(L, _scriptEnv.player.c_str());
@@ -63,7 +63,7 @@ void ScriptHelper::tearDownScriptEnv()
 	ScriptBridge::LuaStackCheck check(L);
 
 	int t = lua_getglobal(L, "ClearScriptEnv");
-	assert(t == LUA_TFUNCTION);
+	CHECK(t == LUA_TFUNCTION);
 	pcall(-1, 0, 0);
 
 	_coreData.clearScriptEnv();
