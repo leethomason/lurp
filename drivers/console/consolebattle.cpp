@@ -248,9 +248,9 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 		armor = { "chain", 3 };
 
 		// type, name, cost, range, effect
-		power0 = { ModType::kBolt, "Fire Bolt", 1, 2 };
-		power1 = { ModType::kHeal, "Heal", 3, 0 };
-		power2 = { ModType::kPowerCover, "Shield of Force", 2, 0, 2 };
+		power0 = SWPower(ModType::kBolt, "Fire Bolt", 1, 2);
+		power1 = SWPower(ModType::kHeal, "Heal", 3, 0);
+		power2 = SWPower(ModType::kPowerCover, "Shield of Force", 2, 0, 2);
 
 		names[0] = "Skeleton Warrior";
 		names[1] = "Skeleton Archer";
@@ -260,9 +260,9 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 		mw = mwPlus = { "knife", Die(1, 4, 0) };
 		rw = { "revolver", Die(2, 6, 1), 1, 24 };
 
-		power0 = { ModType::kBolt, "Arcane Bolt", 1, 2 };
-		power1 = { ModType::kHeal, "Blessed Heal", 3, 0 };
-		power2 = { ModType::kBolt, "Dark Mind", 3, 1, -1 };
+		power0 = SWPower(ModType::kBolt, "Arcane Bolt", 1, 2);
+		power1 = SWPower(ModType::kHeal, "Blessed Heal", 3, 0);
+		power2 = SWPower(ModType::kBolt, "Dark Mind", 3, 1, -1);
 
 		names[0] = "Brawler";
 		names[1] = "Gunslinger";
@@ -274,9 +274,9 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 		rw = { "blaster", Die(2, 6, 0), 2, 30 };
 		armor = { "plasteel", 4 };
 
-		power0 = { ModType::kPowerCover, "Force Shield", 2, 0, 2 };
-		power1 = { ModType::kBoost, "Focus", 3, 1, 1 };
-		power2 = { ModType::kBoost, "Confuse", 3, 2, -1 };
+		power0 = SWPower(ModType::kPowerCover, "Force Shield", 2, 0, 2);
+		power1 = SWPower(ModType::kBoost, "Focus", 3, 1, 1);
+		power2 = SWPower(ModType::kBoost, "Confuse", 3, 2, -1);
 
 		names[0] = "Knight";
 		names[1] = "Marine";
@@ -472,36 +472,36 @@ static void TestModStr()
 		std::vector<ActivePower> active = { apOkayBoost, apIceWall };
 		int result = BattleSystem::applyMods(ModType::kBoost, active, mods);
 
-		TEST(result == 1);
+		TEST(result == 2);
 		TEST(mods.size() == 1);
-		TEST(ModStr(mods) == "+1 Okay Boost");
+		TEST(ModStr(mods) == "+2 Okay Boost");
 	}
 	{
 		std::vector<ModInfo> mods;
 		std::vector<ActivePower> active = { apOkayBoost, apIceWall, apSuperBoost };
 		int result = BattleSystem::applyMods(ModType::kBoost, active, mods);
 
-		TEST(result == 2);
+		TEST(result == 4);
 		TEST(mods.size() == 1);
-		TEST(ModStr(mods) == "+2 Super Boost");
+		TEST(ModStr(mods) == "+4 Super Boost");
 	}
 	{
 		std::vector<ModInfo> mods;
 		std::vector<ActivePower> active = { apOkayBoost, apIceWall, apSuperBoost, apFuzzyMind };
 		int result = BattleSystem::applyMods(ModType::kBoost, active, mods);
 
-		TEST(result == 1);
+		TEST(result == 2);
 		TEST(mods.size() == 2);
-		TEST(ModStr(mods) == "+2 Super Boost, -1 Fuzzy Mind");
+		TEST(ModStr(mods) == "+4 Super Boost, -2 Fuzzy Mind");
 	}
 	{
 		std::vector<ModInfo> mods;
 		std::vector<ActivePower> active = { apOkayBoost, apIceWall, apSuperBoost, apFuzzyMind };
 		int result = BattleSystem::applyMods(ModType::kPowerCover, active, mods);
 
-		TEST(result == 1);
+		TEST(result == 2);
 		TEST(mods.size() == 1);
-		TEST(ModStr(mods) == "+1 Frozen");
+		TEST(ModStr(mods) == "+2 Frozen");
 	}
 }
 

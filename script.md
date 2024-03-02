@@ -321,6 +321,18 @@ Containers hold stuff the player can interact with. Chests, barrels, etc.
 * key - itemID to unlock
 * items - table of items initially present in the container
 
+### Container
+
+Containers hold stuff the player can interact with.
+
+* entityID
+* name - "iron chest" for example
+* `eval()` - is the container visible?
+* locked - initial locked state
+* key: itemID to unlock
+* items[]: list of itemIDs or {itemID, count} in *initial* state
+* eval()
+
 ### Interaction
 
 An Interaction is something on the map you can talk to, investigate, look at, or otherwise interact with.

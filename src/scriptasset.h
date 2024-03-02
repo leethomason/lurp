@@ -37,8 +37,9 @@ struct ScriptAssets : public IAssetHandler
 
 	ScriptRef get(const EntityID& entityID) const {
 		auto it = entityIDToIndex.find(entityID);
-		if (it == entityIDToIndex.end())
+		if (it == entityIDToIndex.end()) {
 			FatalError(fmt::format("entity '{}' does not exist.\n", entityID));
+		}
 		return it->second;
 	}
 
