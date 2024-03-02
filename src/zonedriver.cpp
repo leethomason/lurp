@@ -535,8 +535,12 @@ ZoneDriver::Mode ZoneDriver::mode() const
 			return Mode::kText;
 		else if (type == ScriptType::kChoices)
 			return Mode::kChoices;
-		else
+		else if (type == ScriptType::kBattle)
+			return Mode::kBattle;
+		else {
 			assert(false);
+			FATAL_INTERNAL_ERROR();
+		}
 	}
 	return Mode::kNavigation;
 }
