@@ -98,7 +98,7 @@ static void PrintCombatantsInRegion(int region, const std::vector<SWCombatant>& 
 	options.indent = 4;
 
 	ionic::Table table(options);
-	table.addRow({ "Index", "Name", "Fight", "Shoot", "Arcane", "Melee", "Ranged", "Armor", "Tough", "Shaken", "Wnds" });
+	table.addRow({ "", "Name", "Fight", "Shoot", "Arcane", "Melee", "Range", "Armor", "Tough", "Shaken", "Wnds" });
 
 	int nRow = 0;
 	for (size_t i = 0; i < combatants.size(); i++) {
@@ -107,16 +107,22 @@ static void PrintCombatantsInRegion(int region, const std::vector<SWCombatant>& 
 		if (c.region != region) continue;
 		nRow++;
 
+		std::string melee, range;
+		if (c.hasMelee())
+			melee = fmt::format("{} ({})", c.meleeWeapon.name, DieStr(c.meleeWeapon.damageDie));
+		if (c.hasRanged())
+			range = fmt::format("{} ({})", c.rangedWeapon.name, DieStr(c.rangedWeapon.damageDie));
+
 		table.addRow({
 			std::to_string(i),
 			c.name,
 			DieStr(c.fighting),
 			DieStr(c.shooting),
 			DieStr(c.arcane),
-			c.meleeWeapon.name,
-			c.hasRanged() ? c.rangedWeapon.name : "",
+			melee,
+			range,
 			c.hasArmor() ? c.armor.name : "",
-			std::to_string(c.toughness() + c.armor.armor),
+			fmt::format("{} ({})", c.toughness() + c.armor.armor, c.armor.armor),
 			std::to_string(c.shaken),
 			std::to_string(c.wounds)
 			});
