@@ -29,7 +29,7 @@ FetchContent_Declare(
 )
 FetchContent_Declare(
   ionic
-  GIT_REPOSITORY git@github.com:leethomason/ionic.git
+  GIT_REPOSITORY https://github.com/leethomason/ionic.git
   GIT_TAG        0ae5faabefb4af205e658c5e980e2db203d54298
 )
 FetchContent_MakeAvailable(lua fmt argh ionic)
