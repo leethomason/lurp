@@ -5,7 +5,12 @@ project(lurp)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+
+if(MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 FetchContent_Declare(
   fmt
@@ -25,7 +30,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   ionic
   GIT_REPOSITORY git@github.com:leethomason/ionic.git
-  GIT_TAG        702372d0d624bbbaecfb8cd4bc7196c4c90b3512
+  GIT_TAG        0ae5faabefb4af205e658c5e980e2db203d54298
 )
 FetchContent_MakeAvailable(lua fmt argh ionic)
 
