@@ -5,7 +5,8 @@ namespace lurp {
 
 MapData::MapData(ScriptBridge* bridge, uint32_t seed) : coreData(bridge)
 {
-	random.setSeed(seed ? seed : clock() + 123);
+	assert(seed);
+	random.setSeed(seed);
 }
 
 std::string NewsItem::noun() const {

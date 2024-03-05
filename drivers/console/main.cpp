@@ -328,7 +328,6 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				ZoneDriver::TransferResult tr = driver.transferAll(*c, player);
 				if (tr == ZoneDriver::TransferResult::kLocked)
 					PrintTextLine("The container is locked.", ionic::Color::red);
-					//fmt::print("{}Container is locked.{}\n", dye::red, dye::reset);
 			}
 			else if (v.charIntInRange('i', (int)interactionVec.size())) {
 				driver.startInteraction(interactionVec[v.intVal]);
@@ -338,12 +337,16 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				if (dirIdx >= 0) {
 					if (driver.move(edges[dirIdx].dstRoom) == ZoneDriver::MoveResult::kLocked)
 						PrintTextLine("That way is locked.", ionic::Color::red);
-					//fmt::print("{}That way is locked.{}\n", dye::red, dye::reset);
 				}
 			}
 			if (driver.mode() == ZoneDriver::Mode::kNavigation) {
 				PrintNews(driver.mapData.newsQueue);
 			}
+		}
+		else if (mode == ZoneDriver::Mode::kBattle) {
+			const Battle& battle = driver.battle();
+			bool victory = ConsoleBattleDriver(assets, battle, driver.getPlayer().entityID, driver.mapData.random);
+			assert(false); // fixme: handle victory or defeat
 		}
 		else {
 			assert(false);
@@ -352,7 +355,6 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	}
 	if (!driver.endGameMsg().empty()) {
 		PrintTextLine(driver.endGameMsg(), ionic::Color::white);
-		//fmt::print("{}{}{}\n", dye::white, driver.endGameMsg(), dye::reset);
 	}
 }
 

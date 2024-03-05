@@ -265,10 +265,11 @@ public:
 	static constexpr int kDefendTN = 4;
 	static constexpr int kUnarmedTN = 2;
 
-	BattleSystem(Random& r) : _random(r) {}
+	// --------- Initialization from Script --------
 	BattleSystem(const ScriptAssets& assets, const lurp::Battle& battle, EntityID player, Random& r);
 
 	// --------- Initialization --------
+	BattleSystem(Random& r) : _random(r) {}
 	void setBattlefield(const std::string& name);
 	void addRegion(const Region& region);
 	// Player must be first!

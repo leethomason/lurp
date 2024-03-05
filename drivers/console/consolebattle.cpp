@@ -480,10 +480,77 @@ BattleSpec BattleSpec::Parse(const std::string& s)
 
 bool ConsoleBattleDriver(const ScriptAssets& assets, const lurp::Battle& battle, EntityID player, Random& random)
 {
-//	BattleSystem battle(assets, battle, "testplayer", random);
+	BattleSystem system(assets, battle, player, random);
+	system.start();
 
+	PrintTurnOrder(system.combatants(), system.turnOrder());
+	fmt::print("\n");
 
-	return true;
+	while (!system.done()) {
+		if (system.playerTurn()) {
+			PrintActions(system);
+			PrintCombatants(system.combatants(), system.regions());
+			fmt::print("\n");
+			const SWCombatant& pc = system.combatants()[0];
+
+			fmt::print("Options:\n");
+			if (system.checkMove(0, 1) == BattleSystem::ActionResult::kSuccess)
+				fmt::print("(f)orward\n");
+			if (system.checkMove(0, -1) == BattleSystem::ActionResult::kSuccess)
+				fmt::print("(b)ack\n");
+
+			if (pc.canAttack()) {
+				std::string melee = pc.hasMelee() ? pc.meleeWeapon.name : "unarmed";
+				if (pc.hasRanged())
+					fmt::print("(a #) attack with {} ({}%) or {} ({}%)\n",
+						melee,
+						int(pc.baseMelee() * 100.0),
+						pc.rangedWeapon.name,
+						int(pc.baseRanged() * 100.0));
+				else
+					fmt::print("(a #) attack with {} ({}%)\n",
+						melee,
+						int(pc.baseMelee() * 100.0));
+			}
+			if (pc.canPowers()) {
+				for (size_t i = 0; i < pc.powers.size(); i++) {
+					const SWPower& p = pc.powers[i];
+
+					fmt::print("(p{} #) {} ({}%)\n", i, p.name, int(100.0 * system.powerChance(pc.index, p)));
+				}
+			}
+			fmt::print("(d)one\n");
+			fmt::print("> ");
+			Value v = Value::ParseValue(ReadString());
+			BattleSystem::ActionResult rc = BattleSystem::ActionResult::kSuccess;
+
+			if (v.rawStr == "f")
+				rc = system.move(0, 1);
+			else if (v.rawStr == "b")
+				rc = system.move(0, -1);
+			else if (v.type == Value::Type::kChar && v.hasOption() && within(v.option, 1, (int)system.combatants().size()))
+				rc = system.attack(0, v.option);
+			else if (v.type == Value::Type::kCharInt && v.hasOption() && within(v.option, 0, (int)pc.powers.size()))
+				rc = system.power(0, v.intVal, v.option);
+			else if (v.rawStr == "d")
+				system.advance();
+
+			if (rc == BattleSystem::ActionResult::kInvalid)
+				fmt::print("Invalid action.\n");
+			else if (rc == BattleSystem::ActionResult::kOutOfRange)
+				fmt::print("Out of range.\n");
+			else if (rc == BattleSystem::ActionResult::kNoAction)
+				fmt::print("No action.\n");
+
+			PrintActions(system);
+		}
+		else {
+			system.doEnemyActions();
+			PrintActions(system);
+			system.advance();
+		}
+	}
+	return system.victory();
 }
 
 static void TestRollStr()

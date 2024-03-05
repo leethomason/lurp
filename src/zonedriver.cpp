@@ -602,4 +602,12 @@ void ZoneDriver::choose(int n)
 	checkScriptDriver();
 }
 
+const Battle& ZoneDriver::battle() const
+{
+	assert(_scriptDriver);
+	assert(_scriptDriver->type() == ScriptType::kBattle);
+	return _scriptDriver->battle();
+}
+
+
 } // namespace lurp

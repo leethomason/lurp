@@ -90,6 +90,9 @@ public:
 	template<typename S, typename T>
 	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n = INT_MAX);
 
+	// Mode: Battle
+	const Battle& battle() const;
+
 	// ------ Internal / Here Be Dragons ------
 	// empty 'room' will return edges for the current room
 	const std::vector<EntityID>& entities(EntityID room = "") const;

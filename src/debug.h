@@ -15,6 +15,7 @@
 inline void FatalError(const std::string & msg)
 {
 	fmt::print("[ERROR] {}\n", msg);
+	assert(false);
 	exit(2);
 }
 
