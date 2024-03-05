@@ -23,16 +23,17 @@ FetchContent_Declare(
   URL_HASH SHA256=7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88
 )
 FetchContent_Declare(
-  tabulate
-  GIT_REPOSITORY https://github.com/p-ranav/tabulate.git
-  GIT_TAG        b35db4cce50a4b296290b0ae827305cdeb23751e
+  ionic
+  GIT_REPOSITORY git@github.com:leethomason/ionic.git
+  GIT_TAG        702372d0d624bbbaecfb8cd4bc7196c4c90b3512
 )
-FetchContent_MakeAvailable(lua fmt argh tabulate)
+FetchContent_MakeAvailable(lua fmt argh ionic)
 
 file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "src/*.h")
 file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
+file(GLOB IONIC_SOURCES ${ionic_SOURCE_DIR}/src/*.cpp ${ionic_SOURCE_DIR}/src/*.h)
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/lua.c")
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
 source_group("lua" FILES ${LUA_SOURCES})
@@ -47,8 +48,8 @@ add_test(
 )
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")
 
-add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC})
-target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${tabulate_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
+add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC} ${IONIC_SOURCES})
+target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${ionic_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
 
 add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
 target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)

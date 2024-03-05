@@ -13,8 +13,7 @@
 #include "argh.h"
 #include "crtdbg.h"
 #include <fmt/core.h>
-#include <tabulate/tabulate.hpp>
-#include <tabulate/table.hpp>
+#include <ionic/ionic.h>
 
 // C++
 #include <stdio.h>
@@ -28,139 +27,52 @@
 using namespace lurp;
 
 static constexpr int configSpeakerWidth = 12;
-static constexpr tabulate::Color configTextColor = tabulate::Color::yellow;
-static constexpr tabulate::Color configChoiceColor = tabulate::Color::cyan;
+static constexpr ionic::Color configTextColor = ionic::Color::yellow;
+static constexpr ionic::Color configChoiceColor = ionic::Color::cyan;
 
-static const char* doubleNL(const char* p, const char* end)
+static void PrintTextLine(const std::string& text, ionic::Color color)
 {
-	if (p + 1 < end && p[0] == '\n' && p[1] == '\n')
-		return p + 2;
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.textColor = color;
 
-	int nl = 0;
-	int cr = 0;
-	if (p + 3 < end) {
-		for(int i=0; i<4; i++) {
-			if (p[i] == '\n')
-				nl++;
-			if (p[i] == '\r')
-				cr++;
-		}
-	}
-	if (nl == 2 && cr == 2)
-		return p + 4;
-	return nullptr;
-}
-
-static const char* skipWS(const char* p, const char* end)
-{
-	if (!isspace(*p))
-		return nullptr;
-
-	while (p < end && isspace(*p))
-		p++;
-	return p;
-}
-
-static void StreamText(const std::string& s, const std::string& speaker, tabulate::Table& table)
-{
-	// Trying to get all the text rules right - so very difficult.
-	// Especially since the text coming in could be a long string literal (without new lines)
-	// or new line separated strings. And we want to handle both. And the \n \r mess.
-	// Try - just try - to treat all whitespace as a space.
-	// There are exceptions, of course.
-
-	if (s.empty())
-		return;
-
-	std::string buf;
-	buf.reserve(s.size());
-
-	const char* p = s.c_str();
-	const char* end = p + s.size();
-
-	while (p < end) {
-		const char* q = doubleNL(p, end);
-		if (q) {
-			if (speaker.empty())
-				table.add_row({ buf });
-			else
-				table.add_row({ speaker, buf });
-			buf.clear();
-			p = q;
-			continue;
-		}
-		q = skipWS(p, end);
-		if (q) {
-			buf += ' ';
-			p = q;
-		}
-		else {
-			buf += *p;
-			p++;
-		}
-	}
-	// Remove trailing white space.
-	if (!buf.empty() && buf.back() == ' ')
-		buf.pop_back();
-
-	if (!buf.empty()) {
-		if (speaker.empty())
-			table.add_row({ buf });
-		else
-			table.add_row({ speaker, buf });
-	}
-}
-
-static void PrintTextLine(const std::string& text, tabulate::Color color, bool bold = false)
-{
-	assert(color != tabulate::Color::grey); // Grey doesn't print. Bug in tabulate?
-
-	int w = ConsoleWidth();
-	tabulate::Table table;
-	table.format().width(w - 2);
-	table.format().border("").corner("").padding(0);
-	table.format().padding_bottom(0);
-	table.format().color(color);
-	if (bold)
-		table.format().font_style({ tabulate::FontStyle::bold });
-	table.add_row({ text });
-	std::cout << table << std::endl;
+	ionic::Table table(options);
+	table.addRow({ ionic::Table::normalizeMD(text) });
+	table.print();
 }
 
 static void PrintText(std::string speaker, const std::string& text)
 {
-	int w = ConsoleWidth();
-	tabulate::Table table;
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.textColor = configTextColor;
+	ionic::Table table(options);
 
-	table.format().width(w - 2);
-	table.format().border("").corner("").padding(0);
-	table.format().padding_bottom(1);
-	table.format().color(configTextColor);
-
-	//speaker = "foo";
-	StreamText(text, speaker, table);
 	if (speaker.empty()) {
+		table.addRow({ ionic::Table::normalizeMD(text) });
 	}
 	else {
-		table.column(0).format().width(configSpeakerWidth);
-		table.column(1).format().width(w - 3 - configSpeakerWidth);
+		table.setColumnFormat({ {ionic::ColType::fixed, 12}, {ionic::ColType::dynamic} });
+		table.addRow({ speaker, ionic::Table::normalizeMD(text) });
 	}
-	std::cout << table << std::endl;
+	table.print();
 }
 
 static void PrintChoices(const Choices& choices)
 {
-	tabulate::Table table;
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.innerHDivider = false;
+	options.textColor = configChoiceColor;
+	options.tableColor = configChoiceColor;
+	ionic::Table table(options);
+
 	int i = 0;
-
-	table.format().color(configChoiceColor);
-	table.format().hide_border();
-
 	for (const Choices::Choice& c : choices.choices) {
-		table.add_row({ std::to_string(i), c.text });
+		table.addRow({ std::to_string(i), ionic::Table::normalizeMD(c.text) });
 		i++;
 	}
-	std::cout << table << std::endl;
+	table.print();
 }
 
 static void PrintNews(NewsQueue& queue)
@@ -170,7 +82,7 @@ static void PrintNews(NewsQueue& queue)
 		if (ni.type == NewsType::kItemDelta) {
 			assert(ni.item);
 			int bias = ni.delta < 0 ? -1 : 1;
-			tabulate::Color color = ni.delta < 0 ? tabulate::Color::red : tabulate::Color::green;
+			ionic::Color color = ni.delta < 0 ? ionic::Color::red : ionic::Color::green;
 			PrintTextLine(
 				fmt::format("You {} {} {}", ni.verb(), ni.delta * bias, ni.item->name),
 				color
@@ -180,7 +92,7 @@ static void PrintNews(NewsQueue& queue)
 			std::string s = fmt::format("The {} was {}",ni.noun(), ni.verb());
 			if (ni.item)
 				s += fmt::format(" by the {}", ni.item->name);
-			PrintTextLine(s, tabulate::Color::green);
+			PrintTextLine(s, ionic::Color::green);
 		}
 	}
 }
@@ -219,28 +131,6 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 	}
 }
 
-static std::vector<std::string> wrapAlgo(const std::vector<std::string>& words, const std::string& sep, int width)
-{
-	std::vector<std::string> lines;
-	std::string line;
-	for (const std::string& word : words) {
-		if (line.empty()) {
-			line = word;
-		}
-		else if (line.size() + word.size() > width) {
-			lines.push_back(line);
-			line = word;
-		}
-		else {
-			line += sep + word;
-		}
-	}
-	if (!line.empty()) {
-		lines.push_back(line);
-	}
-	return lines;
-}
-
 static void PrintInventory(const Inventory& inv)
 {
 	if (inv.emtpy()) {
@@ -248,15 +138,15 @@ static void PrintInventory(const Inventory& inv)
 		return;
 	}
 
-	int w = ConsoleWidth();
-	std::vector<std::string> words;
+	bool first = true;
 	for (const auto& itemRef : inv.items()) {
-		words.push_back(fmt::format("{}: {}", itemRef.pItem->name, itemRef.count));
+		if (!first)
+			fmt::print(" | ");
+		else
+			first = false;
+		fmt::print("{}: {}", itemRef.pItem->name, itemRef.count);
 	}
-	std::vector<std::string> lines = wrapAlgo(words, " | ", w - 4);
-	for (const std::string& line : lines) {
-		fmt::print("| {} |\n", line);
-	}
+	fmt::print("\n");
 }
 
 static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
@@ -264,9 +154,11 @@ static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
 	if (vec.empty())
 		return;
 
-	tabulate::Table table;
-	table.format().hide_border();
-	table.format().color(configChoiceColor);
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.tableColor = configChoiceColor;
+	options.textColor = configChoiceColor;
+	ionic::Table table(options);
 
 	int idx = 0;
 	for (const auto container : vec) {
@@ -282,10 +174,10 @@ static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
 			}
 		}
 		std::string option = fmt::format("c{}", idx);
-		table.add_row({ option, container->name, locked ? "(locked)" : "", istr });
+		table.addRow({ option, container->name, locked ? "(locked)" : "", istr });
 		idx++;
 	}
-	std::cout << table << std::endl;
+	table.print();
 }
 
 static void PrintInteractions(const InteractionVec& vec, const ScriptAssets&)
@@ -293,33 +185,36 @@ static void PrintInteractions(const InteractionVec& vec, const ScriptAssets&)
 	if (vec.empty())
 		return;
 
-	tabulate::Table table;
-	table.format().hide_border();
-	table.format().color(configChoiceColor);
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.tableColor = configChoiceColor;
+	options.textColor = configChoiceColor;
+	ionic::Table table(options);
 
 	int i = 0;
 	for (const auto iact : vec) {
 		std::string s = fmt::format("i{}", i);
-		table.add_row({ s, iact->name });
+		table.addRow({ s, iact->name });
 		i++;
 	}
-	std::cout << table << std::endl;
-
+	table.print();
 }
 
 static void PrintEdges(const std::vector<DirEdge>& edges) {
 	int idx = 0;
 	fmt::print("Go:\n");
 
-	tabulate::Table table;
-	table.format().hide_border();
-	table.format().color(configChoiceColor);
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.tableColor = configChoiceColor;
+	options.textColor = configChoiceColor;
+	ionic::Table table(options);
 
 	for (const DirEdge& e : edges) {
 		if (e.dir != Edge::Dir::kUnknown)
-			table.add_row({ e.dirShort, e.name, e.locked ? " (locked)" : "" });
+			table.addRow({ e.dirShort, e.name, e.locked ? " (locked)" : "" });
 		else
-			table.add_row({ std::to_string(idx), e.name, e.locked ? " (locked)" : "" });
+			table.addRow({ std::to_string(idx), e.name, e.locked ? " (locked)" : "" });
 		idx++;
 	}
 	std::cout << table << std::endl;
@@ -348,24 +243,17 @@ static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver
 
 static void PrintRoomDesc(const Zone& zone, const Room& room)
 {
-	tabulate::Table table;
-	int w = ConsoleWidth();
+	ionic::TableOptions options;
+	options.innerHDivider = false;
+	ionic::Table table(options);
 
-	table.add_row({ room.name });
-	table.add_row({ zone.name });
+	table.addRow({ room.name });
+	table.addRow({ zone.name });
 	if (!room.desc.empty())
-		table.add_row({ room.desc });
+		table.addRow({ ionic::Table::normalizeMD(room.desc) });
 
-	table.row(1).format().hide_border_top();
-	if (!room.desc.empty()) {
-		table.row(2).format().hide_border_top();
-		// I really don't like the magic values - I hope 4 - to use tabulate.  
-		int cellWidth = std::max(10, w - 4);
-		if (room.desc.size() > cellWidth)
-			table.format().width(cellWidth);
-	}
-
-	std::cout << table << std::endl;
+	table.setCell(0, 0, { ionic::Color::white }, {});
+	table.print();
 }
 
 static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
@@ -431,7 +319,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				
 				ZoneDriver::TransferResult tr = driver.transferAll(*c, player);
 				if (tr == ZoneDriver::TransferResult::kLocked)
-					PrintTextLine("The container is locked.", tabulate::Color::red);
+					PrintTextLine("The container is locked.", ionic::Color::red);
 					//fmt::print("{}Container is locked.{}\n", dye::red, dye::reset);
 			}
 			else if (v.charIntInRange('i', (int)interactionVec.size())) {
@@ -441,7 +329,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				int dirIdx = SelectEdge(v, edges);
 				if (dirIdx >= 0) {
 					if (driver.move(edges[dirIdx].dstRoom) == ZoneDriver::MoveResult::kLocked)
-						PrintTextLine("That way is locked.", tabulate::Color::red);
+						PrintTextLine("That way is locked.", ionic::Color::red);
 					//fmt::print("{}That way is locked.{}\n", dye::red, dye::reset);
 				}
 			}
@@ -455,7 +343,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		}
 	}
 	if (!driver.endGameMsg().empty()) {
-		PrintTextLine(driver.endGameMsg(), tabulate::Color::white);
+		PrintTextLine(driver.endGameMsg(), ionic::Color::white);
 		//fmt::print("{}{}{}\n", dye::white, driver.endGameMsg(), dye::reset);
 	}
 }
@@ -474,7 +362,7 @@ static void RunOutputTests()
 		"You order your usual coffee and sit at a table outside the cafe. The morning sun warms you\n"
 		"even though the San Francisco air is cool. The note reads:\n"
 		"\n"
-		"\"Cairo. Meet me at the library. Research section in back. - G\"\n"
+		"         \"Cairo. Meet me at the library. Research section in back. - G\"\n"
 		"\n"
 		"Giselle was with you on the mission to Cairo. A good researcher, a good shot, and a good friend.";
 	PrintText("", para);
@@ -517,7 +405,7 @@ static void RunOutputTests()
 
 int main(int argc, const char* argv[])
 {
-	InitConsole();
+	ionic::Table::initConsole();
 
 	fmt::print("LuRP\n");
 	if (argc == 1) {
@@ -577,7 +465,8 @@ int main(int argc, const char* argv[])
 		}
 		{
 			// fixme: add flag
-			//RunOutputTests();
+			RunOutputTests();
+			//BattleOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;

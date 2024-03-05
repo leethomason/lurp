@@ -6,8 +6,6 @@
 
 namespace lurp {
 
-void InitConsole();
-
 // Given dir="default" and stem="auto" return "c:/user/thedude/Saved Games/default/auto.lua"
 std::string SavePath(const std::string& dir, const std::string& stem, bool createDirectories = true);
 
@@ -18,7 +16,5 @@ std::ofstream OpenSaveStream(const std::string& path);
 std::ifstream OpenLoadStream(const std::string& path);
 
 bool CheckPath(const std::string& path, std::string& cwd);
-
-int ConsoleWidth();
 
 } // namespace lurp

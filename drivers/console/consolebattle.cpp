@@ -4,6 +4,7 @@
 #include "test.h"
 
 #include <fmt/format.h>
+#include <ionic/ionic.h>
 
 using namespace lurp::swbattle;
 using namespace lurp;
@@ -76,27 +77,60 @@ static std::string DieStr(const Die& die)
 	return r;
 }
 
-static void PrintTurnOrder(const BattleSystem& system)
+static void PrintTurnOrder(const std::vector<SWCombatant>& combatants, const std::vector<int>& turnOrder)
 {
-	const auto& turnOrder = system.turnOrder();
-	const auto& combatants = system.combatants();
+	ionic::TableOptions options;
+	ionic::Table table(options);
+
 	fmt::print("\nOrder:\n");
 	for (int i = 0; i < turnOrder.size(); i++) {
-		int index = turnOrder[i];
-		fmt::print("{}: {}\n", i, combatants[index].name);
+		table.addRow({ std::to_string(i), combatants[turnOrder[i]].name });
 	}
+	table.print();
 }
 
-static void PrintCombatants(const BattleSystem& system)
+#if 0
+static tabulate::Table MakeCombatantTable(int region, const std::vector<SWCombatant>& combatants, const std::vector<Region>& regions)
 {
+	tabulate::Table table;
+	table.add_row({ "Index", "Name", "Cover", "Fight", "Shoot", "Arcane", "Melee", "Ranged", "Armor", "Toughness", "Shaken", "Wounds" });
+
+	for (size_t i = 0; i < combatants.size(); i++) {
+		const SWCombatant& c = combatants[i];
+		if (c.dead()) continue;
+		if (c.region != region) continue;
+
+		table.add_row({
+			std::to_string(i),
+			c.name,
+			COVER[(int)regions[c.region].cover],
+			DieStr(c.fighting),
+			DieStr(c.shooting),
+			DieStr(c.arcane),
+			c.meleeWeapon.name,
+			c.hasRanged() ? c.rangedWeapon.name : "",
+			c.hasArmor() ? c.armor.name : "",
+			std::to_string(c.toughness() + c.armor.armor),
+			std::to_string(c.shaken),
+			std::to_string(c.wounds)
+			});
+	}
+	return table;
+}
+#endif
+
+static void PrintCombatants(const std::vector<SWCombatant>& combatants, const std::vector<Region>& regions)
+{
+#if 0
 	using SWB = BattleSystem;
-	const auto& regions = system.regions();
-	const auto& combatants = system.combatants();
 
 	for (size_t rIndex = 0; rIndex < regions.size(); ++rIndex) {
 		const Region& r = regions[rIndex];
 		fmt::print("'{}' @ {} yards cover={}\n", r.name, r.yards, COVER[(int)r.cover]);
+		tabulate::Table inner = MakeCombatantTable(rIndex, combatants, regions);
+		std::cout << inner << std::endl;
 
+		/*
 		for (size_t cIndex = 0; cIndex < combatants.size(); cIndex++) {
 			const SWCombatant& c = combatants[cIndex];
 			if (c.dead() || c.region != rIndex) {
@@ -120,7 +154,9 @@ static void PrintCombatants(const BattleSystem& system)
 				}
 			}
 		}
+		*/
 	}
+#endif
 }
 
 static void PrintDamageReport(const SWCombatant& defender,
@@ -361,13 +397,13 @@ void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& ene
 	}
 	system.start();
 
-	PrintTurnOrder(system);
+	PrintTurnOrder(system.combatants(), system.turnOrder());
 	fmt::print("\n");
 
 	while (!system.done()) {
 		if (system.playerTurn()) {
 			PrintActions(system);
-			PrintCombatants(system);
+			PrintCombatants(system.combatants(), system.regions());
 			fmt::print("\n");
 			const SWCombatant& pc = system.combatants()[0];
 
@@ -440,6 +476,14 @@ BattleSpec BattleSpec::Parse(const std::string& s)
 	return bs;
 }
 
+bool ConsoleBattleDriver(const ScriptAssets& assets, const lurp::Battle& battle, EntityID player, Random& random)
+{
+//	BattleSystem battle(assets, battle, "testplayer", random);
+
+
+	return true;
+}
+
 static void TestRollStr()
 {
 	constexpr int noWild = std::numeric_limits<int>::min();
@@ -509,5 +553,41 @@ void RunConsoleBattleTests()
 {
 	RUN_TEST(TestRollStr());
 	RUN_TEST(TestModStr());
+}
+
+void BattleOutputTests()
+{
+	SWCombatant a = { "PLAYER", "Player" };
+	SWCombatant b = { "ENEMY B", "Enemy B" };
+	SWCombatant c = { "ENEMY C", "Enemy C" };
+
+	a.region = 0;
+	a.meleeWeapon = { "sword", Die(1, 8, 0) };
+	a.armor = { "chain", 3 };
+	b.region = 2;
+	b.rangedWeapon = { "bow", Die(1, 6, 0), 0, 24 };
+	c.region = 2;
+	c.meleeWeapon = { "knife", Die(1, 4, 0) };
+
+	Region r0 = { "Region 1", 0, Cover::kNoCover };
+	Region r1 = { "Region 2", 10, Cover::kLightCover };
+	Region r2 = { "Region 3", 20, Cover::kFullCover };
+
+	std::vector<SWCombatant> combatants = { a, b, c };
+	std::vector<int> order = { 2, 1, 0 };
+	std::vector<Region> regions = { r0, r1, r2 };
+
+	{
+		PrintTurnOrder(combatants, order);
+	}
+	{
+		PrintCombatants(combatants, regions);
+	}
+	//static void PrintDamageReport(const SWCombatant & defender,
+//		bool melee,
+//		const DamageReport & damage,
+//		const std::vector<ModInfo>&damageMods)
+	//static void PrintActions(BattleSystem & system)
 
 }
+

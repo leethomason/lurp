@@ -55,16 +55,6 @@ bool CheckPath(const std::string& path, std::string& cwd)
 
 #ifdef _WIN32
 
-void InitConsole()
-{
-    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    DWORD oldMode = 0;
-    //SetConsoleMode(hStdin, ENABLE_EXTENDED_FLAGS | ENABLE_QUICK_EDIT_MODE | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-    GetConsoleMode(handle, &oldMode);
-    DWORD mode = oldMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(handle, mode);
-}
-
 std::string OSSavePath()
 {
     PWSTR path = NULL;
@@ -86,13 +76,6 @@ std::string OSSavePath()
     }
     fmt::print("ERROR: could not find 'Saved Games' folder.\n");
     exit(-1);
-}
-
-int ConsoleWidth()
-{
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	return csbi.srWindow.Right - csbi.srWindow.Left + 1;
 }
 
 std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
