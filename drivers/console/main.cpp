@@ -125,18 +125,8 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 			PrintNews(mapData.newsQueue);
 		}
 		else if (dd.type() == ScriptType::kBattle) {
-			/*
 			const Battle& battle = dd.battle();
-			Random rand(clock());
-			Battler hero = Battler::read(bridge, env.player, rand);
-			Battler enemy = Battler::read(bridge, battle.enemy, rand);
-			bool won = BattleConsoleDriver(hero, enemy, rand);
-			if (won) {
-				Battler::write(bridge, env.player, hero);
-				ScriptRef ref = assets.get(battle.entityID);
-				assets.battles[ref.index].done = true;
-			}
-			*/
+			
 			dd.advance();
 		}
 		else {
@@ -236,7 +226,6 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 		idx++;
 	}
 	std::cout << table << std::endl;
-
 }
 
 static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver& zd)
@@ -296,9 +285,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 
 		if (mode == ZoneDriver::Mode::kText) {
 			while (driver.mode() == ZoneDriver::Mode::kText) {
-				// FIXME: support speaker mode
 				TextLine tl = driver.text();
-				//fmt::print("{}\n", tl.text);
 				PrintText(tl.speaker, tl.text);
 				driver.advance();
 			}

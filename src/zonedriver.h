@@ -46,7 +46,7 @@ public:
 	std::string endGameMsg() const { return _endGameMsg; }
 
 	// ------ Driver ------
-	enum class Mode { kText, kChoices, kNavigation };
+	enum class Mode { kText, kChoices, kNavigation, kBattle };
 	Mode mode() const;
 
 	// Mode: Text

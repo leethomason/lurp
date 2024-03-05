@@ -17,3 +17,6 @@ inline void FatalError(const std::string & msg)
 	fmt::print("[ERROR] {}\n", msg);
 	exit(2);
 }
+
+#define FATAL_INTERNAL_ERROR() \
+	FatalError(fmt::format("Internal error at '{}' in '{}'. Please report this to the developers.\n", __LINE__, __FILE__));
