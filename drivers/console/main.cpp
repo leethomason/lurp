@@ -485,7 +485,7 @@ int main(int argc, const char* argv[])
 		{
 			// fixme: add flag
 			//RunOutputTests();
-			BattleOutputTests();
+			//BattleOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;
