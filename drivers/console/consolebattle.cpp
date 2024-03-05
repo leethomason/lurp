@@ -80,6 +80,7 @@ static std::string DieStr(const Die& die)
 static void PrintTurnOrder(const std::vector<SWCombatant>& combatants, const std::vector<int>& turnOrder)
 {
 	ionic::TableOptions options;
+	options.innerHDivider = false;
 	ionic::Table table(options);
 
 	fmt::print("\nOrder:\n");
@@ -89,74 +90,75 @@ static void PrintTurnOrder(const std::vector<SWCombatant>& combatants, const std
 	table.print();
 }
 
-#if 0
-static tabulate::Table MakeCombatantTable(int region, const std::vector<SWCombatant>& combatants, const std::vector<Region>& regions)
+static void PrintCombatantsInRegion(int region, const std::vector<SWCombatant>& combatants)
 {
-	tabulate::Table table;
-	table.add_row({ "Index", "Name", "Cover", "Fight", "Shoot", "Arcane", "Melee", "Ranged", "Armor", "Toughness", "Shaken", "Wounds" });
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.innerHDivider = false;
+	options.indent = 4;
 
+	ionic::Table table(options);
+	table.addRow({ "", "Name", "Fight", "Shoot", "Arcane", "Melee", "Range", "Armor", "Tough", "Shaken", "Wnds" });
+
+	int nRow = 0;
 	for (size_t i = 0; i < combatants.size(); i++) {
 		const SWCombatant& c = combatants[i];
 		if (c.dead()) continue;
 		if (c.region != region) continue;
+		nRow++;
 
-		table.add_row({
+		std::string melee, range;
+		if (c.hasMelee())
+			melee = fmt::format("{} ({})", c.meleeWeapon.name, DieStr(c.meleeWeapon.damageDie));
+		if (c.hasRanged())
+			range = fmt::format("{} ({})", c.rangedWeapon.name, DieStr(c.rangedWeapon.damageDie));
+
+		table.addRow({
 			std::to_string(i),
 			c.name,
-			COVER[(int)regions[c.region].cover],
 			DieStr(c.fighting),
 			DieStr(c.shooting),
 			DieStr(c.arcane),
-			c.meleeWeapon.name,
-			c.hasRanged() ? c.rangedWeapon.name : "",
+			melee,
+			range,
 			c.hasArmor() ? c.armor.name : "",
-			std::to_string(c.toughness() + c.armor.armor),
+			fmt::format("{} ({})", c.toughness() + c.armor.armor, c.armor.armor),
 			std::to_string(c.shaken),
 			std::to_string(c.wounds)
 			});
+
+		ionic::Color color = (c.team == 0) ? ionic::Color::green : ionic::Color::brightRed;
+		table.setRow(nRow, { color }, {});
 	}
-	return table;
+	if (nRow)
+		table.print();
 }
-#endif
+
+static void PrintRegion(const Region& r, bool first)
+{
+	ionic::TableOptions options;
+	options.tableColor = options.textColor = ionic::Color::cyan;
+	options.outerBorder = false;
+	ionic::Table table(options);
+
+	table.setColumnFormat({ 
+		{ionic::ColType::fixed, 15},	// name
+		{ionic::ColType::fixed, 5},		// yards
+		{ionic::ColType::fixed, 10}		// cover
+		});
+	if (first)
+		table.addRow({ "Name", "Yards", "Cover" });
+	table.addRow({ r.name, std::to_string(r.yards), COVER[(int)r.cover] });
+	table.print();
+}
 
 static void PrintCombatants(const std::vector<SWCombatant>& combatants, const std::vector<Region>& regions)
 {
-#if 0
-	using SWB = BattleSystem;
-
 	for (size_t rIndex = 0; rIndex < regions.size(); ++rIndex) {
 		const Region& r = regions[rIndex];
-		fmt::print("'{}' @ {} yards cover={}\n", r.name, r.yards, COVER[(int)r.cover]);
-		tabulate::Table inner = MakeCombatantTable(rIndex, combatants, regions);
-		std::cout << inner << std::endl;
-
-		/*
-		for (size_t cIndex = 0; cIndex < combatants.size(); cIndex++) {
-			const SWCombatant& c = combatants[cIndex];
-			if (c.dead() || c.region != rIndex) {
-				continue;
-			}
-			else {
-				fmt::print("    {}:'{}' [f={} s={} a={}] ({}{}{}{}{}) toughness={} ({}) shaken={} wounds={} \n",
-					cIndex,
-					c.name,
-					DieStr(c.fighting), DieStr(c.shooting), DieStr(c.arcane),
-					c.meleeWeapon.name, c.hasRanged() ? ", " : "", c.rangedWeapon.name,
-					c.hasArmor() ? " - " : "", c.armor.name,
-					c.toughness() + c.armor.armor, c.armor.armor,
-					c.shaken, c.wounds);
-				if (c.activePowers.size() > 0) {
-					fmt::print("      Powers: ");
-					for (const auto& p : c.activePowers) {
-						fmt::print("{} ", p.power->name);
-					}
-					fmt::print("\n");
-				}
-			}
-		}
-		*/
+		PrintRegion(r, rIndex == 0);
+		PrintCombatantsInRegion(int(rIndex), combatants);
 	}
-#endif
 }
 
 static void PrintDamageReport(const SWCombatant& defender,
@@ -564,10 +566,14 @@ void BattleOutputTests()
 	a.region = 0;
 	a.meleeWeapon = { "sword", Die(1, 8, 0) };
 	a.armor = { "chain", 3 };
+
 	b.region = 2;
 	b.rangedWeapon = { "bow", Die(1, 6, 0), 0, 24 };
+	b.team = 1;
+
 	c.region = 2;
 	c.meleeWeapon = { "knife", Die(1, 4, 0) };
+	c.team = 1;
 
 	Region r0 = { "Region 1", 0, Cover::kNoCover };
 	Region r1 = { "Region 2", 10, Cover::kLightCover };

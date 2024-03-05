@@ -37,7 +37,7 @@ static void PrintTextLine(const std::string& text, ionic::Color color)
 	options.textColor = color;
 
 	ionic::Table table(options);
-	table.addRow({ ionic::Table::normalizeMD(text) });
+	table.addRow({ ionic::Table::normalizeMD(text, 2) });
 	table.print();
 }
 
@@ -45,15 +45,19 @@ static void PrintText(std::string speaker, const std::string& text)
 {
 	ionic::TableOptions options;
 	options.outerBorder = false;
+	options.innerHDivider = false;
+	options.innerVDivider = false;
 	options.textColor = configTextColor;
 	ionic::Table table(options);
 
+	static const int MDNL = 2;
+
 	if (speaker.empty()) {
-		table.addRow({ ionic::Table::normalizeMD(text) });
+		table.addRow({ ionic::Table::normalizeMD(text, MDNL) });
 	}
 	else {
-		table.setColumnFormat({ {ionic::ColType::fixed, 12}, {ionic::ColType::dynamic} });
-		table.addRow({ speaker, ionic::Table::normalizeMD(text) });
+		table.setColumnFormat({ {ionic::ColType::fixed, 12}, {ionic::ColType::flex} });
+		table.addRow({ speaker, ionic::Table::normalizeMD(text, MDNL) });
 	}
 	table.print();
 }
@@ -69,7 +73,7 @@ static void PrintChoices(const Choices& choices)
 
 	int i = 0;
 	for (const Choices::Choice& c : choices.choices) {
-		table.addRow({ std::to_string(i), ionic::Table::normalizeMD(c.text) });
+		table.addRow({ std::to_string(i), ionic::Table::normalizeMD(c.text, 2) });
 		i++;
 	}
 	table.print();
@@ -138,15 +142,19 @@ static void PrintInventory(const Inventory& inv)
 		return;
 	}
 
+	ionic::TableOptions options;
+	options.outerBorder = false;
+
+	std::vector<std::string> vstr;
+
 	bool first = true;
 	for (const auto& itemRef : inv.items()) {
-		if (!first)
-			fmt::print(" | ");
-		else
-			first = false;
-		fmt::print("{}: {}", itemRef.pItem->name, itemRef.count);
+		vstr.push_back(fmt::format("{}: {}", itemRef.pItem->name, itemRef.count));
 	}
-	fmt::print("\n");
+
+	ionic::Table table(options);
+	table.addRow(vstr);
+	table.print();
 }
 
 static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
@@ -250,7 +258,7 @@ static void PrintRoomDesc(const Zone& zone, const Room& room)
 	table.addRow({ room.name });
 	table.addRow({ zone.name });
 	if (!room.desc.empty())
-		table.addRow({ ionic::Table::normalizeMD(room.desc) });
+		table.addRow({ ionic::Table::normalizeMD(room.desc, 2) });
 
 	table.setCell(0, 0, { ionic::Color::white }, {});
 	table.print();
@@ -356,8 +364,6 @@ static void RunConsoleTests()
 
 static void RunOutputTests()
 {
-	PrintText("narrator", "output");
-	printf("******\n");
 	static const char* para =
 		"You order your usual coffee and sit at a table outside the cafe. The morning sun warms you\n"
 		"even though the San Francisco air is cool. The note reads:\n"
@@ -465,8 +471,8 @@ int main(int argc, const char* argv[])
 		}
 		{
 			// fixme: add flag
-			RunOutputTests();
-			//BattleOutputTests();
+			//RunOutputTests();
+			BattleOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;

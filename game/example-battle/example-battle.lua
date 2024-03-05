@@ -1,9 +1,31 @@
+--[[
+Battles take a lot of declaration. Even this simple example has a lot of
+setup. 
+
+The actual script lets you choose a "class": Knight, Archer, or Wizard. 
+And then you are teleported to the Arena to fight enemies of choice.
+
+LuRP uses a subset of the Savage Worlds (SW) rules. (Specifically the SWADE
+rules.) One HUGE advantage is that you can buy the rule book and simply
+look up gear, costs, that sort of thing. SW is more well rounded and a larger
+ruleset than LuRP, but I've tried to make it as re-usable as possible.
+
+NOTE: In SW, the distance in the rules is specified in tabletop inches.
+      1" = 2 yards. LuRP uses yards / tabletop inches interchangably,
+      so there is a factor of 2 error, than in practice seems to wash 
+      out. So when moving from SW to LuRP, the distance value is used as-is.
+]]--
+
+--[[
+    Powers define the arcane abilities available in this example game
+]]
+
 Power {
     entityID = "FIRE_BOLT",
     name = "Fire Bolt",
-    effect = "bolt",
-    cost = 1,
-    range = 2,      -- multiplier: 0 touch, 1 short, 2 medium, 3 long
+    effect = "bolt",    -- there are a number of effects, which you can look up in the script.md docs
+    cost = 1,       -- cost to use, straight from SW
+    range = 2,      -- multiplier: 0 touch, 1 short, 2 medium, 3 long. The "smarts" multiplier from SW.
     strength = 1,   -- multiplier: 1 standard, 2 strong, 3 very strong
 }
 
@@ -12,8 +34,8 @@ Power {
     name = "Armor++",
     effect = "armor",
     cost = 1,
-    range = 0,      -- multiplier: 0 touch, 1 short, 2 medium, 3 long
-    strength = 1,   -- multiplier: 1 standard, 2 strong, 3 very strong
+    range = 0,      -- touch (same region)
+    strength = 1,
 }
 
 Power {
@@ -25,35 +47,39 @@ Power {
     strength = 1,
 }
 
+--[[
+     Items of all types: armor, weapons, keys, money, etc. that can be used in this example
+]]--
 -- Item that is a melee weapon
 Item {
     entityID = "LONGSWORD",
     name = "longsword",
-    range = 0,          -- melee
-    damage = "d8",      -- damage die
+    range = 0,          -- melee so range is 0
+    damage = "d8",      -- damage die from SW
 }
 
 -- Item that is a melee weapon
 Item {
     entityID = "SHORTSWORD",
     name = "shortsword",
-    range = 0,
-    damage = "d6",
+    range = 0,          -- melee so range is 0
+    damage = "d6",      -- damage die from SW
 }
 
 -- Item that is a ranged weapon
 Item {
     entityID = "BOW",
     name = "bow",
-    range = 24,             -- medium range
-    damage = "d6",          -- damage die
+    range = 24,             -- medium range. In SW, this is the medium range in (table top) inches, 
+                            -- which is the value listed in the gear tables.
+    damage = "d6",          -- damage die from SW
 }
 
 -- Item that is armor
 Item {
     entityID = "CHAINMAIL",
     name = "chainmail",
-    armor = 3,
+    armor = 3,              -- toughness provided from armor (again, straight from SW)
 }
 
 -- Item that is armor
@@ -70,12 +96,17 @@ Item {
     armor = 1,
 }
 
+--[[
+    Define the Actors in this simple game. 
+    NOTE: there is only the player, because enemies / monsters / battles are Combatants,
+          which are transient. Actors persist for the game. Combatants exist for the battle.
+]]
 -- Define the player, noting that the script will choose the bonuses later
 Actor {
     entityID = "player",
     name = "Grom",
 
-    wild = true,    -- flags as a more powerful (and important) actor for combat
+    wild = true,    -- flags as a more powerful (and important) actor for combat (see SW rules)
     fighting = 4,   -- from 2-20, usually even, 2 is unskilled, 4 is basic, 12 is incredible
     shooting = 4,
     arcane = 4,
@@ -86,6 +117,11 @@ Actor {
     powers = { "FIRE_BOLT", "ARMOR_BOOST", "HEAL" },
 }
 
+--[[
+    Define the Zones and Rooms
+    NOTE: In this example, the rooms aren't connected. After a choice is made (I want to be a 
+    Knight) the player is teleported to the Arena to fight.
+]]
 Zone {
     entityID = "BATTLE_ZONE",
     name = "Battle Zone",
@@ -125,6 +161,10 @@ Zone {
     }
 }
 
+--[[
+    The Scripts that make the events happen.
+]]
+
 Script {
     entityID = "KNIGHT_SCRIPT",
     code = function()
@@ -156,23 +196,27 @@ Script {
     end
 }
 
+-- This Script wraps up a Battle and some Text about victory. (If
+-- you are defeated, the game is over, so there's only one in-game outcome.)
 Script {
     entityID = "SKELETON_BATTLE",
     Battle {
         name = "Skeleton Battle",
+
+        -- The regions of the battlefield - a board in 1D
         regions = {
-            { "Stone Barriers", 0, "medium"},
+            { "Stone Barriers", 0, "medium"},   -- name, distance, cover. Player starts here.
             { "Open Space", 10, "none"},
             { "Old Columns", 20, "medium"},
-            { "Crumbling Arches", 30, "light"},
+            { "Crumbling Arches", 30, "light"}, -- enemies start here
         },
         Combatant {
             name = "Skeleton Warrior",
-            count = 2,
+            count = 2,                      -- number of this type of combatant
             fighting = 6,
             shooting = 0,
             arcane = 0,
-            bias = -1,
+            bias = -1,                      -- bias makes a "little better" (+1) or "little worse" (-1)
             items = { "LONGSWORD", "LEATHER"},
         },
         Combatant {
@@ -191,6 +235,7 @@ Script {
             powers = { "FIRE_BOLT"},
         },
     },
+    -- You can only see this text if you win. (Otherwise the game was over.)
     Text {
         "You are victorious!"
     }
