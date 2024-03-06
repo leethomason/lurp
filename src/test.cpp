@@ -134,7 +134,7 @@ static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dia
 	ScriptEnv env = { dialog, NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
 	ScriptDriver dd(assets, env, coreData, &bridge);
 
-	const ScriptHelper* runner = dd.getHelper();
+	VarBinder binder(bridge, coreData.coreData, env);
 
 	TEST(!dd.done());
 	TEST(dd.type() == ScriptType::kText);
@@ -152,10 +152,10 @@ static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dia
 	dd.advance();
 	TEST(dd.type() == ScriptType::kChoices);
 	TEST(dd.choices().choices[1].text == "Read the arcane book");
-	TEST(runner->get("player.arcaneGlow").type == LUA_TNIL);
+	TEST(binder.get("player.arcaneGlow").type == LUA_TNIL);
 	dd.choose(1);
-	TEST(runner->get("player.arcaneGlow").type == LUA_TBOOLEAN);
-	TEST(runner->get("player.arcaneGlow").boolean == true);
+	TEST(binder.get("player.arcaneGlow").type == LUA_TBOOLEAN);
+	TEST(binder.get("player.arcaneGlow").boolean == true);
 	TEST(dd.type() == ScriptType::kText);
 	TEST(dd.line().text == "You have an arcane glow.");
 	dd.advance();
@@ -213,18 +213,20 @@ static void TestScriptAccess()
 	ScriptAssets assets(csa);
 	CoreData coreData(&bridge);
 	ScriptEnv env = { NO_ENTITY, NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	
 	ScriptHelper runner(bridge, coreData, env);
+	VarBinder binder(bridge, coreData, env);
 
 	ScriptRef ref = assets.get("testplayer");
 	TEST(ref.type == ScriptType::kActor);
 	const Actor& player = assets._csa.actors[ref.index];
 	TEST(player.name == "Test Player");
 
-	TEST(runner.get("player.fighting").num == 4.0);
-	runner.set("player.fighting", 5.0);
-	TEST(runner.get("player.fighting").num == 5.0);
-	runner.set("player.fighting", 4.0);
-	TEST(runner.get("player.fighting").num == 4.0);
+	TEST(binder.get("player.fighting").num == 4.0);
+	binder.set("player.fighting", 5.0);
+	TEST(binder.get("player.fighting").num == 5.0);
+	binder.set("player.fighting", 4.0);
+	TEST(binder.get("player.fighting").num == 4.0);
 }
 
 static void TestLoad(bool inner)
@@ -328,10 +330,10 @@ static void TestCodeEval()
 
 	{
 		{
-			ScriptHelper runner(bridge, coreData.coreData, env);
-			runner.set("player.class", Variant("fighter"));
-			runner.set("player.arcaneGlow", Variant());
-			runner.set("player.mystery", Variant());
+			VarBinder binder(bridge, coreData.coreData, env);
+			binder.set("player.class", Variant("fighter"));
+			binder.set("player.arcaneGlow", Variant());
+			binder.set("player.mystery", Variant());
 		}
 		ScriptDriver driver(assets, env, coreData, &bridge);
 		TEST(driver.type() == ScriptType::kChoices);
@@ -341,10 +343,10 @@ static void TestCodeEval()
 	}
 	{
 		{
-			ScriptHelper runner(bridge, coreData.coreData, env);
-			runner.set("player.class", Variant("druid"));
-			runner.set("player.arcaneGlow", Variant());
-			runner.set("player.mystery", Variant());
+			VarBinder binder(bridge, coreData.coreData, env);
+			binder.set("player.class", Variant("druid"));
+			binder.set("player.arcaneGlow", Variant());
+			binder.set("player.mystery", Variant());
 		}
 
 		ScriptDriver driver(assets, env, coreData, &bridge);
@@ -354,24 +356,24 @@ static void TestCodeEval()
 	}
 	{
 		{
-			ScriptHelper runner(bridge, coreData.coreData, env);
+			VarBinder binder(bridge, coreData.coreData, env);
 			// Set up a run
-			runner.set("player.class", Variant("wizard"));
-			runner.set("player.arcaneGlow", Variant());
-			runner.set("player.mystery", Variant());
+			binder.set("player.class", Variant("wizard"));
+			binder.set("player.arcaneGlow", Variant());
+			binder.set("player.mystery", Variant());
 		}
 
 		ScriptDriver driver(assets, env, coreData, &bridge);
-		const ScriptHelper* runner = driver.getHelper();
+		VarBinder binder(bridge, coreData.coreData, env);
 		TEST(driver.type() == ScriptType::kText);
-		TEST(runner->get("player.mystery").type == LUA_TBOOLEAN);
-		TEST(runner->get("player.mystery").boolean == true);
+		TEST(binder.get("player.mystery").type == LUA_TBOOLEAN);
+		TEST(binder.get("player.mystery").boolean == true);
 		driver.advance();
 		TEST(driver.type() == ScriptType::kChoices);
 		TEST(driver.choices().choices.size() == 1);
 		driver.choose(0);
 		TEST(driver.type() == ScriptType::kText);
-		TEST(runner->get("player.arcaneGlow").boolean == true);
+		TEST(binder.get("player.arcaneGlow").boolean == true);
 		driver.advance();
 		TEST(driver.done());
 	}
@@ -516,7 +518,6 @@ static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& brid
 
 static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
-	Random r(217);
 	ScriptAssets assets(ca);
 	MapData coreData(&bridge);
 	ScriptEnv env = { "_TEST_TEXT_TEST", NO_ENTITY, NO_ENTITY, "testplayer", "_TEST_BOOK_READER" };
@@ -806,10 +807,11 @@ void TestLuaCore()
 	TEST(cd.coreGet("ACTOR_01", "STR").second.num == 18.0);
 
 	// Test the path works the same as the Core
-	TEST(driver.helper()->get("ACTOR_01.STR").num == 18.0);
-	TEST(driver.helper()->get("ACTOR_01.DEX").num == 10.0);
-	TEST(driver.helper()->get("ACTOR_01.attributes.sings").boolean == true);
-	TEST(driver.helper()->get("player.name").str == "Test Player");
+	VarBinder binder = driver.helper()->binder();
+	TEST(binder.get("ACTOR_01.STR").num == 18.0);
+	TEST(binder.get("ACTOR_01.DEX").num == 10.0);
+	TEST(binder.get("ACTOR_01.attributes.sings").boolean == true);
+	TEST(binder.get("player.name").str == "Test Player");
 
 	// Save to a file for debugging
 	std::string path = SavePath("test", "testluacore");

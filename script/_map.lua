@@ -328,7 +328,7 @@ local function CoreTable(e)
     assert(ePrime.entityID, "Must have an entityID to construct a core table")
     return setmetatable(ePrime, {
         __index = function(t, key)
-            --print("__index", t.entityID, key`)
+            -- print("__index", t.entityID, key)
             -- the core can have a value set to nil, and that
             -- overrides the default. this necessitates returning
             -- 'okay' if the core has the value seperate from the value
@@ -338,7 +338,7 @@ local function CoreTable(e)
             return t._src[key]
         end,
         __newindex = function(t, key, value)
-            --print("__newindex", t.entityID, key, value)
+            -- print("__newindex", t.entityID, key, value)
             CCoreSet(t.entityID, key, value, false)
         end,
     })
@@ -359,11 +359,10 @@ function Entity(entityID)
     end
     assert(t._isCoreTable, "coreCache returned table that is not a core table")
     return t
-    --return CoreTable(Entities[entityID])
 end
 
 function SetupScriptEnv(_script, _player, _npc, _zone, _room)
-    --print("ScriptEnv", _script, _player, _npc, _zone, _room)
+    --print("SetupScriptEnv", _script, _player, _npc, _zone, _room)
     script = CoreTable({ entityID = _script })
     player = Entity(_player)
 
@@ -383,9 +382,13 @@ function SetupScriptEnv(_script, _player, _npc, _zone, _room)
     if (_room) then
         room = Entity(_room)
     end
+    --print("Script", script, script._isCoreTable)
+    assert(script._isCoreTable, "script is not a core table")   
 end
 
 function ClearScriptEnv()
+    --print("ClearScriptEnv", script, player, npc, zone, room)
+    assert(script._isCoreTable, "script is not a core table")
     coreCache[script.entityID] = nil
     script = nil
     player = nil

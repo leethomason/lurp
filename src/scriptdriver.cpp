@@ -181,7 +181,9 @@ std::string ScriptDriver::substitute(const std::string& in) const
 	for (size_t i = 0; i < open.size(); i++) {
 		out += in.substr(prev, open[i] - prev);
 		prev = close[i] + 1;
-		Variant v = _helper->get(in.substr(open[i] + 1, close[i] - open[i] - 1));
+
+		VarBinder binder = _helper->binder();
+		Variant v = binder.get(in.substr(open[i] + 1, close[i] - open[i] - 1));
 		if (v.type == LUA_TSTRING)
 			out += v.str;
 		else if (v.type == LUA_TNUMBER)
@@ -203,7 +205,8 @@ bool ScriptDriver::textTest(const std::string& test) const
 		invert = true;
 		t = t.substr(1);
 	}
-	Variant v = _helper->get(t);
+	VarBinder binder = _helper->binder();
+	Variant v = binder.get(t);
 	bool truthy = v.isTruthy();
 	return invert ? !truthy : truthy;
 }

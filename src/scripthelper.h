@@ -3,6 +3,7 @@
 #include "scripttypes.h"
 #include "util.h"
 #include "iscript.h"
+#include "varbinder.h"
 
 namespace lurp {
 
@@ -16,12 +17,6 @@ public:
 		CoreData& coreData,
 		const ScriptEnv& env);
 	~ScriptHelper();
-
-	// ex: npc.subDesc.accessory
-	Variant get(const std::string& path) const;
-
-	// ex: npc.subDesc.accessory = "hat"
-	void set(const std::string& path, const Variant& value) const;
 
 	// eval(script, player, npc) -> bool
 	// code(script, player, npc) -> nil
@@ -37,6 +32,9 @@ public:
 	void popScriptContext();
 	int contextDepth() const { return _scriptContextCount; }
 
+	VarBinder binder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
+	const ScriptEnv& env() const { return _scriptEnv; }
+
 private:
 	bool pcall(int funcRef, int nArgs, int nResult) const;
 	void setupScriptEnv();
@@ -47,9 +45,6 @@ private:
 
 	ScriptEnv _scriptEnv;
 	int _scriptContextCount = 0;
-
-	std::string pushPath(const std::string& path) const;
-	void corePath(const std::string& in, EntityID& entityID, std::string& path) const;
 };
 
 } // namespace lurp

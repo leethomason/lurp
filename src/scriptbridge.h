@@ -77,6 +77,7 @@ public:
 	std::vector<std::string> getStrArray(const std::string& key) const;
 	std::vector<StringCount> getStrCountArray(const std::string& key) const;
 	std::vector<int> getIntArray(const std::string& key) const;
+	static Variant getField(lua_State* L, const std::string& key, int index, bool raw = false);
 
 	void setStrField(const std::string& key, const std::string& value);
 	void setIntField(const std::string& key, int value);
@@ -143,7 +144,6 @@ private:
 	void appendLuaPath(const std::string& path);
 
 	void doFile(const std::string& filename);
-	static Variant getField(lua_State* L, const std::string& key, int index, bool raw = false);
 
 	static int l_CRandom(lua_State* L);
 	static int l_CDeltaItem(lua_State* L);
