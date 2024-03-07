@@ -3,6 +3,10 @@
 #include <string>
 #include "scriptasset.h"	// FIXME: lurp.h?
 
+namespace lurp {
+class Varbinder;
+}
+
 struct BattleSpec {
 	int level = 5;
 	int fighters = 1;
@@ -13,7 +17,7 @@ struct BattleSpec {
 };
 
 void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed);
-bool ConsoleBattleDriver(const lurp::ScriptAssets& assets, const lurp::Battle& battle, lurp::EntityID player, lurp::Random& r);
+bool ConsoleBattleDriver(const lurp::ScriptAssets& assets, const lurp::VarBinder& binder, const lurp::Battle& battle, lurp::EntityID player, lurp::Random& r);
 
 void RunConsoleBattleTests();
 void BattleOutputTests();

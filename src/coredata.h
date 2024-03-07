@@ -15,6 +15,8 @@ class ScriptHelper;
 
 class CoreData : public ICoreHandler
 {
+	// FIXME: sholudn't need a script bridge
+	// FIXME: shouldn't call setICore
 public:
 	// The ScriptBridge* will set up callbacks to supply the coredata to the scripting system
 	CoreData(ScriptBridge* bridge);

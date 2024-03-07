@@ -609,5 +609,13 @@ const Battle& ZoneDriver::battle() const
 	return _scriptDriver->battle();
 }
 
+VarBinder ZoneDriver::battleVarBinder() const
+{
+	assert(_scriptDriver);
+	assert(_scriptDriver->type() == ScriptType::kBattle);
+	return _scriptDriver->helper()->binder();	// FIXME yuck
+}
+
+
 
 } // namespace lurp

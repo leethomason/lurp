@@ -6,6 +6,7 @@
 
 #include "consolebattle.h"
 #include "scriptasset.h"
+#include "varbinder.h"
 
 #include "../platform.h"
 
@@ -126,8 +127,8 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 		}
 		else if (dd.type() == ScriptType::kBattle) {
 			const Battle& battle = dd.battle();
-			
-			dd.advance();
+			VarBinder binder(bridge, mapData.coreData, env);
+			ConsoleBattleDriver(assets, binder, battle, env.player, mapData.random);
 		}
 		else {
 			assert(false);
@@ -147,7 +148,6 @@ static void PrintInventory(const Inventory& inv)
 
 	std::vector<std::string> vstr;
 
-	bool first = true;
 	for (const auto& itemRef : inv.items()) {
 		vstr.push_back(fmt::format("{}: {}", itemRef.pItem->name, itemRef.count));
 	}
@@ -345,7 +345,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		}
 		else if (mode == ZoneDriver::Mode::kBattle) {
 			const Battle& battle = driver.battle();
-			bool victory = ConsoleBattleDriver(assets, battle, driver.getPlayer().entityID, driver.mapData.random);
+			VarBinder binder = driver.battleVarBinder();
+			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
 			assert(false); // fixme: handle victory or defeat
 		}
 		else {

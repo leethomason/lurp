@@ -478,9 +478,9 @@ BattleSpec BattleSpec::Parse(const std::string& s)
 	return bs;
 }
 
-bool ConsoleBattleDriver(const ScriptAssets& assets, const lurp::Battle& battle, EntityID player, Random& random)
+bool ConsoleBattleDriver(const ScriptAssets& assets, const VarBinder& binder, const lurp::Battle& battle, EntityID player, Random& random)
 {
-	BattleSystem system(assets, battle, player, random);
+	BattleSystem system(assets, binder, battle, player, random);
 	system.start();
 
 	PrintTurnOrder(system.combatants(), system.turnOrder());

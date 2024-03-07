@@ -64,7 +64,12 @@ struct ScriptAssets : public IAssetHandler
 
 	template <typename T>
 	Inventory& getInventory(const T& entity) {
-		return inventories[entity.entityID];
+		return inventories.at(entity.entityID);
+	}
+
+	template <typename T>
+	const Inventory& getInventory(const T& entity) const{
+		return inventories.at(entity.entityID);
 	}
 
 	const ConstScriptAssets& getConst() const { return _csa; }

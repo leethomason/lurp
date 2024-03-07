@@ -14,6 +14,7 @@ struct ScriptAssets;
 struct Power;
 struct Actor;
 struct Battle;
+class VarBinder;
 
 namespace swbattle {
 struct SWPower;
@@ -250,7 +251,7 @@ struct SWCombatant {
 	bool autoLevelArcane();
 
 	static SWCombatant convert(const lurp::Combatant& c, const ScriptAssets&);
-	static SWCombatant convert(const lurp::Actor& c, const ScriptAssets&);
+	static SWCombatant convert(const lurp::Actor& c, const ScriptAssets&, const VarBinder& bind);
 	static Die convertFromSkill(int skill);
 };
 
@@ -266,7 +267,7 @@ public:
 	static constexpr int kUnarmedTN = 2;
 
 	// --------- Initialization from Script --------
-	BattleSystem(const ScriptAssets& assets, const lurp::Battle& battle, EntityID player, Random& r);
+	BattleSystem(const ScriptAssets& assets, const VarBinder& binder, const lurp::Battle& battle, EntityID player, Random& r);
 
 	// --------- Initialization --------
 	BattleSystem(Random& r) : _random(r) {}

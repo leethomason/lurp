@@ -899,6 +899,8 @@ void BattleTest::Read()
 	ScriptBridge bridge;
 	ConstScriptAssets csa = bridge.readCSA("");
 	ScriptAssets assets(csa);
+	CoreData coreData(&bridge);
+	VarBinder binder(bridge, coreData, ScriptEnv());
 
 	const Battle& battle = assets.getBattle("TEST_BATTLE_1_CURSED_CAVERN");
 	TEST(battle.name == "Cursed Cavern");
@@ -975,7 +977,7 @@ void BattleTest::Read()
 	}
 	{
 		const Actor& player = assets.getActor("testplayer");
-		SWCombatant c = SWCombatant::convert(player, assets);
+		SWCombatant c = SWCombatant::convert(player, assets, binder);
 		TEST(c.link == "testplayer");
 		TEST(c.name == "Test Player");
 		TEST(c.wild);
@@ -1087,7 +1089,8 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 
 	TEST(driver.type() == ScriptType::kBattle);
 	{
-		BattleSystem battle(assets, driver.battle(), "testplayer", coreData.random);
+		// FIXME: driver.helper()->binder() is not clear
+		BattleSystem battle(assets, driver.helper()->binder(), driver.battle(), "testplayer", coreData.random);
 		TEST(battle.name() == "Cursed Cavern");
 		TEST(battle.combatants().size() == 5);
 		TEST(battle.regions().size() == 4);

@@ -2,6 +2,7 @@
 #include "scriptbridge.h"
 #include "test.h"
 #include "scriptasset.h"
+#include "varbinder.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -12,7 +13,7 @@
 namespace lurp {
 namespace swbattle {
 
-BattleSystem::BattleSystem(const ScriptAssets& assets, const lurp::Battle& battle, EntityID playerID, Random& r)
+BattleSystem::BattleSystem(const ScriptAssets& assets, const VarBinder& binder, const lurp::Battle& battle, EntityID playerID, Random& r)
 	: _random(r)
 {
 	setBattlefield(battle.name);
@@ -20,7 +21,7 @@ BattleSystem::BattleSystem(const ScriptAssets& assets, const lurp::Battle& battl
 		addRegion(region);
 	}
 	const Actor& actor = assets.getActor(playerID);
-	SWCombatant swPlayer = SWCombatant::convert(actor, assets);
+	SWCombatant swPlayer = SWCombatant::convert(actor, assets, binder);
 	addCombatant(swPlayer);
 
 	for (const EntityID& comID : battle.combatants) {
@@ -538,7 +539,7 @@ SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& a
 	return r;
 }
 
-SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& assets)
+SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& assets, const VarBinder& bind)
 {
 	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
 
@@ -547,29 +548,35 @@ SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& asset
 	r.name = c.name;
 	r.wild = c.wild;
 
-	r.agility = convertFromSkill(std::max(c.fighting, c.shooting));
-	r.smarts = convertFromSkill(c.arcane);
-	r.spirit = convertFromSkill(mean(c.fighting, c.shooting, c.arcane));
-	r.strength = convertFromSkill(mean(c.fighting, c.shooting, c.fighting));
-	r.vigor = convertFromSkill(mean(c.fighting, c.shooting, c.arcane));
+	int fighting = (int) bind.get(c.entityID + "." + "fighting").num;
+	int shooting = (int) bind.get(c.entityID + "." + "shooting").num;
+	int arcane = (int) bind.get(c.entityID + "." + "arcane").num;
 
-	r.fighting = convertFromSkill(c.fighting);
-	r.shooting = convertFromSkill(c.shooting);
-	r.arcane = convertFromSkill(c.arcane);
+	r.agility = convertFromSkill(std::max(fighting, shooting));
+	r.smarts = convertFromSkill(arcane);
+	r.spirit = convertFromSkill(mean(fighting, shooting, arcane));
+	r.strength = convertFromSkill(mean(fighting, shooting, fighting));
+	r.vigor = convertFromSkill(mean(fighting, shooting, arcane));
 
-	const Item* mw = c.inventory.meleeWeapon();
+	r.fighting = convertFromSkill(fighting);
+	r.shooting = convertFromSkill(shooting);
+	r.arcane = convertFromSkill(arcane);
+
+	const Inventory& inv = assets.getInventory(c);
+
+	const Item* mw = inv.meleeWeapon();
 	if (mw) {
 		r.meleeWeapon.name = mw->name;
 		r.meleeWeapon.damageDie = mw->damage;
 	}
-	const Item* rw = c.inventory.rangedWeapon();
+	const Item* rw = inv.rangedWeapon();
 	if (rw) {
 		r.rangedWeapon.name = rw->name;
 		r.rangedWeapon.damageDie = rw->damage;
 		r.rangedWeapon.ap = rw->ap;
 		r.rangedWeapon.range = rw->range;
 	}
-	const Item* armor = c.inventory.armor();
+	const Item* armor = inv.armor();
 	if (armor) {
 		r.armor.name = armor->name;
 		r.armor.armor = armor->armor;

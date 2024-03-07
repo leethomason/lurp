@@ -92,6 +92,7 @@ public:
 
 	// Mode: Battle
 	const Battle& battle() const;
+	VarBinder battleVarBinder() const;
 
 	// ------ Internal / Here Be Dragons ------
 	// empty 'room' will return edges for the current room
