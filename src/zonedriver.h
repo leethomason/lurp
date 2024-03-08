@@ -31,6 +31,9 @@ public:
 		kSuccess,
 	};
 
+	// FIXME: why 2 constructors?
+	// FIXME: hides a MapData getting constructed with a default seed
+
 	// Create a map with navigation, containers, and interactions.
 	// This defines a small game. For interactions w/ script,
 	// and calls into Scripts, a ScriptBridge is required.

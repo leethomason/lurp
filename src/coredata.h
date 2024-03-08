@@ -19,7 +19,7 @@ class CoreData : public ICoreHandler
 	// FIXME: shouldn't call setICore
 public:
 	// The ScriptBridge* will set up callbacks to supply the coredata to the scripting system
-	CoreData(ScriptBridge* bridge);
+	CoreData();
 	~CoreData();
 
 	void clearScriptEnv();
@@ -52,7 +52,7 @@ private:
 	};
 
 	std::map<Flag, Variant> _coreData;
-	ScriptBridge* _bridge = nullptr;
+	//ScriptBridge* _bridge = nullptr;
 };
 
 } // namespace lurp

@@ -168,7 +168,7 @@ Zone {
 Script {
     entityID = "KNIGHT_SCRIPT",
     code = function()
-        player.fighting = 6
+        player.fighting = 8
         player.shooting = 6
         player:addItem("LONGSWORD")
         player:addItem("CHAINMAIL")

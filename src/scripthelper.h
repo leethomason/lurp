@@ -13,7 +13,8 @@ class CoreData;
 class ScriptHelper
 {
 public:
-	ScriptHelper(ScriptBridge& bridge,
+	ScriptHelper(
+		ScriptBridge& bridge,
 		CoreData& coreData,
 		const ScriptEnv& env);
 	~ScriptHelper();
@@ -32,7 +33,7 @@ public:
 	void popScriptContext();
 	int contextDepth() const { return _scriptContextCount; }
 
-	VarBinder binder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
+	VarBinder varBinder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:

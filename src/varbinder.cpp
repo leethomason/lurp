@@ -7,6 +7,12 @@ namespace lurp {
 VarBinder::VarBinder(ScriptBridge& bridge, CoreData& coreData, const ScriptEnv& env)
 	: _bridge(bridge), _coreData(coreData), _env(env)
 {
+	bridge.setICore(&coreData);
+}
+
+VarBinder::~VarBinder()
+{
+	_bridge.setICore(nullptr);
 }
 
 // This is the read-only fallback to the lua script.
@@ -76,7 +82,7 @@ void VarBinder::corePath(const std::string& in, EntityID& entityID, std::string&
 	std::string first = in.substr(0, pos);
 	// VarBinder can't do the substitutions:
 	assert(first != "script");
-	assert(first != "player");
+	//assert(first != "player");	// player often called "player". oops.
 	assert(first != "npc");
 	assert(first != "zone");
 	assert(first != "room");

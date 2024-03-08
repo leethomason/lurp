@@ -498,7 +498,9 @@ int main(int argc, const char* argv[])
 					ScriptEnv env;
 					env.script = argv[2];
 					env.player = "player";
-					MapData mapData(&bridge, 567 + clock());
+
+					MapData mapData(1);
+					mapData.random.setRandomSeed();
 					ConsoleScriptDriver(assets, bridge, env, mapData);
 				}
 				else {

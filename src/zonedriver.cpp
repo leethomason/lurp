@@ -11,7 +11,7 @@
 
 namespace lurp {
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(bridge)
+ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(MapData::kSeed)
 {
 	if (_bridge) {
 		_bridge->setIMap(this);
@@ -19,7 +19,7 @@ ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityI
 	}
 }
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& zone, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(bridge)
+ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& zone, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(MapData::kSeed)
 {
 	if (_bridge) {
 		_bridge->setIMap(this);
@@ -613,7 +613,7 @@ VarBinder ZoneDriver::battleVarBinder() const
 {
 	assert(_scriptDriver);
 	assert(_scriptDriver->type() == ScriptType::kBattle);
-	return _scriptDriver->helper()->binder();	// FIXME yuck
+	return _scriptDriver->helper()->varBinder();	// FIXME yuck
 }
 
 

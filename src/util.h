@@ -50,6 +50,8 @@ public:
 		rand();	rand(); rand();
 	}
 
+	void setRandomSeed();
+
 	uint32_t rand() {
 		// xorshift
 		s ^= s << 13;

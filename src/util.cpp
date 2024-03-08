@@ -1,10 +1,19 @@
 #include "util.h"
 #include "SpookyV2.h"
 
+#include <chrono>
+
 namespace lurp {
 
 bool Globals::trace = false;
 bool Globals::debugSave = false;
+
+void Random::setRandomSeed()
+{
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
+    setSeed((uint32_t)ms);
+}
 
 std::vector<std::string_view> splitSV(const std::string& str, char delim)
 {

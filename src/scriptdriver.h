@@ -59,11 +59,9 @@ public:
 	void choose(int i);					// kChoices
 
 	const Tree* getTree() const { return &_tree;}
-	const ScriptHelper* getHelper() const { return _helper.get();}
-
 	void save(std::ostream& stream) const;
-
 	virtual bool allTextRead(const EntityID& id) const;
+
 	const ScriptHelper* helper() const { return _helper.get(); }
 
 private:
