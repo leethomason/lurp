@@ -7,12 +7,12 @@ namespace lurp {
 VarBinder::VarBinder(ScriptBridge& bridge, CoreData& coreData, const ScriptEnv& env)
 	: _bridge(bridge), _coreData(coreData), _env(env)
 {
-	bridge.setICore(&coreData);
+//	bridge.setICore(&coreData);
 }
 
 VarBinder::~VarBinder()
 {
-	_bridge.setICore(nullptr);
+//	_bridge.setICore(nullptr);
 }
 
 // This is the read-only fallback to the lua script.

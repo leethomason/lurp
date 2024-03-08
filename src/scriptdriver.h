@@ -15,6 +15,7 @@ namespace lurp {
 struct ScriptAssets;
 class ScriptHelper;
 class CoreData;
+class ZoneDriver;
 
 class ScriptDriver : public ITextHandler
 {
@@ -28,8 +29,10 @@ public:
 		const ScriptAssets& assets,
 		const ScriptEnv& env,
 		MapData& mapData,
-		ScriptBridge* bridge,
+		ScriptBridge& bridge,
 		int initCode = -1);
+
+	ScriptDriver(ZoneDriver& zoneDriver, const EntityID& scriptID);
 
 	// Loader version.
 	ScriptDriver(

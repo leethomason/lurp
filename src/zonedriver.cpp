@@ -11,20 +11,18 @@
 
 namespace lurp {
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(MapData::kSeed)
+ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(MapData::kSeed)
 {
-	if (_bridge) {
-		_bridge->setIMap(this);
-		_bridge->setIAsset(&assets);
-	}
+	_bridge.setIMap(this);
+	_bridge.setIAsset(&assets);
+	_bridge.setICore(&mapData.coreData);
 }
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& zone, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(MapData::kSeed)
+ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player) : _assets(assets), _bridge(bridge), _player(player), mapData(MapData::kSeed)
 {
-	if (_bridge) {
-		_bridge->setIMap(this);
-		_bridge->setIAsset(&assets);
-	}
+	_bridge.setIMap(this);
+	_bridge.setIAsset(&assets);
+	_bridge.setICore(&mapData.coreData);
 	_playerID = player;
 	setZone(zone, EntityID());
 	checkScriptDriver();
@@ -33,10 +31,9 @@ ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityI
 ZoneDriver::~ZoneDriver()
 {
 	delete _scriptDriver; _scriptDriver = nullptr;
-	if (_bridge) {
-		_bridge->setIMap(nullptr);
-		_bridge->setIAsset(nullptr);
-	}
+	_bridge.setICore(nullptr);
+	_bridge.setIMap(nullptr);
+	_bridge.setIAsset(nullptr);
 }
 
 const Container* ZoneDriver::getContainer(const EntityID& id)
@@ -170,11 +167,11 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 		if (ref.type == ScriptType::kContainer) {
 			const Container& c = _assets._csa.containers[ref.index];
 			bool eval = true;
-			if (_bridge) {
-				ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _player, NO_ENTITY };
-				ScriptHelper helper(*_bridge, mapData.coreData, env);
-				eval = helper.call(c.eval, 1);
-			}
+
+			ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _player, NO_ENTITY };
+			ScriptHelper helper(_bridge, mapData.coreData, env);
+			eval = helper.call(c.eval, 1);
+\
 			if (eval)
 				result.push_back(&c);
 		}
@@ -185,11 +182,9 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 bool ZoneDriver::filterInteraction(const Interaction& i)
 {
 	bool eval = true;
-	if (_bridge) {
-		ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _player, NO_ENTITY };
-		ScriptHelper helper(*_bridge, mapData.coreData, env);
-		eval = helper.call(i.eval, 1);
-	}
+	ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _player, NO_ENTITY };
+	ScriptHelper helper(_bridge, mapData.coreData, env);
+	eval = helper.call(i.eval, 1);
 	return eval;
 }
 

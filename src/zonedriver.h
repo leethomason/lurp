@@ -38,8 +38,8 @@ public:
 	// This defines a small game. For interactions w/ script,
 	// and calls into Scripts, a ScriptBridge is required.
 	// Sometimes useful to test the base map functionality without the bridge.
-	ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& player);
-	ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& zone, const EntityID& player);
+	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player);
+	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player);
 	~ZoneDriver();
 
 	// ------ Queries ------
@@ -144,7 +144,7 @@ private:
 	ScriptRef _zone;
 	ScriptRef _room;
 	EntityID _player;
-	ScriptBridge* _bridge = nullptr;
+	ScriptBridge& _bridge;
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;
 };

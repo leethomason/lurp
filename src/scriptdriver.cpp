@@ -5,6 +5,7 @@
 #include "scripthelper.h"
 #include "battle.h"
 #include "scriptbridge.h"	// fixme: only needed for "bridge()" which should be refactored
+#include "zonedriver.h"
 
 #include <fmt/core.h>
 #include <fmt/ostream.h>
@@ -28,7 +29,7 @@ ScriptDriver::ScriptDriver(
 	const ScriptAssets& assets,
 	const ScriptEnv& env,
 	MapData& mapData,
-	ScriptBridge* bridge,
+	ScriptBridge& bridge,
 	int initCode)
 	:	_scriptEnv(env),
 		_assets(assets),
@@ -39,12 +40,10 @@ ScriptDriver::ScriptDriver(
 	assert(!env.script.empty());
 	assert(!env.player.empty());
 
-	if (bridge) {
-		_helper = std::make_unique<ScriptHelper>(*bridge, _mapData.coreData, env);
-		_helper->bridge().setIText(this);
-		_helper->pushScriptContext();
-		_helper->call(initCode, 0);
-	}
+	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, env);
+	_helper->bridge().setIText(this);
+	_helper->pushScriptContext();
+	_helper->call(initCode, 0);
 
 	processTree(false);
 }

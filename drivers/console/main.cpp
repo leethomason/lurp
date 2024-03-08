@@ -104,7 +104,7 @@ static void PrintNews(NewsQueue& queue)
 
 static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, const ScriptEnv& env, MapData& mapData)
 {
-	ScriptDriver dd(assets, env, mapData, &bridge);
+	ScriptDriver dd(assets, env, mapData, bridge);
 
 	while (!dd.done()) {
 		while (dd.type() == ScriptType::kText) {
@@ -279,7 +279,7 @@ static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
 
 static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string dir)
 {
-	ZoneDriver driver(assets, &bridge, zone, "player");
+	ZoneDriver driver(assets, bridge, zone, "player");
 	while (true) {
 		ZoneDriver::Mode mode = driver.mode();
 

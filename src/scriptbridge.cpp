@@ -1213,7 +1213,6 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 /*static*/ int ScriptBridge::l_CCoreSet(lua_State* L)
 {
 	ScriptBridge* bridge = (ScriptBridge*)lua_touserdata(L, lua_upvalueindex(1));
-	bridge->getV
 	assert(bridge->_iCoreHandler);
 	std::string entityID = lua_tostring(L, 1);
 	std::string scope = lua_tostring(L, 2);
