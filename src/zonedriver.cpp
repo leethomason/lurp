@@ -554,7 +554,8 @@ void ZoneDriver::checkScriptDriver()
 	if (!_scriptDriver) {
 		const Interaction* iact = getRequiredInteraction();
 		if (iact) {
-			_scriptDriver = new ScriptDriver(_assets, getScriptEnv(iact), mapData, _bridge, iact->code);
+			ScriptEnv env = getScriptEnv(iact);
+			_scriptDriver = new ScriptDriver(*this, _bridge, env, iact->code);
 		}
 	}
 }
@@ -562,7 +563,8 @@ void ZoneDriver::checkScriptDriver()
 void ZoneDriver::startInteraction(const Interaction* interaction)
 {
 	assert(_scriptDriver == nullptr);
-	_scriptDriver = new ScriptDriver(_assets, getScriptEnv(interaction), mapData, _bridge);
+	ScriptEnv env = getScriptEnv(interaction);
+	_scriptDriver = new ScriptDriver(*this, _bridge, env, interaction->code);
 	checkScriptDriver();
 }
 

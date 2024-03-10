@@ -25,6 +25,7 @@ bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) co
 	return true;
 }
 
+/*
 ScriptDriver::ScriptDriver(
 	const ScriptAssets& assets,
 	const ScriptEnv& env,
@@ -47,7 +48,47 @@ ScriptDriver::ScriptDriver(
 
 	processTree(false);
 }
+*/
 
+ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int func)
+	:	_assets(zoneDriver.assets()),
+		_mapData(zoneDriver.mapData),
+		_tree(zoneDriver.assets(), scriptID),
+		_treeIt(_tree)
+{
+	assert(!scriptID.empty());
+	assert(_assets.get(scriptID).type == ScriptType::kScript);
+
+	_scriptEnv.script = scriptID;
+	_scriptEnv.zone = zoneDriver.currentZone().entityID;
+	_scriptEnv.room = zoneDriver.currentRoom().entityID;
+	_scriptEnv.player = zoneDriver.getPlayer().entityID;
+
+	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
+	_helper->bridge().setIText(this);
+	_helper->pushScriptContext();
+	_helper->call(func, 0);
+
+	processTree(false);
+}
+
+ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int func)
+	: _assets(zoneDriver.assets()),
+	_mapData(zoneDriver.mapData),
+	_tree(zoneDriver.assets(), env.script),
+	_treeIt(_tree)
+{
+	_scriptEnv = env;
+
+	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
+	_helper->bridge().setIText(this);
+	_helper->pushScriptContext();
+	_helper->call(func, 0);
+
+	processTree(false);
+}
+
+/*
 ScriptDriver::ScriptDriver(
 	const ScriptAssets& assets,
 	const EntityID& scriptID,
@@ -74,6 +115,7 @@ ScriptDriver::ScriptDriver(
 		clear();
 	}
 }
+*/
 
 ScriptDriver::~ScriptDriver()
 {
@@ -506,6 +548,11 @@ bool ScriptDriver::loadContext(ScriptBridge& loader)
 
 	fmt::print("WARNING could not load ScriptDriver. Rolling back to Map.\n");
 	return false;
+}
+
+VarBinder ScriptDriver::varBinder() const
+{
+	return _helper.get()->varBinder();
 }
 
 const char* scriptTypeName(ScriptType type)

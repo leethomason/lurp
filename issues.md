@@ -14,6 +14,9 @@
   * simplest script
   * simplest battle
 * tests suite should have a flag (for verbose output)
+* npc is broken everywhere
+  * read from Entities
+  * testing
 
 ## Ideas / Icebox
 

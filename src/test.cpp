@@ -129,13 +129,9 @@ static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dialog, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-
-	ScriptEnv env = { dialog, NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-
-	ScriptDriver dd(assets, env, coreData, bridge);
-
-	VarBinder binder(bridge, coreData.coreData, env);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver dd(zoneDriver, bridge, dialog);
+	VarBinder binder = dd.helper()->varBinder();
 
 	TEST(!dd.done());
 	TEST(dd.type() == ScriptType::kText);
@@ -212,11 +208,10 @@ static void TestScriptAccess()
 	ScriptBridge bridge;
 	ConstScriptAssets csa= bridge.readCSA("");
 	ScriptAssets assets(csa);
-	CoreData coreData;
-	ScriptEnv env = { NO_ENTITY, NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	
-	ScriptHelper runner(bridge, coreData, env);
-	VarBinder binder(bridge, coreData, env);
+
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "EMPTY_SCRIPT");
+	VarBinder binder = driver.varBinder();
 
 	ScriptRef ref = assets.get("testplayer");
 	TEST(ref.type == ScriptType::kActor);
@@ -246,7 +241,8 @@ static void TestLoad(bool inner)
 		TEST(!scriptID.empty());
 		
 		if (!scriptID.empty()) {
-			ScriptDriver driver(assets, scriptID, map.mapData, bridge, loader);
+			ScriptDriver driver(map, bridge, "");
+			driver.load(loader);
 
 			TEST(driver.valid());
 			if (!inner) {
@@ -297,7 +293,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge, bool inn
 	ScriptEnv env = map.getScriptEnv(interaction);
 
 	// DIALOG_BOOKCASE_V1
-	ScriptDriver driver(assets, env, map.mapData, bridge);
+	ScriptDriver driver(map, bridge, env);
 	TEST(driver.type() == ScriptType::kText);
 
 	if (inner) {
@@ -325,18 +321,17 @@ static void TestCodeEval()
 	ScriptBridge bridge;
 	ConstScriptAssets csa = bridge.readCSA("");
 	ScriptAssets assets(csa);
-	MapData coreData(MapData::kSeed);
-	
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
 	ScriptEnv env = { "TEST_MAGIC_BOOK", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-
+	
 	{
 		{
-			VarBinder binder(bridge, coreData.coreData, env);
+			VarBinder binder(bridge, zoneDriver.mapData.coreData, env);
 			binder.set("player.class", Variant("fighter"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
 		}
-		ScriptDriver driver(assets, env, coreData, bridge);
+		ScriptDriver driver(zoneDriver, bridge, "TEST_MAGIC_BOOK");
 		TEST(driver.type() == ScriptType::kChoices);
 		TEST(driver.choices().choices.size() == 1);
 		driver.choose(0);
@@ -344,28 +339,28 @@ static void TestCodeEval()
 	}
 	{
 		{
-			VarBinder binder(bridge, coreData.coreData, env);
+			VarBinder binder(bridge, zoneDriver.mapData.coreData, env);
 			binder.set("player.class", Variant("druid"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
 		}
 
-		ScriptDriver driver(assets, env, coreData, bridge);
+		ScriptDriver driver(zoneDriver, bridge, "TEST_MAGIC_BOOK");
 		TEST(driver.type() == ScriptType::kText);
 		driver.advance();
 		TEST(driver.done());
 	}
 	{
 		{
-			VarBinder binder(bridge, coreData.coreData, env);
+			VarBinder binder(bridge, zoneDriver.mapData.coreData, env);
 			// Set up a run
 			binder.set("player.class", Variant("wizard"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
 		}
 
-		ScriptDriver driver(assets, env, coreData, bridge);
-		VarBinder binder(bridge, coreData.coreData, env);
+		ScriptDriver driver(zoneDriver, bridge, "TEST_MAGIC_BOOK");
+		VarBinder binder = driver.varBinder();
 		TEST(driver.type() == ScriptType::kText);
 		TEST(binder.get("player.mystery").type == LUA_TBOOLEAN);
 		TEST(binder.get("player.mystery").boolean == true);
@@ -501,9 +496,8 @@ static void TestScriptBridge(ScriptBridge& engine)
 static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "_TEST_READING", NO_ENTITY, NO_ENTITY, "testplayer", "_TEST_BOOK_READER" };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "_TEST_READING");
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().text == "Velma is reading a book. She is wearing glasses.");
@@ -520,9 +514,11 @@ static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& brid
 static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "_TEST_TEXT_TEST", NO_ENTITY, NO_ENTITY, "testplayer", "_TEST_BOOK_READER" };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "_TEST_TEXT_TEST", NO_ENTITY, NO_ENTITY, "testplayer", "_TEST_BOOK_READER" };
+	//ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "_TEST_TEXT_TEST");
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().text == "This is pathA");
@@ -535,9 +531,11 @@ static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 static void CallScriptTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "_OPEN_RED_CHEST", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "_OPEN_RED_CHEST", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "_OPEN_RED_CHEST");
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().speaker == "narrator");
@@ -549,9 +547,11 @@ static void CallScriptTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 static void ChoiceMode1RepeatTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "CHOICE_MODE_1_REPEAT", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "CHOICE_MODE_1_REPEAT", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_1_REPEAT");
 
 	TEST(driver.type() == ScriptType::kText);
 	driver.advance();
@@ -592,9 +592,11 @@ static void ChoiceMode1RepeatTest(const ConstScriptAssets& ca, ScriptBridge& bri
 static void ChoiceMode1RewindTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "CHOICE_MODE_1_REWIND", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "CHOICE_MODE_1_REWIND", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_1_REWIND");
 
 	//PrintForest(assets, createTree(assets, "testplayer"));
 	TEST(driver.type() == ScriptType::kText);
@@ -628,9 +630,11 @@ static void ChoiceMode1RewindTest(const ConstScriptAssets& ca, ScriptBridge& bri
 static void ChoiceMode1PopTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "CHOICE_MODE_1_POP", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "CHOICE_MODE_1_POP", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_1_POP");
 
 	//PrintForest(assets, createTree(assets, "testplayer"));
 	TEST(driver.type() == ScriptType::kText);
@@ -653,10 +657,11 @@ static void ChoiceMode1PopTest(const ConstScriptAssets& ca, ScriptBridge& bridge
 static void ChoiceMode2Test(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "CHOICE_MODE_2_TEST", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "CHOICE_MODE_2_TEST", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//	ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_2_TEST");
 
 	TEST(driver.type() == ScriptType::kChoices);
 	TEST(driver.choices().choices.size() == 2);
@@ -682,10 +687,10 @@ static void FlagTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, bridge, "testplayer");
-
 	{
-		ScriptEnv env = {"TEST_SCRIPT_1", "TEST_ZONE_1", "TEST_ROOM_1", "testplayer", "TEST_ACTOR_1"};
-		ScriptDriver driver(assets, env, map.mapData, bridge);
+		//ScriptEnv env = {"TEST_SCRIPT_1", "TEST_ZONE_1", "TEST_ROOM_1", "testplayer", "TEST_ACTOR_1"};
+		//ScriptDriver driver(assets, env, map.mapData, bridge);
+		ScriptDriver driver(map, bridge, "TEST_SCRIPT_1");
 
 		TEST(driver.type() == ScriptType::kText);
 		//map.coreData.dump();
@@ -703,8 +708,9 @@ static void TestInventoryScript(const ConstScriptAssets& ca, ScriptBridge& bridg
 {
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, bridge, "testplayer");
-	ScriptEnv env = { "KEY_MASTER", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, map.mapData, bridge);
+	//ScriptEnv env = { "KEY_MASTER", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, map.mapData, bridge);
+	ScriptDriver driver(map, bridge, "KEY_MASTER");
 
 	TEST(driver.type() == ScriptType::kChoices);
 	TEST(driver.choices().choices.size() == 2);
@@ -765,7 +771,7 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		const Interaction* iAct = zone.getInteractions()[1];
 		TEST(iAct->name == "Move Button");
 		ScriptEnv env = zone.getScriptEnv(iAct);
-		ScriptDriver driver(assets, env, zone.mapData, bridge);
+		ScriptDriver driver(zone, bridge, env);
 		TEST(driver.type() == ScriptType::kText);
 		driver.advance();
 		TEST(driver.done());
@@ -778,7 +784,7 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		const Interaction* iAct = zone.getInteractions()[2];
 		TEST(iAct->name == "Teleport Button");
 		ScriptEnv env = zone.getScriptEnv(iAct);
-		ScriptDriver driver(assets, env, zone.mapData, bridge);
+		ScriptDriver driver(zone, bridge, env);
 		TEST(driver.type() == ScriptType::kText);
 		driver.advance();
 		TEST(driver.done());
@@ -794,8 +800,9 @@ static void TestLuaCore()
 	ConstScriptAssets csa = bridge.readCSA("");
 	ScriptAssets assets(csa);
 	ZoneDriver zoneDriver(assets, bridge, "testplayer");
-	ScriptEnv env = { "TEST_LUA_CORE", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, zoneDriver.mapData, bridge);
+	//ScriptEnv env = { "TEST_LUA_CORE", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, zoneDriver.mapData, bridge);
+	ScriptDriver driver(zoneDriver, bridge, "TEST_LUA_CORE");
 
 	TEST(driver.type() == ScriptType::kText);
 	CoreData& cd = zoneDriver.mapData.coreData;
@@ -1084,14 +1091,16 @@ void BattleTest::TestSystem()
 void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	MapData coreData(MapData::kSeed);
-	ScriptEnv env = { "TEST_BATTLE_1", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	ScriptDriver driver(assets, env, coreData, bridge);
+	//MapData coreData(MapData::kSeed);
+	//ScriptEnv env = { "TEST_BATTLE_1", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
+	//ScriptDriver driver(assets, env, coreData, bridge);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "TEST_BATTLE_1");
 
 	TEST(driver.type() == ScriptType::kBattle);
 	{
 		// FIXME: driver.helper()->binder() is not clear
-		BattleSystem battle(assets, driver.helper()->varBinder(), driver.battle(), "testplayer", coreData.random);
+		BattleSystem battle(assets, driver.helper()->varBinder(), driver.battle(), "testplayer", zoneDriver.mapData.random);
 		TEST(battle.name() == "Cursed Cavern");
 		TEST(battle.combatants().size() == 5);
 		TEST(battle.regions().size() == 4);

@@ -812,6 +812,7 @@ Script ScriptBridge::readScript() const
 	try {
 		s.entityID = getStrField("entityID", {});
 		s.code = getFuncField(L, "code");
+		s.npc = getStrField("npc", {""});
 
 		for (TableIt it(L, -1); !it.done(); it.next()) {
 			if (it.kType() == LUA_TNUMBER) {
@@ -1013,7 +1014,7 @@ CallScript ScriptBridge::readCallScript() const
 	try {
 		cs.entityID = readEntityID("entityID", {});
 		cs.scriptID = readEntityID("scriptID", {});
-		//cs.npc = readEntityID("npc", { "" });
+		cs.npc = readEntityID("npc", { "" });
 		cs.code = getFuncField(L, "code");
 		cs.eval = getFuncField(L, "eval");
 	}

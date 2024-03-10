@@ -7,12 +7,10 @@ namespace lurp {
 VarBinder::VarBinder(ScriptBridge& bridge, CoreData& coreData, const ScriptEnv& env)
 	: _bridge(bridge), _coreData(coreData), _env(env)
 {
-//	bridge.setICore(&coreData);
 }
 
 VarBinder::~VarBinder()
 {
-//	_bridge.setICore(nullptr);
 }
 
 // This is the read-only fallback to the lua script.
@@ -145,24 +143,28 @@ std::string VarBinder::evalPath(const ScriptEnv& env, const std::string& in) con
 	else if (first == "player") {
 		if (env.player.empty()) {
 			fmt::print("WARNING: Attempt to access player variable '{}' with no player\n", in);
+			assert(false);
 		}
 		first = env.player;
 	}
 	else if (first == "npc") {
 		if (env.npc.empty()) {
 			fmt::print("WARNING: Attempt to access npc variable '{}' with no npc\n", in);
+			assert(false);
 		}
 		first = env.npc;
 	}
 	else if (first == "zone") {
 		if (env.zone.empty()) {
 			fmt::print("WARNING: Attempt to access zone variable '{}' with no zone\n", in);
+			assert(false);
 		}
 		first = env.zone;
 	}
 	else if (first == "room") {
 		if (env.room.empty()) {
 			fmt::print("WARNING: Attempt to access room variable '{}' with no room\n", in);
+			assert(false);
 		}
 		first = env.room;
 	}

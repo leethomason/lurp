@@ -129,6 +129,7 @@ struct Interaction {
 struct CallScript {
 	EntityID entityID;
 	EntityID scriptID;
+	EntityID npc;
 	int code = -1;
 	int eval = -1;
 

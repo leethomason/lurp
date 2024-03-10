@@ -15,10 +15,7 @@ class ScriptHelper;
 
 class CoreData : public ICoreHandler
 {
-	// FIXME: sholudn't need a script bridge
-	// FIXME: shouldn't call setICore
 public:
-	// The ScriptBridge* will set up callbacks to supply the coredata to the scripting system
 	CoreData();
 	~CoreData();
 
@@ -30,7 +27,6 @@ public:
 	virtual std::pair<bool, Variant> coreGet(const std::string& scope, const std::string& flag) const;
 	bool coreBool(const std::string& scope, const std::string& flag, bool defaultValue) const;
 
-	// If the 'bridge' is not null, it will be used to check if coreData is unchanged.
 	void save(std::ostream& stream) const;
 	void load(ScriptBridge& loader);
 
@@ -52,7 +48,6 @@ private:
 	};
 
 	std::map<Flag, Variant> _coreData;
-	//ScriptBridge* _bridge = nullptr;
 };
 
 } // namespace lurp

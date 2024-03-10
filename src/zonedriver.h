@@ -131,6 +131,8 @@ public:
 
 	MapData mapData;
 
+	const ScriptAssets& assets() const { return _assets; }
+
 private:
 	std::vector<Edge> edges(EntityID room = "") const;
 	bool filterInteraction(const Interaction&);	// true if interaction should be included

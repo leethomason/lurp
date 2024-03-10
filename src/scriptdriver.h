@@ -5,6 +5,7 @@
 #include "tree.h"
 #include "iscript.h"
 #include "mapdata.h"
+#include "varbinder.h"
 
 #include <string>
 #include <vector>
@@ -20,27 +21,17 @@ class ZoneDriver;
 class ScriptDriver : public ITextHandler
 {
 public:
-	// The ScriptHelper binds the player/npc/map/zone to the scripting environment.
-	//		It is optional; if not provided, the script has minimal functionality.
-	// The readText set is used to track which text has been read by the player.
-	//		It is optional; if not provided, all text is considered unread. This will
-	//      certainly break some scripts. But useful to be null for testing.
-	ScriptDriver(
-		const ScriptAssets& assets,
-		const ScriptEnv& env,
-		MapData& mapData,
-		ScriptBridge& bridge,
-		int initCode = -1);
 
-	ScriptDriver(ZoneDriver& zoneDriver, const EntityID& scriptID);
+	ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int initLuaFunc = -1);
+	ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int initLuaFunc = -1);
 
 	// Loader version.
-	ScriptDriver(
-		const ScriptAssets& assets,
-		const EntityID& scriptID,
-		MapData& mapData,
-		ScriptBridge& bridge,
-		ScriptBridge& loader);
+	//ScriptDriver(
+	//	const ScriptAssets& assets,
+	//	const EntityID& scriptID,
+	//	MapData& mapData,
+	//	ScriptBridge& bridge,
+	//	ScriptBridge& loader);
 
 	~ScriptDriver();
 
@@ -66,6 +57,11 @@ public:
 	virtual bool allTextRead(const EntityID& id) const;
 
 	const ScriptHelper* helper() const { return _helper.get(); }
+	VarBinder varBinder() const;
+
+	bool load(ScriptBridge& loader) {
+		return loadContext(loader);
+	}
 
 private:
 	ScriptEnv loadEnv(ScriptBridge& loader) const;

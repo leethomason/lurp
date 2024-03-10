@@ -102,6 +102,7 @@ static void PrintNews(NewsQueue& queue)
 	}
 }
 
+#if 0
 static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, const ScriptEnv& env, MapData& mapData)
 {
 	ScriptDriver dd(assets, env, mapData, bridge);
@@ -135,6 +136,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 		}
 	}
 }
+#endif
 
 static void PrintInventory(const Inventory& inv)
 {
@@ -494,6 +496,7 @@ int main(int argc, const char* argv[])
 				if (argc > 2)
 					ref = assets.get(argv[2]);
 
+#if 0
 				if (ref.type == ScriptType::kScript) {
 					ScriptEnv env;
 					env.script = argv[2];
@@ -503,7 +506,9 @@ int main(int argc, const char* argv[])
 					mapData.random.setRandomSeed();
 					ConsoleScriptDriver(assets, bridge, env, mapData);
 				}
-				else {
+				else 
+#endif
+				{
 					std::string dir = GameFileToDir(scriptFile);
 					std::string savePath = SavePath(dir, "saves");
 					fmt::print("Save path: {}\n", savePath);
