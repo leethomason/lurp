@@ -387,16 +387,18 @@ function SetupScriptEnv(_script, _player, _npc, _zone, _room)
 end
 
 function SetupNPCEnv(_npc)
+    print("SetupNPCEnv", _npc)
     if script == nil then
         print("WARNING: SetupNPCEnv() script is not set")
-        return
+        return false
     end
     if npc ~= nil then
         print("WARNING: SetupNPCEnv() npc is already set")
-        return
+        return false
     end
     npc = Entity(_npc)
     assert(npc._isCoreTable, "npc is not a core table")
+    return true
 end
 
 function ClearScriptEnv()

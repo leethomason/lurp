@@ -179,11 +179,11 @@ Script {
     },
     Text {
         eval = function() return script.booksRead == 1 end,
-        { s="{npc}", "Read the first book! (Books read = {script.booksRead})"}
+        { s="{npc.name}", "Read the first book! (Books read = {script.booksRead})"}
     },
     Text {
         eval = function() return script.booksRead > 1 end,
-        { s="{npc}", "That's {script.booksRead} books read."}
+        { s="{npc.name}", "That's {script.booksRead} books read."}
     }
 }
 

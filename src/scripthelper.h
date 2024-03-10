@@ -25,7 +25,7 @@ public:
 
 	bool callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const;
 
-	void save(std::ostream& stream) const;
+	//void save(std::ostream& stream) const;
 
 	// fixme: hacky - for the driver to get access
 	ScriptBridge& bridge() const { return _bridge; }
@@ -45,8 +45,8 @@ private:
 
 	ScriptBridge& _bridge;
 	CoreData& _coreData;
+	const ScriptEnv& _scriptEnv;
 
-	ScriptEnv _scriptEnv;
 	int _scriptContextCount = 0;
 };
 

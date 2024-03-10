@@ -58,7 +58,8 @@ Zone {
         entityID = "TEST_ROOM_1",
         name = "test room",
         Interaction {
-            actor = "TEST_ACTOR_1",
+            npc = "TEST_ACTOR_1",
+            required = true,
             next = Script {
                 entityID = "TEST_SCRIPT_1",
                 code = function()

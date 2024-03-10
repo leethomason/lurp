@@ -145,7 +145,6 @@ private:
 	ScriptAssets& _assets;
 	ScriptRef _zone;
 	ScriptRef _room;
-	EntityID _player;
 	ScriptBridge& _bridge;
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;

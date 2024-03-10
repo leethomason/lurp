@@ -123,18 +123,7 @@ bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std
 		else
 			lua_pushstring(L, arg.c_str());
 	}
-	pcall(-1, (int)args.size(), nResult);
-
-	bool r = false;
-	Variant vr = Variant::fromLua(L, -1);
-	if (nResult) {
-		r = lua_toboolean(L, -1) != 0;
-	}
-	lua_pop(L, nResult);
-
-	// FIXME: trace
-
-	return r;
+	return pcall(-1, (int)args.size(), nResult);
 }
 
 bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
@@ -175,17 +164,6 @@ bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 	}
 
 	return r;
-}
-
-void ScriptHelper::save(std::ostream& stream) const
-{
-	fmt::print(stream, "ScriptHelper = {{\n");
-	fmt::print(stream, "  script = '{}',\n", _scriptEnv.script);
-	fmt::print(stream, "  zone = '{}',\n", _scriptEnv.zone);
-	fmt::print(stream, "  room = '{}',\n", _scriptEnv.room);
-	fmt::print(stream, "  player = '{}',\n", _scriptEnv.player);
-	fmt::print(stream, "  npc = '{}',\n", _scriptEnv.npc);
-	fmt::print(stream, "}}\n");
 }
 
 } // namespace lurp

@@ -53,20 +53,18 @@ public:
 	void choose(int i);					// kChoices
 
 	const Tree* getTree() const { return &_tree;}
-	void save(std::ostream& stream) const;
 	virtual bool allTextRead(const EntityID& id) const;
 
 	const ScriptHelper* helper() const { return _helper.get(); }
 	VarBinder varBinder() const;
 
-	bool load(ScriptBridge& loader) {
-		return loadContext(loader);
-	}
+	void save(std::ostream& stream) const;
+	bool load(ScriptBridge& loader);
+	static void saveScriptEnv(std::ostream& stream, const ScriptEnv& env);
+	static ScriptEnv loadScriptEnv(ScriptBridge& loader);
+
 
 private:
-	ScriptEnv loadEnv(ScriptBridge& loader) const;
-	bool loadContext(ScriptBridge& loader);
-
 	bool parseAction(const std::string& str, Choices::Action& action) const;
 
 	// eval() the active choices and do text substitution
@@ -78,6 +76,7 @@ private:
 	bool textTest(const std::string& test) const;
 
 	const ScriptAssets& _assets;
+	ScriptBridge& _bridge;
 	ScriptEnv _scriptEnv;
 	MapData& _mapData;
 	

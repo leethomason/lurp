@@ -7,7 +7,11 @@ namespace lurp {
 
 void walkTree(const ScriptAssets& assets, const EntityID& entityID, int depth, std::vector<NodeRef>& tree)
 {
-	assert(!entityID.empty());
+	if (entityID.empty()) {
+		// happens when we create an empty script for loading.
+		return;
+	}
+
 	ScriptRef ref = assets.get(entityID);
 
 	// If the driver can't point at it, doesn't need to be in tree.
