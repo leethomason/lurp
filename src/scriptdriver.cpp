@@ -148,23 +148,18 @@ Text ScriptDriver::filterText(const Text& text) const
 	Text result = text.copyWithoutLines();
 
 	bool outerEval = true;
-	if (_helper) {
-		outerEval = _helper->call(text.eval, 1);
-		outerEval = outerEval && textTest(text.test);
-	}
+	outerEval = _helper->call(text.eval, 1);
+	outerEval = outerEval && textTest(text.test);
 	if (!outerEval) {
 		return result;
 	}
-	if (_helper) {
-		_helper->call(text.code, 0);
-	}
+	_helper->call(text.code, 0);
 
 	for (const Text::Line& line : text.lines) {
 		bool eval = true;
-		if (_helper) {
-			eval = _helper->call(line.eval, 1);
-			eval = eval && textTest(line.test);
-		}
+		eval = _helper->call(line.eval, 1);
+		eval = eval && textTest(line.test);
+
 		if (!eval) continue;
 
 		Text::Line tl;
@@ -294,7 +289,8 @@ void ScriptDriver::processTree(bool step)
 			ScriptRef ref = node.ref;
 			if (ref.type == ScriptType::kScript) {
 				const Script& script = _assets._csa.scripts[ref.index];
-				if (_helper) _helper->call(script.code, 0);
+
+				_helper->call(script.code, 0);
 			}
 			else if (ref.type == ScriptType::kText) {
 				const Text& text = _assets._csa.texts[ref.index];
@@ -322,9 +318,9 @@ void ScriptDriver::processTree(bool step)
 			else if (ref.type == ScriptType::kCallScript) {
 				const CallScript& callScript = _assets._csa.callScripts[ref.index];
 				bool eval = true;
-				if (_helper) eval = _helper->call(callScript.eval, true);
+				eval = _helper->call(callScript.eval, true);
 				if (eval) {
-					if (_helper) _helper->call(callScript.code, false);
+					_helper->call(callScript.code, false);
 				}
 				else {
 					_treeIt.forwardTE();
@@ -471,8 +467,7 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 
 void ScriptDriver::save(std::ostream& stream) const
 {
-	if (_helper)
-		_helper->save(stream);
+	_helper->save(stream);
 
 	// Always true? But needs to be a leading edge
 	// so that when the load occurs, the state is set

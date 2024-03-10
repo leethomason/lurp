@@ -33,7 +33,7 @@ void ScriptHelper::setupScriptEnv()
 
 	// Check if the context is already set up
 	int exists = lua_getglobal(L, "script");
-	CHECK(exists == LUA_TNIL); 
+	CHECK(exists == LUA_TNIL);
 	lua_pop(L, 1);
 
 	// Now push the call params
@@ -107,6 +107,34 @@ bool ScriptHelper::call(int ref, int nResult) const
 	assert(lua_type(L, -1) == LUA_TFUNCTION);
 
 	return pcall(ref, fi.nParams, nResult);
+}
+
+bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const
+{
+	lua_State* L = _bridge.getLuaState();
+	ScriptBridge::LuaStackCheck check(L);
+
+	int t = lua_getglobal(L, funcName.c_str());
+	CHECK(t == LUA_TFUNCTION);
+
+	for (const std::string& arg : args) {
+		if (arg.empty())
+			lua_pushnil(L);
+		else
+			lua_pushstring(L, arg.c_str());
+	}
+	pcall(-1, (int)args.size(), nResult);
+
+	bool r = false;
+	Variant vr = Variant::fromLua(L, -1);
+	if (nResult) {
+		r = lua_toboolean(L, -1) != 0;
+	}
+	lua_pop(L, nResult);
+
+	// FIXME: trace
+
+	return r;
 }
 
 bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
