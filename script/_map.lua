@@ -387,7 +387,7 @@ function SetupScriptEnv(_script, _player, _npc, _zone, _room)
 end
 
 function SetupNPCEnv(_npc)
-    print("SetupNPCEnv", _npc)
+    --print("SetupNPCEnv", _npc)
     if script == nil then
         print("WARNING: SetupNPCEnv() script is not set")
         return false

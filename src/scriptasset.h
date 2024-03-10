@@ -77,7 +77,12 @@ struct ScriptAssets : public IAssetHandler
 	void save(std::ostream& stream);
 	void load(ScriptBridge& loader);
 
+	// IAssetHandler
 	virtual std::pair<bool, Variant> assetGet(const std::string& entity, const std::string& path) const;
+
+	// Debugging: return the description of the entity
+	std::string desc(const EntityID& entityID) const;
+
 	const ConstScriptAssets& _csa;
 
 private:

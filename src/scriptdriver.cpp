@@ -545,8 +545,8 @@ bool ScriptDriver::load(ScriptBridge& loader)
 	int treeItIndex = loader.getIntField("treeItIndex", { 0 });
 	int textSubIndex = loader.getIntField("textSubIndex", { 0 });
 
-	_tree = Tree(_assets, entityID);
-	_tree.dump(_assets);
+	_tree = Tree(_assets, _scriptEnv.script);
+	//_tree.dump(_assets);
 
 	loader.pushTable("choicesStack");
 
