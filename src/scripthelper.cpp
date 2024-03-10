@@ -33,7 +33,7 @@ void ScriptHelper::setupScriptEnv()
 
 	// Check if the context is already set up
 	int exists = lua_getglobal(L, "script");
-	CHECK(exists == LUA_TNIL); 
+	CHECK(exists == LUA_TNIL);
 	lua_pop(L, 1);
 
 	// Now push the call params
@@ -109,6 +109,23 @@ bool ScriptHelper::call(int ref, int nResult) const
 	return pcall(ref, fi.nParams, nResult);
 }
 
+bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const
+{
+	lua_State* L = _bridge.getLuaState();
+	ScriptBridge::LuaStackCheck check(L);
+
+	int t = lua_getglobal(L, funcName.c_str());
+	CHECK(t == LUA_TFUNCTION);
+
+	for (const std::string& arg : args) {
+		if (arg.empty())
+			lua_pushnil(L);
+		else
+			lua_pushstring(L, arg.c_str());
+	}
+	return pcall(-1, (int)args.size(), nResult);
+}
+
 bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 {
 	ScriptBridge::FuncInfo fi;
@@ -147,17 +164,6 @@ bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 	}
 
 	return r;
-}
-
-void ScriptHelper::save(std::ostream& stream) const
-{
-	fmt::print(stream, "ScriptHelper = {{\n");
-	fmt::print(stream, "  script = '{}',\n", _scriptEnv.script);
-	fmt::print(stream, "  zone = '{}',\n", _scriptEnv.zone);
-	fmt::print(stream, "  room = '{}',\n", _scriptEnv.room);
-	fmt::print(stream, "  player = '{}',\n", _scriptEnv.player);
-	fmt::print(stream, "  npc = '{}',\n", _scriptEnv.npc);
-	fmt::print(stream, "}}\n");
 }
 
 } // namespace lurp

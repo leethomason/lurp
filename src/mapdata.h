@@ -60,7 +60,9 @@ using NewsQueue  = Queue<NewsItem>;
 
 struct MapData
 {
-	MapData(ScriptBridge* bridge, uint32_t seed = 17);
+	static constexpr uint32_t kSeed = 0x12345678;
+
+	MapData(uint32_t seed);
 	Random random;
 	std::unordered_set<uint64_t> textRead;
 	CoreData coreData;

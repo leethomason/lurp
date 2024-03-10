@@ -109,11 +109,11 @@ local coffeeWithGiselle = Script {
     Text { 
         code = function() player:removeItem("SHAHIR_JOURNAL") end,
 [[
-Giselle is sipping tea at the cafe. She smiles when you arrive and put the journal on the table.
+{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table.
 "Nice work {player.name}. Although I'll give "myself some credit for talking to that bore Deweyish.
 Grab youself a sip and a pastry. I want a look at this thing."
 
-Giselle starts reading through the journal while you order tea and samosas. You make notes in your 
+{npc.name} starts reading through the journal while you order tea and samosas. You make notes in your 
 own journal, collecting your thoughts on the turn of events.
 
 "A compass and a key." She says. You look up from your musings. She has notes scribbled on papers 
@@ -260,7 +260,7 @@ Zone {
             required = true,
             eval = function() return player:hasItem("SHAHIR_JOURNAL") end,
             name = "Giselle is sipping coffee.",
-            actor = "Giselle",
+            npc = "Giselle",
             next = coffeeWithGiselle
         }
     },

@@ -115,9 +115,9 @@ struct Interaction {
 	EntityID npc;
 	int eval = -1;
 	int code = -1;
-	bool _required = false;
+	bool required = false;
 
-	bool active(bool done) const { return !_required || !done; }
+	bool active(bool done) const { return !required || !done; }
 
 	static constexpr ScriptType type{ ScriptType::kInteraction };
 	void dump(int depth) const {
@@ -129,6 +129,7 @@ struct Interaction {
 struct CallScript {
 	EntityID entityID;
 	EntityID scriptID;
+	EntityID npc;
 	int code = -1;
 	int eval = -1;
 

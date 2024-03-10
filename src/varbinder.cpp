@@ -9,6 +9,10 @@ VarBinder::VarBinder(ScriptBridge& bridge, CoreData& coreData, const ScriptEnv& 
 {
 }
 
+VarBinder::~VarBinder()
+{
+}
+
 // This is the read-only fallback to the lua script.
 std::string VarBinder::pushPath(const std::string& path) const
 {
@@ -76,7 +80,7 @@ void VarBinder::corePath(const std::string& in, EntityID& entityID, std::string&
 	std::string first = in.substr(0, pos);
 	// VarBinder can't do the substitutions:
 	assert(first != "script");
-	assert(first != "player");
+	//assert(first != "player");	// player often called "player". oops.
 	assert(first != "npc");
 	assert(first != "zone");
 	assert(first != "room");
@@ -139,24 +143,28 @@ std::string VarBinder::evalPath(const ScriptEnv& env, const std::string& in) con
 	else if (first == "player") {
 		if (env.player.empty()) {
 			fmt::print("WARNING: Attempt to access player variable '{}' with no player\n", in);
+			assert(false);
 		}
 		first = env.player;
 	}
 	else if (first == "npc") {
 		if (env.npc.empty()) {
 			fmt::print("WARNING: Attempt to access npc variable '{}' with no npc\n", in);
+			assert(false);
 		}
 		first = env.npc;
 	}
 	else if (first == "zone") {
 		if (env.zone.empty()) {
 			fmt::print("WARNING: Attempt to access zone variable '{}' with no zone\n", in);
+			assert(false);
 		}
 		first = env.zone;
 	}
 	else if (first == "room") {
 		if (env.room.empty()) {
 			fmt::print("WARNING: Attempt to access room variable '{}' with no room\n", in);
+			assert(false);
 		}
 		first = env.room;
 	}

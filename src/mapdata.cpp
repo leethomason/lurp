@@ -3,7 +3,7 @@
 
 namespace lurp {
 
-MapData::MapData(ScriptBridge* bridge, uint32_t seed) : coreData(bridge)
+MapData::MapData(uint32_t seed)
 {
 	assert(seed);
 	random.setSeed(seed);

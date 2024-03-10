@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include "lua.hpp"
+
+#include <string>
 
 namespace lurp {
 

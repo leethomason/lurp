@@ -23,6 +23,7 @@ struct Script
 		ScriptType type;
 	};
 	EntityID entityID;
+	EntityID npc;
 	int code = -1;	// called when script is started
 	std::vector<Event> events;
 

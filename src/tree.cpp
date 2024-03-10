@@ -7,7 +7,11 @@ namespace lurp {
 
 void walkTree(const ScriptAssets& assets, const EntityID& entityID, int depth, std::vector<NodeRef>& tree)
 {
-	assert(!entityID.empty());
+	if (entityID.empty()) {
+		// happens when we create an empty script for loading.
+		return;
+	}
+
 	ScriptRef ref = assets.get(entityID);
 
 	// If the driver can't point at it, doesn't need to be in tree.
@@ -95,17 +99,12 @@ bool TreeIt::done() const
 
 void Tree::dump(const ScriptAssets& assets) const
 {
-	//int idx = 0;
+	int idx = 0;
 	for (const NodeRef& ref : _tree) {
-		//fmt::print("{:2}: ", idx++);
-		fmt::print("{: >{}}", "", 2 + ref.depth * 2);
-		std::string name = scriptTypeName(ref.ref.type);
-		std::string id;
-		if (ref.ref.type == ScriptType::kScript)
-			id = assets._csa.scripts[ref.ref.index].entityID;
-		else if (ref.ref.type == ScriptType::kChoices)
-			id = assets._csa.choices[ref.ref.index].entityID;
-		fmt::print("{} {} {} {}\n", name, ref.ref.index, id, ref.leading ? "L" : "T");
+		fmt::print("{:<3}{: >{}} {} ", idx, "", 2 + ref.depth * 2, ref.leading ? "L" : "T");
+		idx++;
+		std::string desc = assets.desc(ref.entityID);
+		fmt::print("{}\n", desc );
 	}
 }
 

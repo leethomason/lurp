@@ -11,17 +11,12 @@
 
 namespace lurp {
 
-CoreData::CoreData(ScriptBridge* bridge)
-	: _bridge(bridge)
+CoreData::CoreData()
 {
-	if (_bridge)
-		_bridge->setICore(this);
 }
 
 CoreData::~CoreData()
 {
-	if (_bridge)
-		_bridge->setICore(nullptr);
 }
 
 void CoreData::clearScriptEnv()

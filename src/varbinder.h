@@ -19,6 +19,7 @@ public:
 		CoreData& coreData,			// connects to the core variables
 		const ScriptEnv& env);		// Allows substitution: zone.name, player.fighting, room.desc, etc.
 									// Can be the default object, but then no substitution is possible.
+	~VarBinder();
 
 	Variant get(const std::string& path) const;
 	Variant get(const std::string& path, const std::string& var) const {

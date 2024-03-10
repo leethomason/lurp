@@ -44,6 +44,8 @@ private:
 	TreeVec _tree;
 };
 
+// debugging
+
 class TreeIt {
 public:
 	TreeIt(const Tree& tree) : _tree(tree) {}

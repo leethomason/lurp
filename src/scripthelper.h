@@ -13,7 +13,8 @@ class CoreData;
 class ScriptHelper
 {
 public:
-	ScriptHelper(ScriptBridge& bridge,
+	ScriptHelper(
+		ScriptBridge& bridge,
 		CoreData& coreData,
 		const ScriptEnv& env);
 	~ScriptHelper();
@@ -22,7 +23,9 @@ public:
 	// code(script, player, npc) -> nil
 	bool call(int funcRef, int nResult) const;
 
-	void save(std::ostream& stream) const;
+	bool callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const;
+
+	//void save(std::ostream& stream) const;
 
 	// fixme: hacky - for the driver to get access
 	ScriptBridge& bridge() const { return _bridge; }
@@ -32,7 +35,7 @@ public:
 	void popScriptContext();
 	int contextDepth() const { return _scriptContextCount; }
 
-	VarBinder binder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
+	VarBinder varBinder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:
@@ -42,8 +45,8 @@ private:
 
 	ScriptBridge& _bridge;
 	CoreData& _coreData;
+	const ScriptEnv& _scriptEnv;
 
-	ScriptEnv _scriptEnv;
 	int _scriptContextCount = 0;
 };
 

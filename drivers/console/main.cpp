@@ -102,9 +102,10 @@ static void PrintNews(NewsQueue& queue)
 	}
 }
 
+#if 0
 static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, const ScriptEnv& env, MapData& mapData)
 {
-	ScriptDriver dd(assets, env, mapData, &bridge);
+	ScriptDriver dd(assets, env, mapData, bridge);
 
 	while (!dd.done()) {
 		while (dd.type() == ScriptType::kText) {
@@ -135,6 +136,7 @@ static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, cons
 		}
 	}
 }
+#endif
 
 static void PrintInventory(const Inventory& inv)
 {
@@ -279,7 +281,7 @@ static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
 
 static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string dir)
 {
-	ZoneDriver driver(assets, &bridge, zone, "player");
+	ZoneDriver driver(assets, bridge, zone, "player");
 	while (true) {
 		ZoneDriver::Mode mode = driver.mode();
 
@@ -494,14 +496,19 @@ int main(int argc, const char* argv[])
 				if (argc > 2)
 					ref = assets.get(argv[2]);
 
+#if 0
 				if (ref.type == ScriptType::kScript) {
 					ScriptEnv env;
 					env.script = argv[2];
 					env.player = "player";
-					MapData mapData(&bridge, 567 + clock());
+
+					MapData mapData(1);
+					mapData.random.setRandomSeed();
 					ConsoleScriptDriver(assets, bridge, env, mapData);
 				}
-				else {
+				else 
+#endif
+				{
 					std::string dir = GameFileToDir(scriptFile);
 					std::string savePath = SavePath(dir, "saves");
 					fmt::print("Save path: {}\n", savePath);

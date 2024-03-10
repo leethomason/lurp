@@ -154,6 +154,9 @@ Script {
 Actor {
     entityID = "_TEST_BOOK_READER",
     name = "Velma",
+    -- what is this magic? sub-tables in LuRP?
+    -- they are allowed, but always immutable.
+    -- you can't change the value of a sub-table.
     accessory = {
         face = "glasses",
     }
@@ -161,8 +164,12 @@ Actor {
 
 Script {
     entityID = "_TEST_READING",
-    code = function() script.booksRead = 0 end,
+    npc = "_TEST_BOOK_READER",
+    code = function()
+        script.booksRead = 0
+    end,
     Text {
+        -- Subtle point: we can read sub-tables (accessory.face) but they are immutable.
         { s="narrator", "{npc.name} is reading a book. She is wearing {npc.accessory.face}.",
                         "{player.name} smiles at her."}
     },
@@ -172,11 +179,11 @@ Script {
     },
     Text {
         eval = function() return script.booksRead == 1 end,
-        { s="npc", "Read the first book! (Books read = {script.booksRead})"}
+        { s="{npc.name}", "Read the first book! (Books read = {script.booksRead})"}
     },
     Text {
         eval = function() return script.booksRead > 1 end,
-        { s="npc", "That's {script.booksRead} books read."}
+        { s="{npc.name}", "That's {script.booksRead} books read."}
     }
 }
 
@@ -331,6 +338,10 @@ Script {
             assert(e.STR == 18, "npc.STR should be 18 now") -- fixme: this doesn't make sense
         end
     }
+}
+
+Script {
+    entityID = "EMPTY_SCRIPT"
 }
 
 Script {

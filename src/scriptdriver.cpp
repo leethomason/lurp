@@ -5,6 +5,7 @@
 #include "scripthelper.h"
 #include "battle.h"
 #include "scriptbridge.h"	// fixme: only needed for "bridge()" which should be refactored
+#include "zonedriver.h"
 
 #include <fmt/core.h>
 #include <fmt/ostream.h>
@@ -24,11 +25,12 @@ bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) co
 	return true;
 }
 
+/*
 ScriptDriver::ScriptDriver(
 	const ScriptAssets& assets,
 	const ScriptEnv& env,
 	MapData& mapData,
-	ScriptBridge* bridge,
+	ScriptBridge& bridge,
 	int initCode)
 	:	_scriptEnv(env),
 		_assets(assets),
@@ -39,16 +41,60 @@ ScriptDriver::ScriptDriver(
 	assert(!env.script.empty());
 	assert(!env.player.empty());
 
-	if (bridge) {
-		_helper = std::make_unique<ScriptHelper>(*bridge, _mapData.coreData, env);
-		_helper->bridge().setIText(this);
-		_helper->pushScriptContext();
-		_helper->call(initCode, 0);
+	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, env);
+	_helper->bridge().setIText(this);
+	_helper->pushScriptContext();
+	_helper->call(initCode, 0);
+
+	processTree(false);
+}
+*/
+
+ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int func)
+	:	_assets(zoneDriver.assets()),
+		_bridge(bridge),
+		_mapData(zoneDriver.mapData),
+		_tree(zoneDriver.assets(), scriptID),
+		_treeIt(_tree)
+{
+	if (scriptID.empty()) {
+		assert(func < 0);	// shouldn't call a func on load
 	}
+	else {
+		assert(_assets.get(scriptID).type == ScriptType::kScript);
+	}
+
+	_scriptEnv.script = scriptID;
+	_scriptEnv.zone = zoneDriver.currentZone().entityID;
+	_scriptEnv.room = zoneDriver.currentRoom().entityID;
+	_scriptEnv.player = zoneDriver.getPlayer().entityID;
+
+	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
+	_helper->bridge().setIText(this);
+	_helper->pushScriptContext();
+	_helper->call(func, 0);
 
 	processTree(false);
 }
 
+ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int func)
+	: _assets(zoneDriver.assets()),
+	_bridge(bridge),
+	_mapData(zoneDriver.mapData),
+	_tree(zoneDriver.assets(), env.script),
+	_treeIt(_tree)
+{
+	_scriptEnv = env;
+
+	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
+	_helper->bridge().setIText(this);
+	_helper->pushScriptContext();
+	_helper->call(func, 0);
+
+	processTree(false);
+}
+
+/*
 ScriptDriver::ScriptDriver(
 	const ScriptAssets& assets,
 	const EntityID& scriptID,
@@ -75,6 +121,7 @@ ScriptDriver::ScriptDriver(
 		clear();
 	}
 }
+*/
 
 ScriptDriver::~ScriptDriver()
 {
@@ -82,7 +129,7 @@ ScriptDriver::~ScriptDriver()
 		_helper->popScriptContext();
 		_helper->bridge().setIText(nullptr);
 	}
-	assert(_choicesStack.empty());
+	//assert(_choicesStack.empty());
 }
 
 void ScriptDriver::clear()
@@ -107,23 +154,18 @@ Text ScriptDriver::filterText(const Text& text) const
 	Text result = text.copyWithoutLines();
 
 	bool outerEval = true;
-	if (_helper) {
-		outerEval = _helper->call(text.eval, 1);
-		outerEval = outerEval && textTest(text.test);
-	}
+	outerEval = _helper->call(text.eval, 1);
+	outerEval = outerEval && textTest(text.test);
 	if (!outerEval) {
 		return result;
 	}
-	if (_helper) {
-		_helper->call(text.code, 0);
-	}
+	_helper->call(text.code, 0);
 
 	for (const Text::Line& line : text.lines) {
 		bool eval = true;
-		if (_helper) {
-			eval = _helper->call(line.eval, 1);
-			eval = eval && textTest(line.test);
-		}
+		eval = _helper->call(line.eval, 1);
+		eval = eval && textTest(line.test);
+
 		if (!eval) continue;
 
 		Text::Line tl;
@@ -182,7 +224,11 @@ std::string ScriptDriver::substitute(const std::string& in) const
 		out += in.substr(prev, open[i] - prev);
 		prev = close[i] + 1;
 
-		VarBinder binder = _helper->binder();
+		// Subtle. This doesn't work:
+		//		VarBinder binder = _helper->varBinder();
+		// because this ScriptDriver might have modified the npc.
+		VarBinder binder(_bridge, _mapData.coreData, _scriptEnv);
+
 		Variant v = binder.get(in.substr(open[i] + 1, close[i] - open[i] - 1));
 		if (v.type == LUA_TSTRING)
 			out += v.str;
@@ -205,7 +251,7 @@ bool ScriptDriver::textTest(const std::string& test) const
 		invert = true;
 		t = t.substr(1);
 	}
-	VarBinder binder = _helper->binder();
+	VarBinder binder(_bridge, _mapData.coreData, _scriptEnv);
 	Variant v = binder.get(t);
 	bool truthy = v.isTruthy();
 	return invert ? !truthy : truthy;
@@ -253,7 +299,12 @@ void ScriptDriver::processTree(bool step)
 			ScriptRef ref = node.ref;
 			if (ref.type == ScriptType::kScript) {
 				const Script& script = _assets._csa.scripts[ref.index];
-				if (_helper) _helper->call(script.code, 0);
+				if (!script.npc.empty()) {
+					bool okay = _helper->callGlobal("SetupNPCEnv", { script.npc }, 1);
+					if (okay) 
+						_scriptEnv.npc = script.npc;
+				}
+				_helper->call(script.code, 0);
 			}
 			else if (ref.type == ScriptType::kText) {
 				const Text& text = _assets._csa.texts[ref.index];
@@ -281,9 +332,14 @@ void ScriptDriver::processTree(bool step)
 			else if (ref.type == ScriptType::kCallScript) {
 				const CallScript& callScript = _assets._csa.callScripts[ref.index];
 				bool eval = true;
-				if (_helper) eval = _helper->call(callScript.eval, true);
+				eval = _helper->call(callScript.eval, true);
 				if (eval) {
-					if (_helper) _helper->call(callScript.code, false);
+					if (!callScript.npc.empty()) {
+						bool okay = _helper->callGlobal("SetupNPCEnv", { callScript.npc }, 1);
+						if (okay)
+							_scriptEnv.npc = callScript.npc;
+					}
+					_helper->call(callScript.code, false);
 				}
 				else {
 					_treeIt.forwardTE();
@@ -428,10 +484,37 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 	return true;
 }
 
+/*static*/ void ScriptDriver::saveScriptEnv(std::ostream& stream, const ScriptEnv& env)
+{
+	fmt::print(stream, "ScriptEnv = {{\n");
+	fmt::print(stream, "  script = '{}',\n", env.script);
+	fmt::print(stream, "  zone = '{}',\n", env.zone);
+	fmt::print(stream, "  room = '{}',\n", env.room);
+	fmt::print(stream, "  player = '{}',\n", env.player);
+	fmt::print(stream, "  npc = '{}',\n", env.npc);
+	fmt::print(stream, "}}\n");
+}
+
+/*static*/ ScriptEnv ScriptDriver::loadScriptEnv(ScriptBridge& loader)
+{
+	lua_State* L = loader.getLuaState();
+	ScriptBridge::LuaStackCheck check(L);
+
+	loader.pushGlobal("ScriptEnv");
+	ScriptEnv env;
+	env.script = loader.getStrField("script", { "" });
+	env.zone = loader.getStrField("zone", { "" });
+	env.room = loader.getStrField("room", { "" });
+	env.player = loader.getStrField("player", { "" });
+	env.npc = loader.getStrField("npc", { "" });
+	loader.pop();
+
+	return env;
+}
+
 void ScriptDriver::save(std::ostream& stream) const
 {
-	if (_helper)
-		_helper->save(stream);
+	saveScriptEnv(stream, _scriptEnv);
 
 	// Always true? But needs to be a leading edge
 	// so that when the load occurs, the state is set
@@ -447,37 +530,23 @@ void ScriptDriver::save(std::ostream& stream) const
 	}
 	fmt::print(stream, "  }},\n");
 	fmt::print(stream, "}}\n");
-
 }
 
-ScriptEnv ScriptDriver::loadEnv(ScriptBridge& loader) const
+bool ScriptDriver::load(ScriptBridge& loader)
 {
 	lua_State* L = loader.getLuaState();
 	ScriptBridge::LuaStackCheck check(L);
 
-	ScriptEnv env;
-	loader.pushGlobal("ScriptHelper");
-	env.script = loader.getStrField("script", { "" });
-	env.zone = loader.getStrField("zone", { "" });
-	env.room = loader.getStrField("room", { "" });
-	env.player = loader.getStrField("player", { "" });
-	env.npc = loader.getStrField("npc", { "" });
-	loader.pop();
-
-	return env;
-}
-
-bool ScriptDriver::loadContext(ScriptBridge& loader)
-{
-	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	_scriptEnv = loadScriptEnv(loader);
 
 	loader.pushGlobal("ScriptDriver");
 
+	EntityID entityID = loader.getStrField("entityID", { "" });
 	int treeItIndex = loader.getIntField("treeItIndex", { 0 });
 	int textSubIndex = loader.getIntField("textSubIndex", { 0 });
-	//int treeSize = loader.getIntField("treeSize", { 0 });
-	EntityID entityID = loader.getStrField("entityID", { "" });
+
+	_tree = Tree(_assets, _scriptEnv.script);
+	//_tree.dump(_assets);
 
 	loader.pushTable("choicesStack");
 
@@ -490,9 +559,11 @@ bool ScriptDriver::loadContext(ScriptBridge& loader)
 	lua_pop(L, 1);
 	lua_pop(L, 1);
 
+	const NodeRef& nodeRef = _tree.getNode(treeItIndex);
+
 	if (treeItIndex < _tree.size()
-		&& _tree.getNode(treeItIndex).entityID == entityID
-		&& _tree.getNode(treeItIndex).leading)
+		&& nodeRef.entityID == entityID
+		&& nodeRef.leading)
 	{
 		_treeIt.setIndex(treeItIndex);
 		_textSubIndex = textSubIndex;
@@ -507,6 +578,12 @@ bool ScriptDriver::loadContext(ScriptBridge& loader)
 
 	fmt::print("WARNING could not load ScriptDriver. Rolling back to Map.\n");
 	return false;
+}
+
+VarBinder ScriptDriver::varBinder() const
+{
+	VarBinder binder(_bridge, _mapData.coreData, _scriptEnv);
+	return binder;
 }
 
 const char* scriptTypeName(ScriptType type)

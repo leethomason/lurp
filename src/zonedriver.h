@@ -31,12 +31,15 @@ public:
 		kSuccess,
 	};
 
+	// FIXME: why 2 constructors?
+	// FIXME: hides a MapData getting constructed with a default seed
+
 	// Create a map with navigation, containers, and interactions.
 	// This defines a small game. For interactions w/ script,
 	// and calls into Scripts, a ScriptBridge is required.
 	// Sometimes useful to test the base map functionality without the bridge.
-	ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& player);
-	ZoneDriver(ScriptAssets& assets, ScriptBridge* bridge, const EntityID& zone, const EntityID& player);
+	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player);
+	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player);
 	~ZoneDriver();
 
 	// ------ Queries ------
@@ -128,6 +131,8 @@ public:
 
 	MapData mapData;
 
+	const ScriptAssets& assets() const { return _assets; }
+
 private:
 	std::vector<Edge> edges(EntityID room = "") const;
 	bool filterInteraction(const Interaction&);	// true if interaction should be included
@@ -140,8 +145,7 @@ private:
 	ScriptAssets& _assets;
 	ScriptRef _zone;
 	ScriptRef _room;
-	EntityID _player;
-	ScriptBridge* _bridge = nullptr;
+	ScriptBridge& _bridge;
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;
 };
