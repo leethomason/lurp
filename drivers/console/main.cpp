@@ -349,7 +349,13 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			const Battle& battle = driver.battle();
 			VarBinder binder = driver.battleVarBinder();
 			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
-			assert(false); // fixme: handle victory or defeat
+			if (victory) {
+				PrintTextLine("-- Victory! --", ionic::Color::green);
+			}
+			else {
+				PrintTextLine("-- Defeat! --", ionic::Color::red);
+				driver.endGame("You have been defeated in battle.");
+			}
 		}
 		else {
 			assert(false);
@@ -447,7 +453,7 @@ int main(int argc, const char* argv[])
 		std::string startingZone = cmdl[2];
 		bool trace = cmdl[{ "-t", "--trace" }];
 		bool debugSave = cmdl[{ "-s", "--debugSave" }];
-		bool battleSim = cmdl[{ "-b", "--battle" }];
+		//bool battleSim = cmdl[{ "-b", "--battle" }];
 
 		BattleSpec enemyBS;
 		BattleSpec playerBS;
@@ -482,10 +488,11 @@ int main(int argc, const char* argv[])
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;
 
-		if (battleSim) {
-			ConsoleBattleSim(era, playerBS, enemyBS, seed);
-		}
-		else {
+		//if (battleSim) {
+		//	ConsoleBattleSim(era, playerBS, enemyBS, seed);
+		//}
+	//	else 
+		{
 			// Run game.
 			if (!scriptFile.empty()) {
 				ScriptBridge bridge;
@@ -506,7 +513,7 @@ int main(int argc, const char* argv[])
 					mapData.random.setRandomSeed();
 					ConsoleScriptDriver(assets, bridge, env, mapData);
 				}
-				else 
+				else
 #endif
 				{
 					std::string dir = GameFileToDir(scriptFile);

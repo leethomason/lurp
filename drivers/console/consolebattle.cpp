@@ -271,6 +271,13 @@ static void PrintActions(BattleSystem& system)
 	}
 }
 
+void Pause()
+{
+	fmt::print("(enter) > ");
+	ReadString();
+}
+
+#if 0
 static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spec, Random& random)
 {
 	MeleeWeapon mw, mwPlus;
@@ -358,7 +365,8 @@ static int AssignCombatant(int era, SWCombatant* c, int n, const BattleSpec& spe
 	}
 	return index;
 }
-
+#endif
+#if 0
 void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& enemyBS, uint32_t seed)
 {
 	lurp::Random random(seed);
@@ -467,6 +475,7 @@ void ConsoleBattleSim(int era, const BattleSpec& playerBS, const BattleSpec& ene
 		}
 	}
 }
+#endif
 
 BattleSpec BattleSpec::Parse(const std::string& s)
 {
@@ -489,6 +498,7 @@ bool ConsoleBattleDriver(const ScriptAssets& assets, const VarBinder& binder, co
 	while (!system.done()) {
 		if (system.playerTurn()) {
 			PrintActions(system);
+			Pause();
 			PrintCombatants(system.combatants(), system.regions());
 			fmt::print("\n");
 			const SWCombatant& pc = system.combatants()[0];
