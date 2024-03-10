@@ -289,7 +289,8 @@ void ScriptDriver::processTree(bool step)
 			ScriptRef ref = node.ref;
 			if (ref.type == ScriptType::kScript) {
 				const Script& script = _assets._csa.scripts[ref.index];
-
+				if (!script.npc.empty())
+					_helper->callGlobal("SetupNPCEnv", { script.npc }, 0);
 				_helper->call(script.code, 0);
 			}
 			else if (ref.type == ScriptType::kText) {
@@ -320,6 +321,8 @@ void ScriptDriver::processTree(bool step)
 				bool eval = true;
 				eval = _helper->call(callScript.eval, true);
 				if (eval) {
+					if (!callScript.npc.empty())
+						_helper->callGlobal("SetupNPCEnv", { callScript.npc }, 0);
 					_helper->call(callScript.code, false);
 				}
 				else {
