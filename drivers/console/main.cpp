@@ -102,42 +102,6 @@ static void PrintNews(NewsQueue& queue)
 	}
 }
 
-#if 0
-static void ConsoleScriptDriver(ScriptAssets& assets, ScriptBridge& bridge, const ScriptEnv& env, MapData& mapData)
-{
-	ScriptDriver dd(assets, env, mapData, bridge);
-
-	while (!dd.done()) {
-		while (dd.type() == ScriptType::kText) {
-			TextLine line = dd.line();
-			PrintText(line.speaker, line.text);
-			dd.advance();
-			PrintNews(mapData.newsQueue);
-		}
-		if (dd.done())
-			break;
-
-		if (dd.type() == ScriptType::kChoices) {
-			const Choices& choices = dd.choices();
-			PrintChoices(choices);
-			fmt::print("> ");
-			Value v2 = Value::ParseValue(ReadString());
-			if (v2.intInRange((int)choices.choices.size()))
-				dd.choose(v2.intVal);
-			PrintNews(mapData.newsQueue);
-		}
-		else if (dd.type() == ScriptType::kBattle) {
-			const Battle& battle = dd.battle();
-			VarBinder binder(bridge, mapData.coreData, env);
-			ConsoleBattleDriver(assets, binder, battle, env.player, mapData.random);
-		}
-		else {
-			assert(false);
-		}
-	}
-}
-#endif
-
 static void PrintInventory(const Inventory& inv)
 {
 	if (inv.emtpy()) {
@@ -431,11 +395,8 @@ int main(int argc, const char* argv[])
 		fmt::print("Optional:\n");
 		fmt::print("  -t, --trace		Enable debug tracing\n");
 		fmt::print("  -s, --debugSave   Save everything with warnings.\n");
-		fmt::print("  -b, --battle		Run the battle sim\n");
-		fmt::print("  -e, --enemies		<level><fight><shoot><arcane>\n");
-		fmt::print("  -p, --player      <level><fight><shoot><arcane>\n");
-		fmt::print("  -r, --era         0: ancient, 1: west, 2: future\n");
 		fmt::print("  --seed            Random number seed\n");
+		fmt::print("  --outputTests     Run output tests\n");
 	}
 
 	int rc = 0;
@@ -446,26 +407,15 @@ int main(int argc, const char* argv[])
 #endif
 	{
 		argh::parser cmdl;
-		cmdl.add_params({ "-e", "--enemies", "-p", "--player", "-r", "--era", "--seed" });
+		cmdl.add_params({ "--seed" });
 		cmdl.parse(argc, argv);
 
 		std::string scriptFile = cmdl[1];
 		std::string startingZone = cmdl[2];
+
 		bool trace = cmdl[{ "-t", "--trace" }];
 		bool debugSave = cmdl[{ "-s", "--debugSave" }];
-		//bool battleSim = cmdl[{ "-b", "--battle" }];
-
-		BattleSpec enemyBS;
-		BattleSpec playerBS;
-
-		std::string v;
-		cmdl({ "-e", "--enemies" }) >> v;
-		enemyBS = BattleSpec::Parse(v);
-		cmdl({ "-p", "--player" }) >> v;
-		playerBS = BattleSpec::Parse(v);
-
-		int era = 0;
-		cmdl({ "-r", "--era" }, era) >> era;
+		bool outputTests = cmdl[{ "--outputTests" }];
 
 		uint32_t seed = uint32_t(time(0));
 		cmdl({ "--seed" }, seed) >> seed;
@@ -480,49 +430,31 @@ int main(int argc, const char* argv[])
 			else
 				fmt::print("LuRP tests failed.\n");
 		}
-		{
-			// fixme: add flag
-			//RunOutputTests();
-			//BattleOutputTests();
+		if (outputTests) {
+			RunOutputTests();
+			BattleOutputTests();
 		}
 		Globals::trace = trace;
 		Globals::debugSave = debugSave;
 
-		//if (battleSim) {
-		//	ConsoleBattleSim(era, playerBS, enemyBS, seed);
-		//}
-	//	else 
-		{
-			// Run game.
-			if (!scriptFile.empty()) {
-				ScriptBridge bridge;
-				ConstScriptAssets csassets = bridge.readCSA(scriptFile);
-				ScriptAssets assets(csassets);
+		// Run game.
+		if (!scriptFile.empty()) {
+			ScriptBridge bridge;
+			ConstScriptAssets csassets = bridge.readCSA(scriptFile);
+			ScriptAssets assets(csassets);
 
-				ScriptRef ref;
-				if (argc > 2)
-					ref = assets.get(argv[2]);
+			ScriptRef ref;
+			if (argc > 2)
+				ref = assets.get(argv[2]);
 
-#if 0
-				if (ref.type == ScriptType::kScript) {
-					ScriptEnv env;
-					env.script = argv[2];
-					env.player = "player";
 
-					MapData mapData(1);
-					mapData.random.setRandomSeed();
-					ConsoleScriptDriver(assets, bridge, env, mapData);
-				}
-				else
-#endif
-				{
-					std::string dir = GameFileToDir(scriptFile);
-					std::string savePath = SavePath(dir, "saves");
-					fmt::print("Save path: {}\n", savePath);
-					fmt::print("\n\n");
+			{
+				std::string dir = GameFileToDir(scriptFile);
+				std::string savePath = SavePath(dir, "saves");
+				fmt::print("Save path: {}\n", savePath);
+				fmt::print("\n\n");
 
-					ConsoleZoneDriver(assets, bridge, startingZone, dir);
-				}
+				ConsoleZoneDriver(assets, bridge, startingZone, dir);
 			}
 		}
 	}
