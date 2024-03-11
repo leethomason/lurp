@@ -22,7 +22,6 @@ inline std::string toLower(const std::string& str) {
 
 struct Globals
 {
-	static bool trace;
 	static bool debugSave;
 };
 

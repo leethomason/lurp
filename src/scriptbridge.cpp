@@ -110,15 +110,19 @@ ScriptBridge::ScriptBridge()
 	appendLuaPath("script");
 	registerCallbacks();
 
+	_basicTestPassed = true;
 	doFile("script/_test.lua");
 	{
 		LuaStackCheck check2(L);
 		lua_getglobal(L, "_Test");									// push "tests" table (stack=1)
-		if (!lua_istable(L, -1))
-			fmt::print("could not find the global 'Test' table\n");
+		if (!lua_istable(L, -1)) {
+			PLOG(plog::error) << "Could not find the global 'Test' table";
+			_basicTestPassed = false;
+		}
 
 		std::string t0 = getStrField("name", {});						// Get field (stack=2)
-		assert(t0 == "TestName");
+		CHECK(t0 == "TestName");
+		if (t0 != "TestName") _basicTestPassed = false;
 
 		lua_pop(L, 1);												// pop 2 (stack=0)
 	}
@@ -129,16 +133,19 @@ ScriptBridge::ScriptBridge()
 		for (TableIt it(L, -1); !it.done(); it.next()) {
 			++count;
 		}
-		assert(count == 6);
+		CHECK(count == 6);
+		if (count != 6) _basicTestPassed = false;
+
 		count = 0;
 		for (TableIt it(L, -1); !it.done(); it.next()) {
 			if (it.kType() == LUA_TNUMBER)
 				++count;
 		}
-		assert(count == 4);
+		CHECK(count == 4);
 
-		assert(getField(L, "iVal", 0).type == LUA_TNUMBER);
-		assert(getField(L, "", 4).type == LUA_TSTRING);
+		CHECK(getField(L, "iVal", 0).type == LUA_TNUMBER);
+		CHECK(getField(L, "", 4).type == LUA_TSTRING);
+		if (count != 4) _basicTestPassed = false;
 
 		lua_pop(L, 1);												// pop 2 (stack=0)
 	}
@@ -210,15 +217,16 @@ void ScriptBridge::doFile(const std::string& filename)
 	CheckPath(filename, cwd);
 	int error = luaL_loadfile(L, filename.c_str());
 	if (error) {
-		fmt::print("Error occurs when calling luaL_loadfile() 0x{:x}\n", error);
-		fmt::print("Error: '{}'\n", lua_tostring(L, -1));
+		PLOG(plog::error) << fmt::format("Occurs when calling luaL_loadfile() 0x{:x}", error);
+		PLOG(plog::error) << fmt::format("Msg: '{}'", lua_tostring(L, -1));
 	}
 	error = lua_pcall(L, 0, LUA_MULTRET, 0);
 	if (error) {
-		fmt::print("Error initializing file '{}'.\n", filename);
-		fmt::print("Error occurs when calling lua_pcall() 0x{:x}\n", error);
-		fmt::print("Error: '{}'\n", lua_tostring(L, -1));
+		PLOG(plog::error) << fmt::format("Error Iitializing file '{}'.", filename);
+		PLOG(plog::error) << fmt::format("Occurs when calling lua_pcall() 0x{:x}", error);
+		PLOG(plog::error) << fmt::format("Msg: '{}'", lua_tostring(L, -1));
 	}
+
 }
 
 

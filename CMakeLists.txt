@@ -53,6 +53,7 @@ enable_testing()
 
 add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC} ${IONIC_SOURCES})
 target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${ionic_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src ${plog_SOURCE_DIR}/include)
+set_target_properties(lurp PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 
 add_test(
   NAME lurp

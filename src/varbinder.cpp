@@ -42,11 +42,9 @@ std::string VarBinder::pushPath(const std::string& path) const
 				lua_pop(L, 1);
 				_bridge.pushGlobal(p);
 			}
-			if (Globals::trace) {
 				bool isCoreTable = _bridge.getBoolField("_isCoreTable", { false });
 				if (!isCoreTable)
-					fmt::print("[TRACE][ERROR] pushPath() trying to read {} and it is not a core table\n", p);
-			}
+					PLOG(plog::debug) << "pushPath() trying to read " << p << " and it is not a CoreTable";
 		}
 		else {
 			_bridge.pushTable(p);
@@ -98,8 +96,7 @@ Variant VarBinder::get(const std::string& in) const
 
 	std::pair<bool, Variant> p = _coreData.coreGet(entity, var);
 	if (p.first) {
-		if (Globals::trace)
-			fmt::print("[TRACE] CoreData get {}.{} -> {}\n", entity, var, p.second.toLuaString());
+		PLOG(plog::debug) << fmt::format("CoreData get{}.{} -> {}", entity, var, p.second.toLuaString());
 		return p.second;
 	}
 	lua_State* L = _bridge.getLuaState();
@@ -108,8 +105,7 @@ Variant VarBinder::get(const std::string& in) const
 	std::string key = pushPath(in);
 	Variant v = ScriptBridge::getField(L, key, -1, true);
 	lua_pop(L, 1);
-	if (Globals::trace)
-		fmt::print("[TRACE] Lua get {}.{} -> {}\n", entity, var, v.toLuaString());
+	PLOG(plog::debug) << fmt::format("Lua get {}.{} -> {}", entity, var, v.toLuaString());
 	return v;
 }
 
@@ -122,8 +118,7 @@ void VarBinder::set(const std::string& in, const Variant& v) const
 	corePath(path, entity, var);
 
 	_coreData.coreSet(entity, var, v, false);
-	if (Globals::trace)
-		fmt::print("[TRACE] CoreData set {}.{} = {}\n", entity, var, v.toLuaString());
+	PLOG(plog::debug) << fmt::format("CoreData set {}.{} = {}", entity, var, v.toLuaString());
 }
 
 std::string VarBinder::evalPath(const ScriptEnv& env, const std::string& in) const
@@ -142,28 +137,28 @@ std::string VarBinder::evalPath(const ScriptEnv& env, const std::string& in) con
 	}
 	else if (first == "player") {
 		if (env.player.empty()) {
-			fmt::print("WARNING: Attempt to access player variable '{}' with no player\n", in);
+			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;
 			assert(false);
 		}
 		first = env.player;
 	}
 	else if (first == "npc") {
 		if (env.npc.empty()) {
-			fmt::print("WARNING: Attempt to access npc variable '{}' with no npc\n", in);
+			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;
 			assert(false);
 		}
 		first = env.npc;
 	}
 	else if (first == "zone") {
 		if (env.zone.empty()) {
-			fmt::print("WARNING: Attempt to access zone variable '{}' with no zone\n", in);
+			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;
 			assert(false);
 		}
 		first = env.zone;
 	}
 	else if (first == "room") {
 		if (env.room.empty()) {
-			fmt::print("WARNING: Attempt to access room variable '{}' with no room\n", in);
+			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;
 			assert(false);
 		}
 		first = env.room;

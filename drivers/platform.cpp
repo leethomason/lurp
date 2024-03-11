@@ -4,6 +4,7 @@
 #include <fmt/core.h>
 #include <filesystem>
 #include <assert.h>
+#include <plog/Log.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -45,9 +46,17 @@ bool CheckPath(const std::string& path, std::string& cwd)
     std::ofstream stream;
     stream.open(path, std::ios::in);
     if (!stream.is_open()) {
-		fmt::print("ERROR: could not open file '{}'\n", path);
+		PLOG(plog::error) << fmt::format("Could not open file '{}'", path);
         cwd = std::filesystem::current_path().string();
-        fmt::print("       Current working directory: '{}'\n", cwd);
+        PLOG(plog::error) << fmt::format("Current working directory: '{}'", cwd);
+        PLOG(plog::warning) << fmt::format("Basic tests failed. This is likely due to running from the incorrect directory.");
+        PLOG(plog::warning) << fmt::format("The working directory should be the root of the LuRP.");
+
+        fmt::print("Basic tests failed. This is likely due to running from the incorrect directory.\n");
+        fmt::print("The working directory should be the root of the LuRP.\n");
+        if (path.substr(path.size() - 9) == "_test.lua") {
+            exit(-1);
+        }
 		return false;
 	}
     return true;
@@ -74,7 +83,7 @@ std::string OSSavePath()
         delete[] buffer;
         return converted_str;
     }
-    fmt::print("ERROR: could not find 'Saved Games' folder.\n");
+    PLOG(plog::error) << "Could not find 'Saved Games' folder.";
     exit(-1);
 }
 

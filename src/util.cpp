@@ -5,7 +5,6 @@
 
 namespace lurp {
 
-bool Globals::trace = false;
 bool Globals::debugSave = false;
 
 void Random::setRandomSeed()

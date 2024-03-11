@@ -248,9 +248,11 @@ static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
 	return -1;
 }
 
-static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string dir)
+static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string dir, uint32_t seed)
 {
 	ZoneDriver driver(assets, bridge, zone, "player");
+	driver.mapData.random.setSeed(seed);
+
 	while (true) {
 		ZoneDriver::Mode mode = driver.mode();
 
@@ -394,55 +396,57 @@ int main(int argc, const char* argv[])
 	ionic::Table::initConsole();
 
 	fmt::print("Welcome to the story engine LuRP\n\n");
-	if (argc == 1) {
+	int rc = 0;
+
+	argh::parser cmdl;
+	cmdl.add_params({ "--seed", "-l", "--log" });
+	cmdl.parse(argc, argv);
+	std::string scriptFile = cmdl[1];
+	std::string startingZone = cmdl[2];
+
+	if (scriptFile.empty()) {
 		fmt::print("LuRP story engine. This is the console line runner.\n");
 		fmt::print("Usage: lurp <path/to/lua/file> <starting-zone>\n");
 		fmt::print("Optional:\n");
-		fmt::print("  -l, --log			Set log level: 'error', 'warning', 'info'. Default: 'warning'\n");
+		fmt::print("  -l, --log         Set log level: 'error', 'warning', 'info', 'debug'. Default: 'warning'\n");
 		fmt::print("  -s, --debugSave   Save everything with warnings.\n");
 		fmt::print("  --seed            Random number seed\n");
 		fmt::print("  --outputTests     Run output tests\n");
 	}
 
-	int rc = 0;
+	bool debugSave = cmdl[{ "-s", "--debugSave" }];
+	bool outputTests = cmdl[{ "--outputTests" }];
+
+	uint32_t seed = uint32_t(time(0));
+	cmdl({ "--seed" }, seed) >> seed;
+	std::string log = "warning";
+	cmdl({ "-l", "--log" }, log) >> log;
+
+	std::string dir = GameFileToDir(scriptFile);
+	std::string savePath = SavePath(dir, "saves");
+	std::string logPath = LogPath();
+
+	plog::Severity logLevel = plog::warning;
+	if (log == "error")
+		logLevel = plog::error;
+	else if (log == "info")
+		logLevel = plog::info;
+	else if (log == "debug")
+		logLevel = plog::debug;
+
+	static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+	static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.c_str(), 1'000'000, 3);
+	plog::init(logLevel, &consoleAppender).addAppender(&fileAppender);
+
+	PLOG(plog::info) << "Logging started.";
+	PLOG(plog::info) << "Save path: " << savePath;
 
 #ifdef  _DEBUG
+	// plog::init throws off memory tracking.
 	_CrtMemState s1, s2, s3;
 	_CrtMemCheckpoint(&s1);
 #endif
 	{
-		argh::parser cmdl;
-		cmdl.add_params({ "--seed", "-l", "--log" });
-		cmdl.parse(argc, argv);
-
-		std::string scriptFile = cmdl[1];
-		std::string startingZone = cmdl[2];
-
-		bool debugSave = cmdl[{ "-s", "--debugSave" }];
-		bool outputTests = cmdl[{ "--outputTests" }];
-
-		uint32_t seed = uint32_t(time(0));
-		cmdl({ "--seed" }, seed) >> seed;
-		std::string log = "warning";
-		cmdl({ "-l", "--log" }, log) >> log;
-
-		std::string dir = GameFileToDir(scriptFile);
-		std::string savePath = SavePath(dir, "saves");
-		std::string logPath = LogPath();
-
-		plog::Severity logLevel = plog::warning;
-		if (log == "error")
-			logLevel = plog::error;
-		else if (log == "info")
-			logLevel = plog::info;
-
-		static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
-		static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.c_str(), 1'000'000, 3);
-		plog::init(logLevel, &consoleAppender).addAppender(&fileAppender);
-
-
-		PLOG(plog::info) << "Logging started.";
-		PLOG(plog::info) << "Save path: " << savePath;
 
 		{
 			RunTests();
@@ -466,7 +470,7 @@ int main(int argc, const char* argv[])
 			ConstScriptAssets csassets = bridge.readCSA(scriptFile);
 			ScriptAssets assets(csassets);
 
-			ConsoleZoneDriver(assets, bridge, startingZone, dir);
+			ConsoleZoneDriver(assets, bridge, startingZone, dir, seed);
 		}
 	}
 

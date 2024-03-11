@@ -6,6 +6,7 @@
 
 #include <fmt/core.h>
 #include <fmt/ostream.h>
+#include <plog/Log.h>
 
 namespace lurp {
 
@@ -141,9 +142,9 @@ bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 	else if (err == LUA_ERRERR) errStr = "LUA_ERRERR";
 
 	if (err) {
-		fmt::print("WARNING: Lua error {} '{}' from '{}' at line {}\n", err, errStr, fi.srcName, fi.srcLine);
+		PLOG(plog::warning) << fmt::format("Lua error {} '{}' from '{}' at line {}", err, errStr, fi.srcName, fi.srcLine);
 		std::string e = lua_tostring(L, -1);
-		fmt::print("  {}\n", e);
+		PLOG(plog::warning) << fmt::format("Msg: {}", e);
 		assert(false);
 	}
 	bool r = false;
@@ -153,14 +154,8 @@ bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 	}
 	lua_pop(L, nResult);
 
-	if (Globals::trace && !err && funcRef >= 0) {
-		fmt::print("[TRACE] Call to {} at line {} returned {}. ",
-			fi.srcName, fi.srcLine, vr.toLuaString());
-		if (nResult == 0) fmt::print("(nil expected) {}\n",
-			vr.type == LUA_TNIL ? "" : "[NOTE]");
-		else if (nResult == 1) fmt::print("{}\n",
-			vr.type == LUA_TNIL ? "[NOTE] non-nil expected" : "");
-		else fmt::print("{} results not expected.\n", nResult);
+	if (funcRef >= 0) {
+		PLOG(plog::debug) << fmt::format("[TRACE] Call to {} at line {} returned {}. ", fi.srcName, fi.srcLine, vr.toLuaString());
 	}
 
 	return r;

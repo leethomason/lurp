@@ -107,9 +107,11 @@ public:
 	};
 
 	Inventory readInventory() const;
+	bool basicTestPassed() const { return _basicTestPassed; }
 
 private:
 	lua_State* L = 0;
+	bool _basicTestPassed = false;
 	std::map<int, FuncInfo> _funcInfoMap;
 	IMapHandler* _iMapHandler = nullptr;
 	ICoreHandler* _iCoreHandler = nullptr;
