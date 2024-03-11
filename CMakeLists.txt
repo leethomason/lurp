@@ -32,7 +32,12 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
   GIT_TAG        0ae5faabefb4af205e658c5e980e2db203d54298
 )
-FetchContent_MakeAvailable(lua fmt argh ionic)
+FetchContent_Declare(
+  plog
+  GIT_REPOSITORY https://github.com/SergiusTheBest/plog.git
+  GIT_TAG        199734337bec45e72956c4e82f848a716cbf7ac3
+)
+FetchContent_MakeAvailable(lua fmt argh ionic plog)
 
 file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
 file(GLOB SOURCES "src/*.cpp")
@@ -46,15 +51,15 @@ source_group("console" FILES ${CONSOLE_SRC})
 
 enable_testing()
 
+add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC} ${IONIC_SOURCES})
+target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${ionic_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src ${plog_SOURCE_DIR}/include)
+
 add_test(
   NAME lurp
-  COMMAND lurp
+  COMMAND lurp --log info
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")
-
-add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC} ${IONIC_SOURCES})
-target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${ionic_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src)
 
 add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
 target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)

@@ -3,19 +3,19 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include <fmt/core.h>
+#include <plog/Log.h>
 
 // Like assert, but doesn't get removed in release builds
 #define CHECK(x)                                                \
 	if (!(x)) {	                                                \
-		printf("ERROR: CHECK failed. Line %d in %s\n", __LINE__, __FILE__);   \
+		PLOG(plog::error) << "CHECK runtime assertion failed";  \
 		assert(false);                                          \
 	}
 
 inline void FatalError(const std::string & msg)
 {
-	fmt::print("[ERROR] {}\n", msg);
-	assert(false);
+	PLOG(plog::error) << "FATAL: " << msg;
+	assert(false);							
 	exit(2);
 }
 

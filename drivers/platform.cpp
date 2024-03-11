@@ -94,6 +94,14 @@ std::string SavePath(const std::string& dir, const std::string& stem, bool creat
     return savePath;
 }
 
+std::string LogPath()
+{
+    std::string logPath = OSSavePath();
+    logPath += "\\";
+    logPath += "lurp.txt";
+    return logPath;
+}
+
 #else
 
 #error Platform not defined.

@@ -30,13 +30,13 @@ void RecordTest(bool pass)
 		++gNTestFail;
 }
 
-void LogTests()
+void LogTestResults()
 {
 	if (gNTestPass == 0) {
-		fmt::print("ERROR No tests ran!\n");
+		PLOG(plog::error) << "No tests ran!";
 	}
 	else {
-		fmt::print("RUN_TEST: {} TEST passed: {}\n", gNRunTest, gNTestPass);
+		PLOG(plog::info) << "Tests run: " << gNRunTest << " TEST assertions passed: " << gNTestPass;
 	}
 }
 

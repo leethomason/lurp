@@ -8,6 +8,7 @@ namespace lurp {
 
 // Given dir="default" and stem="auto" return "c:/user/thedude/Saved Games/default/auto.lua"
 std::string SavePath(const std::string& dir, const std::string& stem, bool createDirectories = true);
+std::string LogPath();
 
 // Gets the 'stem' for saving from the path to the game file.
 std::string GameFileToDir(const std::string& gameFile);

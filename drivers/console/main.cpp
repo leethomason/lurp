@@ -15,6 +15,11 @@
 #include "crtdbg.h"
 #include <fmt/core.h>
 #include <ionic/ionic.h>
+#include <plog/Log.h>
+#include <plog/Appenders/ColorConsoleAppender.h>
+#include <plog/Appenders/RollingFileAppender.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Initializers/ConsoleInitializer.h>
 
 // C++
 #include <stdio.h>
@@ -388,12 +393,12 @@ int main(int argc, const char* argv[])
 {
 	ionic::Table::initConsole();
 
-	fmt::print("LuRP\n");
+	fmt::print("Welcome to the story engine LuRP\n\n");
 	if (argc == 1) {
 		fmt::print("LuRP story engine. This is the console line runner.\n");
 		fmt::print("Usage: lurp <path/to/lua/file> <starting-zone>\n");
 		fmt::print("Optional:\n");
-		fmt::print("  -t, --trace		Enable debug tracing\n");
+		fmt::print("  -l, --log			Set log level: 'error', 'warning', 'info'. Default: 'warning'\n");
 		fmt::print("  -s, --debugSave   Save everything with warnings.\n");
 		fmt::print("  --seed            Random number seed\n");
 		fmt::print("  --outputTests     Run output tests\n");
@@ -407,34 +412,52 @@ int main(int argc, const char* argv[])
 #endif
 	{
 		argh::parser cmdl;
-		cmdl.add_params({ "--seed" });
+		cmdl.add_params({ "--seed", "-l", "--log" });
 		cmdl.parse(argc, argv);
 
 		std::string scriptFile = cmdl[1];
 		std::string startingZone = cmdl[2];
 
-		bool trace = cmdl[{ "-t", "--trace" }];
 		bool debugSave = cmdl[{ "-s", "--debugSave" }];
 		bool outputTests = cmdl[{ "--outputTests" }];
 
 		uint32_t seed = uint32_t(time(0));
 		cmdl({ "--seed" }, seed) >> seed;
+		std::string log = "warning";
+		cmdl({ "-l", "--log" }, log) >> log;
+
+		std::string dir = GameFileToDir(scriptFile);
+		std::string savePath = SavePath(dir, "saves");
+		std::string logPath = LogPath();
+
+		plog::Severity logLevel = plog::warning;
+		if (log == "error")
+			logLevel = plog::error;
+		else if (log == "info")
+			logLevel = plog::info;
+
+		static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+		static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.c_str(), 1'000'000, 3);
+		plog::init(logLevel, &consoleAppender).addAppender(&fileAppender);
+
+
+		PLOG(plog::info) << "Logging started.";
+		PLOG(plog::info) << "Save path: " << savePath;
 
 		{
 			RunTests();
 			RunConsoleTests();
 			rc = TestReturnCode();
-			LogTests();
+			LogTestResults();
 			if (rc == 0)
-				fmt::print("LuRP tests run successfully.\n");
+				PLOG(plog::info) << "LuRP tests run successfully.";
 			else
-				fmt::print("LuRP tests failed.\n");
+				PLOG(plog::error) << "LuRP tests failed.";
 		}
 		if (outputTests) {
 			RunOutputTests();
 			BattleOutputTests();
 		}
-		Globals::trace = trace;
 		Globals::debugSave = debugSave;
 
 		// Run game.
@@ -443,19 +466,7 @@ int main(int argc, const char* argv[])
 			ConstScriptAssets csassets = bridge.readCSA(scriptFile);
 			ScriptAssets assets(csassets);
 
-			ScriptRef ref;
-			if (argc > 2)
-				ref = assets.get(argv[2]);
-
-
-			{
-				std::string dir = GameFileToDir(scriptFile);
-				std::string savePath = SavePath(dir, "saves");
-				fmt::print("Save path: {}\n", savePath);
-				fmt::print("\n\n");
-
-				ConsoleZoneDriver(assets, bridge, startingZone, dir);
-			}
+			ConsoleZoneDriver(assets, bridge, startingZone, dir);
 		}
 	}
 

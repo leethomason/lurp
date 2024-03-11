@@ -1,20 +1,22 @@
 #pragma once
 
+#include <plog/Log.h>
+
 int RunTests();	// returns failures
 int TestReturnCode();
 
 void RecordTest(bool pass);
 void IncTestRun();
-void LogTests();
+void LogTestResults();
 
-#define RUN_TEST(test) IncTestRun(); fmt::print("Test: {}\n", #test); test
+#define RUN_TEST(test) IncTestRun(); PLOG(plog::info) << "Test: " << #test; test
 
 // Like assert(), but works in release mode too
 // always runs the test, so that the behavior doesn't change.
 #define TEST(x)                                                 \
 	if (!(x)) {	                                                \
-		RecordTest(false);                                       \
-		printf("ERROR: line %d in %s\n", __LINE__, __FILE__);   \
+		RecordTest(false);                                      \
+		PLOG(plog::error) << "Test failure line " << __LINE__ << " in " << __FILE__; \
         assert(false);                                          \
 	}															\
 	else {														\
@@ -24,7 +26,7 @@ void LogTests();
 #define TEST_FP(x, y)                                           \
 	if (fabs(x - y) > 0.0001) {	                                \
 		RecordTest(false);                                       \
-		printf("ERROR: line %d in %s\n", __LINE__, __FILE__);   \
+		PLOG(plog::error) << "Test failure line " << __LINE__ << " in " << __FILE__; \
         assert(false);                                          \
 	}                                                           \
 	else {														\
