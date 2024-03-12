@@ -49,7 +49,8 @@ public:
 		rand();	rand(); rand();
 	}
 
-	void setRandomSeed();
+	// Used to create a seed for the random number generator
+	static uint32_t getTime();
 
 	uint32_t rand() {
 		// xorshift

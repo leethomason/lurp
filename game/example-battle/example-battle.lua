@@ -145,8 +145,11 @@ Zone {
                     { text = "Wizard (arcane)", next = "WIZARD_SCRIPT" }
                 },
                 Text {
-                    "To the Arena!",
-                    code = function() MovePlayer("BATTLE_ZONE_ARENA", true) end
+                    "To the Arena!"
+                },
+                Choices {
+                    { text = "Small Skeleton Battle", next = "SMALL_SKELETON_BATTLE"},
+                    { text = "Skeleton Battle", next = "SKELETON_BATTLE"}
                 }
             }
         }
@@ -237,6 +240,42 @@ Script {
     },
     -- You can only see this text if you win. (Otherwise the game was over.)
     Text {
-        "You are victorious!"
+        "Congratulations gladiator!"
+    }
+}
+
+Script {
+    entityID = "SMALL_SKELETON_BATTLE",
+    Battle {
+        name = "Small Skeleton Battle",
+
+        -- The regions of the battlefield - a board in 1D
+        regions = {
+            { "Stone Barriers", 0, "medium"},   -- name, distance, cover. Player starts here.
+            { "Open Space", 10, "none"},
+            { "Old Columns", 20, "medium"},
+            { "Crumbling Arches", 30, "light"}, -- enemies start here
+        },
+        Combatant {
+            name = "Skeleton Warrior",
+            count = 1,                      -- number of this type of combatant
+            fighting = 6,
+            shooting = 0,
+            arcane = 0,
+            bias = 0,                      -- bias makes a "little better" (+1) or "little worse" (-1)
+            items = { "LONGSWORD", "LEATHER"},
+        },
+        Combatant {
+            name = "Skeleton Archer",
+            fighting = 4,
+            shooting = 6,
+            arcane = 0,
+            bias = -1,
+            items = { "SHORTSWORD", "BOW"},
+        },
+    },
+    -- You can only see this text if you win. (Otherwise the game was over.)
+    Text {
+        "Congratulations gladiator!"
     }
 }
