@@ -2,18 +2,16 @@
 
 ## Open Issues
 
-* Simple: minimal but complete
+* Delete: Simple: minimal but complete
 * Docs
   * Readme
   * Script
 * Deployment
-* Turn battle driver on
 * Auto-save before battle
 * Examples:
   * simplest zone
   * simplest script
   * simplest battle
-* tests suite should have a flag (for verbose output)
 * npc is broken everywhere
   * read from Entities
   * testing
@@ -25,6 +23,8 @@
 
 ## Done
 
+* tests suite should have a flag (for verbose output)
+* Turn battle driver on
 * Better looking console output
 * EdgeGroup is a mess
 * Reasonable save/load location
@@ -50,7 +50,7 @@
 * Support simple text: Text { "me", "hello there" }
 * Choices v2
 * Serialization
-* fix: Script { Text {
+* fix: Script Text
 * inventory
   * inventory API
   * is it the right model?
