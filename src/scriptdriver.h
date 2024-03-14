@@ -36,6 +36,7 @@ public:
 	~ScriptDriver();
 
 	bool done() const;
+	void abort();
 	void clear();
 	bool valid() const { return _tree.size() > 0; }
 	const ScriptEnv& env() const { return _scriptEnv; }

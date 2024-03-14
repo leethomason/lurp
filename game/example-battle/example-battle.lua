@@ -150,16 +150,13 @@ Zone {
                 Choices {
                     { text = "Small Skeleton Battle", next = "SMALL_SKELETON_BATTLE"},
                     { text = "Skeleton Battle", next = "SKELETON_BATTLE"}
+                },
+                Text {
+                    -- You can only see this text if you win. (Otherwise the game was over.)
+                    "Congratulations gladiator! You have won the battle!",
+                    code = function() EndGame("Game Over") end
                 }
             }
-        }
-    },
-    Room {
-        entityID = "BATTLE_ZONE_ARENA",
-        name = "Arena",
-        Interaction {
-            required = true,
-            next = "SKELETON_BATTLE"
         }
     }
 }
@@ -238,10 +235,6 @@ Script {
             powers = { "FIRE_BOLT"},
         },
     },
-    -- You can only see this text if you win. (Otherwise the game was over.)
-    Text {
-        "Congratulations gladiator!"
-    }
 }
 
 Script {
@@ -274,8 +267,4 @@ Script {
             items = { "SHORTSWORD", "BOW"},
         },
     },
-    -- You can only see this text if you win. (Otherwise the game was over.)
-    Text {
-        "Congratulations gladiator!"
-    }
 }

@@ -92,4 +92,14 @@ struct Variant {
 	bool boolean = false;
 };
 
+struct Entity {
+	virtual ~Entity() = default;
+
+	EntityID entityID;
+
+	virtual void dump(int depth) const = 0;
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const = 0;
+	virtual ScriptType getType() const = 0;
+};
+
 } // namespace lurp

@@ -46,6 +46,8 @@ public:
 	const Room& currentRoom() const;
 	const Zone& currentZone() const;
 	const Actor& getPlayer();
+
+	bool gameOver() const { return !_endGameMsg.empty(); }
 	std::string endGameMsg() const { return _endGameMsg; }
 
 	// ------ Driver ------
@@ -96,6 +98,7 @@ public:
 	// Mode: Battle
 	const Battle& battle() const;
 	VarBinder battleVarBinder() const;
+	void battleDone(bool victory);
 
 	// ------ Internal / Here Be Dragons ------
 	// empty 'room' will return edges for the current room

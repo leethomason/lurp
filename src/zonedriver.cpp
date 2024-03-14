@@ -621,6 +621,19 @@ VarBinder ZoneDriver::battleVarBinder() const
 	return _scriptDriver->helper()->varBinder();	// FIXME yuck
 }
 
+void ZoneDriver::battleDone(bool victory)
+{
+	assert(_scriptDriver);
+	assert(_scriptDriver->type() == ScriptType::kBattle);
+	if (!victory) {
+		_scriptDriver->abort();
+		endGame("Defeat");
+	}
+	else {
+		_scriptDriver->advance();
+	}
+	checkScriptDriver();
+}
 
 
 } // namespace lurp

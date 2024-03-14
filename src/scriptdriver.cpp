@@ -132,6 +132,12 @@ ScriptDriver::~ScriptDriver()
 	//assert(_choicesStack.empty());
 }
 
+void ScriptDriver::abort()
+{
+	_treeIt.setIndex(_tree.size());
+	_choicesStack.clear();
+}
+
 void ScriptDriver::clear()
 {
 	_scriptEnv = ScriptEnv();
