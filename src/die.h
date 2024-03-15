@@ -21,6 +21,7 @@ struct Die {
 
 	bool isValid() const { return n > 0 && d > 0; }
 	int summary() const { return n * d + b; }
+	std::string toString() const;
 
 	static Die noDie() { return Die(0, 0, 0); }
 	static Die parse(const std::string& str);

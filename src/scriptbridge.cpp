@@ -23,8 +23,7 @@ namespace lurp {
 template<typename T>
 void FatalReadError(const std::string& msg, const T& t)
 {
-	fmt::print("[ERROR] reading {}: '{}'\n", scriptTypeName(T::type), msg);
-	t.dump(1);
+	fmt::print("[ERROR] reading {}: '{}' {}\n", scriptTypeName(T::type), msg, t.description());
 	exit(1);
 }
 

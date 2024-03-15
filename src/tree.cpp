@@ -12,7 +12,7 @@ void walkTree(const ScriptAssets& assets, const EntityID& entityID, int depth, s
 		return;
 	}
 
-	ScriptRef ref = assets.get(entityID);
+	ScriptRef ref = assets.getScriptRef(entityID);
 
 	// If the driver can't point at it, doesn't need to be in tree.
 	switch (ref.type) {

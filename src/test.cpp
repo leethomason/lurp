@@ -197,7 +197,7 @@ static void TestScriptAccess()
 	ScriptDriver driver(zoneDriver, bridge, "EMPTY_SCRIPT");
 	VarBinder binder = driver.varBinder();
 
-	ScriptRef ref = assets.get("testplayer");
+	ScriptRef ref = assets.getScriptRef("testplayer");
 	TEST(ref.type == ScriptType::kActor);
 	const Actor& player = assets._csa.actors[ref.index];
 	TEST(player.name == "Test Player");
@@ -241,7 +241,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	const Item& key01 = assets.getItem("KEY_01");
 	TEST(chestInventory.hasItem(key01) == true);
 
-	const Actor& player = assets._csa.actors[assets.get("testplayer").index];
+	const Actor& player = assets._csa.actors[assets.getScriptRef("testplayer").index];
 	Inventory& playerInventory = assets.inventories.at(player.entityID);
 
 	transfer(key01, chestInventory, playerInventory);

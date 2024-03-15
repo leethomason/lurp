@@ -11,8 +11,7 @@ namespace lurp {
 struct ScriptAssets;
 class ScriptBridge;
 
-struct Container {
-	EntityID entityID;
+struct Container : Entity {
 	std::string name;
 	int eval = -1;
 	bool locked = false;
@@ -26,12 +25,23 @@ struct Container {
 		return { false, Variant() };
 	}
 	static constexpr ScriptType type{ ScriptType::kContainer };
-	void dump(int d) const {
-		fmt::print("{: >{}}Container {} {}\n", "", d * 2, entityID, name);
+	
+	virtual std::string description() const override {
+		return fmt::format("Container {} {}\n", entityID, name);
 	};
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "key") return { true, Variant(key) };
+		return { false ,Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
+	}
 };
 
-struct Edge {
+struct Edge : Entity {
 	enum class Dir {
 		kNorth,
 		kNortheast,
@@ -44,7 +54,6 @@ struct Edge {
 		kUnknown
 	};
 
-	EntityID entityID;
 	std::string name;
 	Dir dir = Dir::kUnknown;
 	EntityID room1;
@@ -52,17 +61,25 @@ struct Edge {
 	EntityID key;
 	bool locked = false;
 
-	std::pair<bool, Variant> get(const std::string& k) const {
-		if (k == "locked") return { true, Variant(locked) };
+	static constexpr ScriptType type{ ScriptType::kEdge };
+	
+	virtual std::string description() const override {
+		return fmt::format("Edge {}   {} <-> {}\n", name, room1, room2);
+	};
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
 		if (k == "name") return { true, Variant(name) };
+		if (k == "dir") return { true, Variant(dirToShortName(dir)) };
+		if (k == "room1") return { true, Variant(room1) };
+		if (k == "room2") return { true, Variant(room2) };
 		if (k == "key") return { true, Variant(key) };
+		if (k == "locked") return { true, Variant()};	// the original value is never the desired value
 		return { false, Variant() };
 	}
 
-	static constexpr ScriptType type{ ScriptType::kEdge };
-	void dump(int d) const {
-		fmt::print("{: >{}}Edge {}   {} <-> {}\n", "", d * 2, name, room1, room2);
-	};
+	virtual ScriptType getType() const override {
+		return type;
+	}
 
 	static std::string dirToShortName(Dir d);
 	static std::string dirToLongName(Dir d);
@@ -80,20 +97,29 @@ struct DirEdge
 	EntityID key;
 };
 
-struct Room {
-	EntityID entityID;
+struct Room : Entity {
 	std::string name;
 	std::string desc;
 	std::vector<EntityID> objects;
 
 	static constexpr ScriptType type{ ScriptType::kRoom };
-	void dump(int d) const {
-		fmt::print("{: >{}}Room {} {}\n", "", d * 2, entityID, name);
+
+	std::string description() const override {
+		return fmt::format("Room {} {}\n", entityID, name);
 	};
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "desc") return { true, Variant(desc) };
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
+	}
 };
 
-struct Zone {
-	EntityID entityID;
+struct Zone : Entity {
 	std::string name;
 	std::vector<EntityID> objects;
 
@@ -101,16 +127,21 @@ struct Zone {
 	const Room* firstRoom(const ScriptAssets& assets) const;
 
 	static constexpr ScriptType type{ ScriptType::kZone };
-	void dump(int d) const {
-		fmt::print("{: >{}}Zone name: {}\n", "", d * 2, entityID);
-		for (const auto& r : objects) {
-			fmt::print("{: >{}}  {}\n", "", d * 2, r);
-		}
+
+	virtual std::string description() const override {
+		return fmt::format("Zone name: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string&) const override {
+		return { false, Variant() };
+	};
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
-struct Interaction {
-	EntityID entityID;
+struct Interaction : Entity {
 	std::string name;
 	EntityID next;
 	EntityID npc;
@@ -121,14 +152,27 @@ struct Interaction {
 	bool active(bool done) const { return !required || !done; }
 
 	static constexpr ScriptType type{ ScriptType::kInteraction };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Interaction entityID: {} '{}'\n", entityID, name);
+
+	virtual std::string description() const override {
+		return fmt::format("Interaction entityID: {} '{}'\n", entityID, name);
 	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "next") return { true, Variant(next) };
+		if (k == "npc") return { true, Variant(npc) };
+		if (k == "required") return { true, Variant(required) };
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
+	}
+
+
 };
 
-struct CallScript {
-	EntityID entityID;
+struct CallScript : Entity {
 	EntityID scriptID;
 	EntityID npc;
 	int code = -1;
@@ -138,6 +182,20 @@ struct CallScript {
 	void dump(int depth) const {
 		fmt::print("{: >{}}", "", depth * 2);
 		fmt::print("CallScript {} calls={}\n", entityID, scriptID);
+	}
+
+	virtual std::string description() const override {
+		return fmt::format("CallScript entityID: {} npc={} scriptID={}\n", entityID, npc, scriptID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "scriptID") return { true, Variant(scriptID) };
+		if (k == "npc") return { true, Variant(npc) };
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 

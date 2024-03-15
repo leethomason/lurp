@@ -61,7 +61,7 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const E
 		assert(func < 0);	// shouldn't call a func on load
 	}
 	else {
-		assert(_assets.get(scriptID).type == ScriptType::kScript);
+		assert(_assets.get(scriptID)->getType() == ScriptType::kScript);
 	}
 
 	_scriptEnv.script = scriptID;
@@ -462,7 +462,7 @@ void ScriptDriver::choose(int i)
 
 bool ScriptDriver::allTextRead(const EntityID& id) const
 {
-	ScriptRef ref = _assets.get(id);
+	ScriptRef ref = _assets.getScriptRef(id);
 	int index = -1;
 
 	const TreeVec& tree = _tree.tree();

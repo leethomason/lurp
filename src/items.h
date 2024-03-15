@@ -12,8 +12,7 @@ namespace lurp {
 
 struct ConstScriptAssets;
 
-struct Item {
-	EntityID entityID;
+struct Item : public Entity {
 	std::string name;
 	std::string desc;
 	int range = 0;
@@ -21,19 +20,34 @@ struct Item {
 	int ap = 0;
 	Die damage = { 0, 0, 0 };
 
+	Item() = default;
+	Item(const std::string& name, const std::string& desc) : name(name), desc(desc) {}
+
 	bool isMeleeWeapon() const { return range == 0 && damage.d > 0 && armor == 0; }
 	bool isRangedWeapon() const { return range > 0 && damage.d > 0 && armor == 0; }
 	bool isArmor() const { return armor > 0 && damage.d == 0; }
 	
 	static constexpr ScriptType type{ ScriptType::kItem };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Item entityID: {} '{}'\n", entityID, name);
+
+	virtual std::string description() const override {
+		return fmt::format("Item entityID: {} '{}'\n", entityID, name);
 	}
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "desc") return { true, Variant(desc) };
+		if (k == "range") return { true, Variant(range) };
+		if (k == "armor") return { true, Variant(armor) };
+		if (k == "ap") return { true, Variant(ap) };
+		if (k == "damage") return { true, Variant(damage.toString()) };
+		return { false, Variant() };
+	}
+	virtual ScriptType getType() const override {
+		return type; 
+	}
+
 };
 
-struct Power {
-	EntityID entityID;
+struct Power : Entity {
 	std::string name;
 	std::string effect;
 	int cost = 1;			// 1, 2, 3
@@ -41,9 +55,20 @@ struct Power {
 	int strength = 1;		// -3, -2, -1, 1, 2, 3
 
 	static constexpr ScriptType type{ ScriptType::kPower };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Power entityID: {} '{}' {} cost={} range={} strength={}\n", entityID, name, effect, cost, range, strength);
+	
+	virtual std::string description() const override {
+		return fmt::format("Power entityID: {} '{}' {} cost={} range={} strength={}\n", entityID, name, effect, cost, range, strength);
+	}
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "effect") return { true, Variant(effect) };
+		if (k == "cost") return { true, Variant(cost) };
+		if (k == "range") return { true, Variant(range) };
+		if (k == "strength") return { true, Variant(strength) };
+		return { false, Variant() };
+	}
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
@@ -89,8 +114,8 @@ public:
 	void save(std::ostream& stream);
 
 	static constexpr ScriptType type{ ScriptType::kInventory };
-	void dump(int d) const {
-		fmt::print("{: >{}}Inventory", "", d * 2);
+	std::string description() const {
+		return "Inventory";
 	};
 
 	friend void transfer(const Item& item, Inventory& src, Inventory& dst, int n = INT_MAX);
