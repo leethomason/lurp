@@ -1266,8 +1266,9 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	ScriptBridge* bridge = (ScriptBridge*)lua_touserdata(L, lua_upvalueindex(1));
 
 	std::string reason = lua_tostring(L, 1);
+	int bias = (int) lua_tointeger(L, 2);
 	if (bridge->_iMapHandler)
-		bridge->_iMapHandler->endGame(reason);
+		bridge->_iMapHandler->endGame(reason, bias);
 	return 0;
 }
 

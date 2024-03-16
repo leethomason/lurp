@@ -257,7 +257,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	ZoneDriver driver(assets, bridge, zone, "player");
 	driver.mapData.random.setSeed(seed);
 
-	while (!driver.gameOver()) {
+	while (!driver.isGameOver()) {
 		ZoneDriver::Mode mode = driver.mode();
 
 		if (mode == ZoneDriver::Mode::kText) {
@@ -322,16 +322,13 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			VarBinder binder = driver.battleVarBinder();
 #if 1
 			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
-			if (victory) {
-				PrintTextLine("-- Victory! --", ionic::Color::green);
-			}
-			else {
-				PrintTextLine("-- Defeat! --", ionic::Color::red);
-			}
 #else
 			bool victory = false;
 #endif
-			driver.battleDone(victory);
+			driver.battleDone();
+			if (!victory) {
+				driver.endGame("You have been defeated.", -1);
+			}
 		}
 		else {
 			assert(false);

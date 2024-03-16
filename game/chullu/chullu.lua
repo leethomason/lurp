@@ -273,7 +273,7 @@ Zone {
             eval = function() return player:hasItem("REVOLVER") end,
             next = Script {
                 Text { "You board the plane...or would, if this demo was complete. Thanks for playing!" ,
-                       code = function() EndGame("Game Over") end, "",
+                       code = function() EndGame("Game Over", 0) end, "",
                 },
             }
         }

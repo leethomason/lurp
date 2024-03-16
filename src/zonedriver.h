@@ -48,9 +48,6 @@ public:
 	const Zone& currentZone() const;
 	const Actor& getPlayer();
 
-	bool gameOver() const { return !_endGameMsg.empty(); }
-	std::string endGameMsg() const { return _endGameMsg; }
-
 	// ------ Driver ------
 	enum class Mode { kText, kChoices, kNavigation, kBattle };
 	Mode mode() const;
@@ -99,7 +96,7 @@ public:
 	// Mode: Battle
 	const Battle& battle() const;
 	VarBinder battleVarBinder() const;
-	void battleDone(bool victory);
+	void battleDone();	// advance past the battle; if the battle is lost, you need to call endGame("You lost", -1)
 
 	// ------ Internal / Here Be Dragons ------
 	// empty 'room' will return edges for the current room
@@ -123,7 +120,11 @@ public:
 	virtual void deltaItem(const EntityID& id, const EntityID& item, int n);
 	virtual int numItems(const EntityID& id, const EntityID& item) const;
 	virtual void movePlayer(const EntityID& dst, bool teleport);
-	virtual void endGame(const std::string& msg);
+	virtual void endGame(const std::string& msg, int bias);
+
+	bool isGameOver() const { return !_endGameMsg.empty(); }
+	std::string endGameMsg() const { return _endGameMsg; }
+	int endGameBias() const { return _endGameBias; }
 
 	// Note that for save AND load, the ScriptAssets must already be loaded.
 	// The save and load apply a delta on the ScriptAssets.
@@ -153,6 +154,7 @@ private:
 	ScriptRef _room;
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;
+	int _endGameBias = 0;
 };
 
 template<typename S, typename T>

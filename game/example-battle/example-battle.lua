@@ -75,6 +75,29 @@ Item {
     damage = "d6",          -- damage die from SW
 }
 
+-- Item this is a ranged weapon
+Item {
+    entityID = "PULSE_RIFLE",
+    name = "pulse rifle",
+    range = 60,
+    damage = "3d6"
+}
+
+-- Item that is a mellee weapon
+Item {
+    entityID = "PLASMA_SWORD",
+    name = "plasma sword",
+    range = 0,
+    damage = "d6"
+}
+
+-- Item that is armor
+Item {
+    entityID = "RECON_ARMOR",
+    name = "recon armor",
+    armor = 4,
+}
+
 -- Item that is armor
 Item {
     entityID = "CHAINMAIL",
@@ -142,7 +165,9 @@ Zone {
                 Choices {
                     { text = "Knight Gear (fighting)", next = "KNIGHT_SCRIPT" },
                     { text = "Archer (shooting) ", next = "ARCHER_SCRIPT" },
-                    { text = "Wizard (arcane)", next = "WIZARD_SCRIPT" }
+                    { text = "Wizard (arcane)", next = "WIZARD_SCRIPT" },
+                    { text = "Space Marine (fighting, shooting)", next = "SPACE_MARINE_SCRIPT" },
+                    { text = "Star Mage (arcane, fighting)", next = "STAR_MAGE_SCRIPT"}
                 },
                 Text {
                     "To the Arena!"
@@ -154,7 +179,7 @@ Zone {
                 Text {
                     -- You can only see this text if you win. (Otherwise the game was over.)
                     "Congratulations gladiator! You have won the battle!",
-                    code = function() EndGame("Game Over") end
+                    code = function() EndGame("Game Over", 1) end
                 }
             }
         }

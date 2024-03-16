@@ -469,22 +469,3 @@ Globals in script scope:
 * zone
 * room
 
-Script:         LUA:                  CoreData:         EntityID:    path:          Notes
--------------   -----------------     ----------------  -----------  -------------  ----------------
-script.flag     script.flag           _ScriptEnv.flag   _ScriptEnv   flag           there is no Entity() lookup! this is a temporary object.
-                                                                                    although script.entityID == "_ScriptEnv"
-player.hp       player.hp             player.hp         player       hp             noting that "player" == player.entityID so this one is odd
-                Entity("player").hp
-zone.name       zone.name             ZONE1.name        ZONE1        name           zone.entityID == "ZONE1"
-                Entity(zone).name     
-npc.traits.str  npc.traits.str        Grom.traits.str   Grom         traits.str     npc.entityID == "Grom"
-                Entity("Grom").traits.str
-
-# Serialization
-
-Saved:
-* CoreData
-* Changed assets
-* Map status
-* Zone status
-

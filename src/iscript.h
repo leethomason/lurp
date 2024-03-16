@@ -16,7 +16,7 @@ public:
 	virtual int numItems(const EntityID& id, const EntityID& item) const = 0;
 
 	virtual void movePlayer(const EntityID& dst, bool teleport) = 0;
-	virtual void endGame(const std::string& reason) = 0;
+	virtual void endGame(const std::string& reason, int bias) = 0;
 };
 
 class IAssetHandler {

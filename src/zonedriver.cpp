@@ -361,9 +361,10 @@ void ZoneDriver::movePlayer(const EntityID& dst, bool tele)
 	else move(dst);
 }
 
-void ZoneDriver::endGame(const std::string& msg)
+void ZoneDriver::endGame(const std::string& msg, int bias)
 {
 	_endGameMsg = msg;
+	_endGameBias = bias;
 }
 
 bool ZoneDriver::unlock(const Edge& e)
@@ -621,17 +622,11 @@ VarBinder ZoneDriver::battleVarBinder() const
 	return _scriptDriver->varBinder();
 }
 
-void ZoneDriver::battleDone(bool victory)
+void ZoneDriver::battleDone()
 {
 	assert(_scriptDriver);
 	assert(_scriptDriver->type() == ScriptType::kBattle);
-	if (!victory) {
-		_scriptDriver->abort();
-		endGame("Defeat");
-	}
-	else {
-		_scriptDriver->advance();
-	}
+	_scriptDriver->advance();
 	checkScriptDriver();
 }
 

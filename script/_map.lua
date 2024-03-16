@@ -69,8 +69,9 @@ function MovePlayer(dstID, teleport)
     CMove(dstID, teleport == true)
 end
 
-function EndGame(reason)
-    CEndGame(reason)
+function EndGame(reason, bias)
+    bias = bias or 0
+    CEndGame(reason, bias)
 end
 
 local poolID = {}
@@ -449,8 +450,8 @@ if DIR == nil then
         print('CMove', dstID, teleport)
     end
 
-    CEndGame = function(reason)
-        print('CEndGame', reason)
+    CEndGame = function(reason, bias)
+        print('CEndGame', reason, bias)
     end
 
     script = {}
