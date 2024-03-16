@@ -283,7 +283,7 @@ void ZoneDriver::teleport(const EntityID& room)
 		const Zone& z = _assets._csa.zones[i];
 		for (size_t j = 0; j < z.objects.size(); ++j) {
 			if (z.objects[j] == room) {
-				_zone = ScriptRef{ ScriptType::kZone, (int)i };
+				_zone = _assets.getScriptRef(z.entityID);
 				return;
 			}
 		}
@@ -479,8 +479,8 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 	loader.pushGlobal("Map");
 	EntityID room = loader.getStrField("currentRoom", {});
 	EntityID zone = loader.getStrField("currentZone", {});
-	_zone = _assets.get(zone);
-	_room = _assets.get(room);
+	_zone = _assets.getScriptRef(zone);
+	_room = _assets.getScriptRef(room);
 	lua_pop(L, 1);
 
 	lua_getglobal(L, "ScriptEnv");
