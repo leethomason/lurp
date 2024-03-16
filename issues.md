@@ -2,9 +2,6 @@
 
 ## Open Issues
 
-* Entities:
-  * get / set is unclear. Immutable?
-  * get / set needs testing. Does set do...nothing?
 * Delete: Simple: minimal but complete
 * Docs
   * Readme
@@ -15,9 +12,6 @@
   * simplest zone
   * simplest script
   * simplest battle
-* npc is broken everywhere
-  * read from Entities
-  * testing
 
 ## Ideas / Icebox
 
@@ -26,6 +20,11 @@
 
 ## Done
 
+* npc is broken everywhere
+* read from Entities
+* testing
+* get / set is unclear. Immutable?
+* get / set needs testing. Does set do...nothing?
 * tests suite should have a flag (for verbose output)
 * Turn battle driver on
 * Better looking console output
