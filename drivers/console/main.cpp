@@ -318,7 +318,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		else if (mode == ZoneDriver::Mode::kBattle) {
 			const Battle& battle = driver.battle();
 			VarBinder binder = driver.battleVarBinder();
-#if 0
+#if 1
 			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
 			if (victory) {
 				PrintTextLine("-- Victory! --", ionic::Color::green);
