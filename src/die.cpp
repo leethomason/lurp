@@ -5,6 +5,8 @@
 #include <variant>
 #include <assert.h>
 
+#include <fmt/core.h>
+
 namespace lurp {
 
 int Die::roll(Random& random, int* _nAce)
@@ -28,6 +30,13 @@ int Die::roll(Random& random, int* _nAce)
 		*_nAce = nAce;
 
 	return total + b;	// bonus only applies to total
+}
+
+std::string Die::toString() const
+{
+	if (b > 0) return fmt::format("{}d{}+{}", n, d, b);
+	if (b < 0) return fmt::format("{}d{}{}", n, d, b);
+	return fmt::format("{}d{}", n, d);
 }
 
 Die Die::parse(const std::string& str)

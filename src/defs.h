@@ -7,6 +7,7 @@
 namespace lurp {
 
 using EntityID = std::string;
+struct Entity;
 
 struct ScriptEnv {
 	EntityID script;
@@ -49,6 +50,7 @@ enum class ScriptType {
 const char* scriptTypeName(ScriptType type);
 
 struct ScriptRef {
+	const Entity* entity = nullptr;
 	ScriptType type = ScriptType::kNone;
 	int index = 0;
 
@@ -68,6 +70,7 @@ struct Variant {
 	Variant(const std::string& s) : type(LUA_TSTRING), str(s) {}
 	Variant(const char* s) : type(LUA_TSTRING), str(s) {}
 	Variant(double n) : type(LUA_TNUMBER), num(n) {}
+	Variant(int n) : type(LUA_TNUMBER), num(n) {}
 	Variant(bool b) : type(LUA_TBOOLEAN), boolean(b) {}
 
 	bool operator==(const Variant& rhs) const {
@@ -90,6 +93,16 @@ struct Variant {
 	std::string str;
 	double num = 0;
 	bool boolean = false;
+};
+
+struct Entity {
+	virtual ~Entity() = default;
+
+	EntityID entityID;
+
+	virtual std::string description() const = 0;
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const = 0;
+	virtual ScriptType getType() const = 0;
 };
 
 } // namespace lurp

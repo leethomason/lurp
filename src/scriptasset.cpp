@@ -16,87 +16,14 @@ std::pair<bool, Variant> ScriptAssets::assetGet(const std::string& entity, const
 {
 	if (!isAsset(entity)) return { false, Variant() };
 	if (path == "entityID") return { true, Variant(entity) };
-	ScriptRef ref = get(entity);
-	switch (ref.type) {
-	case ScriptType::kContainer:
-		return _csa.containers[ref.index].get(path);
-	case ScriptType::kEdge:
-		return _csa.edges[ref.index].get(path);
-	case ScriptType::kActor:
-		return _csa.actors[ref.index].get(path);
-	case ScriptType::kBattle:
-		return _csa.battles[ref.index].get(path);
-	default:
-		assert(false);
-		return { false, Variant() };
-	}
+	const Entity* e = get(entity);
+	return e->getVar(path);
 }
 
 std::string ScriptAssets::desc(const EntityID& entityID) const
 {
-	ScriptRef ref = get(entityID);
-	switch (ref.type) {
-
-	case ScriptType::kScript: {
-		const Script& script = _csa.scripts[ref.index];
-		return fmt::format("Script '{}' npc='{}' code={} nEvents={}", script.entityID, script.npc, script.code, script.events.size());
-	}
-	case ScriptType::kText: {
-		const Text& text = _csa.texts[ref.index];
-		return fmt::format("Text '{}'", text.entityID);
-	}
-	case ScriptType::kChoices: {
-		const Choices& choice = _csa.choices[ref.index];
-		return fmt::format("Choice '{}' nChoice={}", choice.entityID, choice.choices.size());
-	}
-	case ScriptType::kItem: {
-		const Item& item = _csa.items[ref.index];
-		return fmt::format("Item '{}' name={}", item.entityID, item.name);
-	}
-	case ScriptType::kPower: {
-		const Power& power = _csa.powers[ref.index];
-		return fmt::format("Power '{}' name={}", power.entityID, power.name);
-	}
-	case ScriptType::kInteraction: {
-		const Interaction& interaction = _csa.interactions[ref.index];
-		return fmt::format("Interaction '{}' name={}", interaction.entityID, interaction.name);
-	}
-	case ScriptType::kRoom: {
-		const Room& room = _csa.rooms[ref.index];
-		return fmt::format("Room '{}' name={}", room.entityID, room.name);
-	}
-	case ScriptType::kZone: {
-		const Zone& zone = _csa.zones[ref.index];
-		return fmt::format("Zone '{}' name={}", zone.entityID, zone.name);
-	}
-	case ScriptType::kBattle: {
-		const Battle& battle = _csa.battles[ref.index];
-		return fmt::format("Battle '{}' name={}", battle.entityID, battle.name);
-	}
-	case ScriptType::kContainer: {
-		const Container& container = _csa.containers[ref.index];
-		return fmt::format("Container '{}' name={}", container.entityID, container.name);
-	}
-	case ScriptType::kEdge: {
-		const Edge& edge = _csa.edges[ref.index];
-		return fmt::format("Edge '{}' name={}", edge.entityID, edge.name);
-	}
-	case ScriptType::kActor: {
-		const Actor& actor = _csa.actors[ref.index];
-		return fmt::format("Actor '{}' name={}", actor.entityID, actor.name);
-	}
-	case ScriptType::kCombatant: {
-		const Combatant& combatant = _csa.combatants[ref.index];
-		return fmt::format("Combatant '{}' name={} count={}", combatant.entityID, combatant.name, combatant.count);
-	}
-	case ScriptType::kCallScript: {
-		const CallScript& callScript = _csa.callScripts[ref.index];
-		return fmt::format("CallScript '{}' scriptID='{}' npc='{}'", callScript.entityID, callScript.scriptID, callScript.npc);
-	}
-	default:
-		assert(false);
-		return "Unknown";
-	}
+	const Entity* e = get(entityID);
+	return e->description();
 }
 
 
@@ -111,7 +38,7 @@ void ScriptAssets::save(std::ostream& stream)
 	fmt::print(stream, "Inventories = {{\n");
 
 	for (auto& [entityID, inventory] : inventories) {
-		ScriptRef ref = get(entityID);
+		ScriptRef ref = getScriptRef(entityID);
 		if (ref.type == ScriptType::kContainer) {
 			const Container& container = _csa.containers[ref.index];
 			if (container.inventory == inventory) continue;
@@ -174,7 +101,7 @@ void ScriptAssets::scan()
 }
 
 #define TYPE_BODY(vecName, itemEnum) \
-	ScriptRef ref = get(entityID); \
+	ScriptRef ref = getScriptRef(entityID); \
 	assert(ref.type == ScriptType::itemEnum); \
 	return _csa.vecName[ref.index];
 

@@ -185,8 +185,10 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 
 	ionic::TableOptions options;
 	options.outerBorder = false;
-	options.tableColor = configChoiceColor;
+	options.innerHDivider = false;
 	options.textColor = configChoiceColor;
+	options.tableColor = configChoiceColor;
+
 	ionic::Table table(options);
 
 	for (const DirEdge& e : edges) {
@@ -253,7 +255,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	ZoneDriver driver(assets, bridge, zone, "player");
 	driver.mapData.random.setSeed(seed);
 
-	while (true) {
+	while (!driver.gameOver()) {
 		ZoneDriver::Mode mode = driver.mode();
 
 		if (mode == ZoneDriver::Mode::kText) {
@@ -275,9 +277,6 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			PrintNews(driver.mapData.newsQueue);
 		}
 		else if (mode == ZoneDriver::Mode::kNavigation) {
-			if (!driver.endGameMsg().empty())
-				break;
-
 			PrintRoomDesc(driver.currentZone(), driver.currentRoom());
 			const Actor& player = driver.getPlayer();
 			const ContainerVec& containerVec = driver.getContainers();
@@ -319,14 +318,18 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		else if (mode == ZoneDriver::Mode::kBattle) {
 			const Battle& battle = driver.battle();
 			VarBinder binder = driver.battleVarBinder();
+#if 1
 			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
 			if (victory) {
 				PrintTextLine("-- Victory! --", ionic::Color::green);
 			}
 			else {
 				PrintTextLine("-- Defeat! --", ionic::Color::red);
-				driver.endGame("You have been defeated in battle.");
 			}
+#else
+			bool victory = false;
+#endif
+			driver.battleDone(victory);
 		}
 		else {
 			assert(false);
@@ -417,7 +420,7 @@ int main(int argc, const char* argv[])
 	bool debugSave = cmdl[{ "-s", "--debugSave" }];
 	bool outputTests = cmdl[{ "--outputTests" }];
 
-	uint32_t seed = uint32_t(time(0));
+	uint32_t seed = Random::getTime();
 	cmdl({ "--seed" }, seed) >> seed;
 	std::string log = "warning";
 	cmdl({ "-l", "--log" }, log) >> log;

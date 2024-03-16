@@ -2,6 +2,9 @@
 
 ## Open Issues
 
+* Entities:
+  * get / set is unclear. Immutable?
+  * get / set needs testing. Does set do...nothing?
 * Delete: Simple: minimal but complete
 * Docs
   * Readme

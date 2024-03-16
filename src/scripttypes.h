@@ -16,25 +16,29 @@ class Inventory;
 struct ScriptAssets;
 class ScriptBridge;
 
-struct Script
+struct Script : Entity
 {
 	struct Event {
 		EntityID entityID;
 		ScriptType type;
 	};
-	EntityID entityID;
 	EntityID npc;
 	int code = -1;	// called when script is started
 	std::vector<Event> events;
 
 	static constexpr ScriptType type{ ScriptType::kScript };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Script entityID: {}\n", entityID);
-		for (const auto& e : events) {
-			fmt::print("{: >{}}", "", depth * 2 + 2);
-			fmt::print("Event: {}\n", e.entityID);
-		}
+
+	virtual std::string description() const override {
+		return fmt::format("Script entityID: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "npc") return { true, Variant(npc) };
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
@@ -44,7 +48,7 @@ struct TextLine {
 	bool alreadyRead = false;
 };
 
-struct Text {
+struct Text : Entity {
 	struct Line {
 		std::string speaker;
 		std::string text;
@@ -54,7 +58,6 @@ struct Text {
 		int code = -1;		// called when this line is read
 	};
 
-	EntityID entityID;
 	std::vector<Line> lines;
 
 	int eval = -1;		// return true if this option should be presented
@@ -71,17 +74,21 @@ struct Text {
 	}
 
 	static constexpr ScriptType type{ ScriptType::kText };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Text entityID: {}\n", entityID);
-		for (const auto& line : lines) {
-			fmt::print("{: >{}}", "", depth * 2 + 2);
-			fmt::print("{}: {}\n", line.speaker, line.text);
-		}
+
+	virtual std::string description() const override {
+		return fmt::format("Text entityID: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string&) const override {
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
-struct Choices {
+struct Choices : Entity {
 	enum class Action {
 		kDone,		// Done with choices. Move to next event.
 		kRewind,	// Move to the start of the current script.
@@ -98,7 +105,6 @@ struct Choices {
 		int unmapped = 0;	// original un-mapped index. not serialized.
 	};
 
-	EntityID entityID;
 	std::vector<Choice> choices;
 	Action action = Action::kDone;
 
@@ -110,18 +116,21 @@ struct Choices {
 	}
 
 	static constexpr ScriptType type{ ScriptType::kChoices };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Choice entityID: {}\n", entityID);
-		for (const auto& c : choices) {
-			fmt::print("{: >{}}", "", depth * 2 + 2);
-			fmt::print("{} -> {}\n", c.text, c.next);
-		}
+
+	virtual std::string description() const override {
+		return fmt::format("Choice entityID: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string&) const override {
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
-struct Actor {
-	EntityID entityID;
+struct Actor : Entity {
 	std::string name;
 	bool wild = false;
 	int fighting = 0;
@@ -136,14 +145,25 @@ struct Actor {
 		fmt::print("Actor {} '{}'\n", entityID, name);
 	}
 
-	std::pair<bool, Variant> get(const std::string& key) const {
-		if (key == "name") return { true, Variant(name) };
+	virtual std::string description() const override {
+		return fmt::format("Actor entityID: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "wild") return { true, Variant(wild) };
+		if (k == "fighting") return { true, Variant(fighting) };
+		if (k == "shooting") return { true, Variant(shooting) };
+		if (k == "arcane") return { true, Variant(arcane) };
 		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
-struct Combatant {
-	EntityID entityID;
+struct Combatant : Entity {
 	std::string name;
 	bool wild = false;
 	int count = 1;
@@ -156,15 +176,28 @@ struct Combatant {
 	std::vector<EntityID> powers;
 
 	static constexpr ScriptType type{ ScriptType::kCombatant };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		fmt::print("Combatant {} '{}'\n", entityID, name);
+
+	virtual std::string description() const override {
+		return fmt::format("Combatant entityID: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		if (k == "wild") return { true, Variant(wild) };
+		if (k == "count") return { true, Variant(count) };
+		if (k == "fighting") return { true, Variant(fighting) };
+		if (k == "shooting") return { true, Variant(shooting) };
+		if (k == "arcane") return { true, Variant(arcane) };
+		if (k == "bias") return { true, Variant(bias) };
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 
-struct Battle {
-	EntityID entityID;
-
+struct Battle : Entity {
 	std::string name;
 	std::vector<lurp::swbattle::Region> regions;
 	std::vector<EntityID> combatants;
@@ -174,9 +207,18 @@ struct Battle {
 	}
 
 	static constexpr ScriptType type{ ScriptType::kBattle };
-	void dump(int depth) const {
-		fmt::print("{: >{}}", "", depth * 2);
-		//fmt::print("Battle {} 'player' v {}\n", entityID, enemy);
+
+	virtual std::string description() const override {
+		return fmt::format("Battle entityID: {}\n", entityID);
+	}
+
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
+		if (k == "name") return { true, Variant(name) };
+		return { false, Variant() };
+	}
+
+	virtual ScriptType getType() const override {
+		return type;
 	}
 };
 

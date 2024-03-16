@@ -59,8 +59,8 @@ void ZoneDriver::setZone(const EntityID& cz, EntityID room)
 		room = r->entityID;
 	}
 
-	_zone = _assets.get(zone);
-	_room = _assets.get(room);
+	_zone = _assets.getScriptRef(zone);
+	_room = _assets.getScriptRef(room);
 	assert(_zone.type == ScriptType::kZone);
 	assert(_room.type == ScriptType::kRoom);
 }
@@ -151,7 +151,7 @@ const std::vector<EntityID>& ZoneDriver::entities(EntityID room) const
 {
 	if (room.empty())
 		room = _assets._csa.rooms[_room.index].entityID;
-	ScriptRef roomRef = _assets.get(room);
+	ScriptRef roomRef = _assets.getScriptRef(room);
 	const Room& r = _assets._csa.rooms[roomRef.index];
 	return r.objects;
 }
@@ -164,7 +164,7 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 	const std::vector<EntityID>& eArr = this->entities(room);
 	ContainerVec result;
 	for (const auto& e : eArr) {
-		ScriptRef ref = _assets.get(e);
+		ScriptRef ref = _assets.getScriptRef(e);
 		if (ref.type == ScriptType::kContainer) {
 			const Container& c = _assets._csa.containers[ref.index];
 			bool eval = true;
@@ -197,7 +197,7 @@ InteractionVec ZoneDriver::getInteractions(EntityID room)
 	const std::vector<EntityID>& eArr = this->entities(room);
 	InteractionVec result;
 	for (const auto& e : eArr) {
-		ScriptRef ref = _assets.get(e);
+		ScriptRef ref = _assets.getScriptRef(e);
 		if (ref.type == ScriptType::kInteraction) {
 			const Interaction* iact = &_assets._csa.interactions[ref.index];
 			bool done = mapData.coreData.coreBool(iact->entityID, "done", false);
@@ -214,7 +214,7 @@ const Interaction* ZoneDriver::getRequiredInteraction()
 	EntityID roomID = _assets._csa.rooms[_room.index].entityID;
 	const std::vector<EntityID>& eArr = this->entities(roomID);
 	for (const auto& e : eArr) {
-		ScriptRef ref = _assets.get(e);
+		ScriptRef ref = _assets.getScriptRef(e);
 		if (ref.type == ScriptType::kInteraction) {
 			const Interaction* iact = &_assets._csa.interactions[ref.index];
 			bool done = mapData.coreData.coreBool(iact->entityID, "done", false);
@@ -239,7 +239,7 @@ ScriptEnv ZoneDriver::getScriptEnv(const Interaction* interaction)
 void ZoneDriver::markRequiredInteractionComplete(const Interaction* iact)
 {
 	if (iact) {
-		ScriptRef ref = _assets.get(iact->entityID);
+		ScriptRef ref = _assets.getScriptRef(iact->entityID);
 		assert(ref.type == ScriptType::kInteraction);
 		//_assets.interactions[ref.index].done = true;
 		mapData.coreData.coreSet(iact->entityID, "done", true, false);
@@ -251,7 +251,7 @@ void ZoneDriver::markRequiredInteractionComplete(const EntityID& scriptID)
 	EntityID roomID = _assets._csa.rooms[_room.index].entityID;
 	const std::vector<EntityID>& eArr = this->entities(roomID);
 	for (const auto& e : eArr) {
-		ScriptRef ref = _assets.get(e);
+		ScriptRef ref = _assets.getScriptRef(e);
 		if (ref.type == ScriptType::kInteraction) {
 			const Interaction* iact = &_assets._csa.interactions[ref.index];
 			if (iact->required && iact->next == scriptID) {
@@ -265,7 +265,7 @@ void ZoneDriver::markRequiredInteractionComplete(const EntityID& scriptID)
 void ZoneDriver::teleport(const EntityID& room)
 {
 	// Note this can change the Room *and* the Zone.
-	_room = _assets.get(room);
+	_room = _assets.getScriptRef(room);
 	assert(_room.type == ScriptType::kRoom);
 	
 	const Zone& zone = _assets._csa.zones[_zone.index];
@@ -283,7 +283,7 @@ void ZoneDriver::teleport(const EntityID& room)
 		const Zone& z = _assets._csa.zones[i];
 		for (size_t j = 0; j < z.objects.size(); ++j) {
 			if (z.objects[j] == room) {
-				_zone = ScriptRef{ ScriptType::kZone, (int)i };
+				_zone = _assets.getScriptRef(z.entityID);
 				return;
 			}
 		}
@@ -294,7 +294,7 @@ void ZoneDriver::teleport(const EntityID& room)
 /* ScriptCBHandler */
 bool ZoneDriver::isLocked(const EntityID& id) const
 {
-	ScriptRef ref = _assets.get(id);
+	ScriptRef ref = _assets.getScriptRef(id);
 
 	// Check the CoreData
 	std::pair<bool, Variant> val = mapData.coreData.coreGet(id, "locked");
@@ -313,7 +313,7 @@ bool ZoneDriver::isLocked(const EntityID& id) const
 /* ScriptCBHandler */
 void ZoneDriver::setLocked(const EntityID& id, bool locked)
 {
-	ScriptRef ref = _assets.get(id);
+	ScriptRef ref = _assets.getScriptRef(id);
 	if (ref.type == ScriptType::kEdge) {
 		const Edge& e = _assets._csa.edges[ref.index];
 		mapData.newsQueue.push(NewsItem::lock(locked, e, nullptr));
@@ -479,8 +479,8 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 	loader.pushGlobal("Map");
 	EntityID room = loader.getStrField("currentRoom", {});
 	EntityID zone = loader.getStrField("currentZone", {});
-	_zone = _assets.get(zone);
-	_room = _assets.get(room);
+	_zone = _assets.getScriptRef(zone);
+	_room = _assets.getScriptRef(room);
 	lua_pop(L, 1);
 
 	lua_getglobal(L, "ScriptEnv");
@@ -621,6 +621,19 @@ VarBinder ZoneDriver::battleVarBinder() const
 	return _scriptDriver->helper()->varBinder();	// FIXME yuck
 }
 
+void ZoneDriver::battleDone(bool victory)
+{
+	assert(_scriptDriver);
+	assert(_scriptDriver->type() == ScriptType::kBattle);
+	if (!victory) {
+		_scriptDriver->abort();
+		endGame("Defeat");
+	}
+	else {
+		_scriptDriver->advance();
+	}
+	checkScriptDriver();
+}
 
 
 } // namespace lurp

@@ -35,12 +35,17 @@ struct ScriptAssets : public IAssetHandler
 
 	std::map<EntityID, Inventory> inventories;
 
-	ScriptRef get(const EntityID& entityID) const {
+	ScriptRef getScriptRef(const EntityID& entityID) const {
 		auto it = entityIDToIndex.find(entityID);
 		if (it == entityIDToIndex.end()) {
 			FatalError(fmt::format("entity '{}' does not exist.\n", entityID));
 		}
 		return it->second;
+	}
+
+	const Entity* get(const EntityID& entityID) const {
+		ScriptRef sr = getScriptRef(entityID);
+		return sr.entity;
 	}
 
 	bool isAsset(const EntityID& entityID) const {
@@ -92,7 +97,7 @@ private:
 
 	template <typename T>
 	void scan(const std::vector<T>& vec) {
-		for (int i = 0; i < vec.size(); ++i) entityIDToIndex[vec[i].entityID] = { T::type, i };
+		for (int i = 0; i < vec.size(); ++i) entityIDToIndex[vec[i].entityID] = { &vec[i], T::type, i };
 	}
 };
 
