@@ -336,7 +336,12 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 		}
 	}
 	if (!driver.endGameMsg().empty()) {
-		PrintTextLine(driver.endGameMsg(), ionic::Color::white);
+		ionic::Color color = ionic::Color::white;
+		if (driver.endGameBias() < 0)
+			color = ionic::Color::red;
+		else if (driver.endGameBias() > 0)
+			color = ionic::Color::green;
+		PrintTextLine(driver.endGameMsg(), color);
 	}
 }
 
