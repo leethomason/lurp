@@ -185,8 +185,10 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 
 	ionic::TableOptions options;
 	options.outerBorder = false;
-	options.tableColor = configChoiceColor;
+	options.innerHDivider = false;
 	options.textColor = configChoiceColor;
+	options.tableColor = configChoiceColor;
+
 	ionic::Table table(options);
 
 	for (const DirEdge& e : edges) {
