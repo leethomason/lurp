@@ -110,7 +110,7 @@ void CoreData::save(std::ostream& stream) const
 	*/
 	fmt::print(stream, "CoreData = {{\n");
 
-	for (const auto it : _coreData) {
+	for (const auto& it : _coreData) {
 		if (it.first.mutableUser)
 			continue;
 		fmt::print(stream, "  {{ '{}', '{}', {} }},\n", it.first.entity, it.first.path, it.second.toLuaString());

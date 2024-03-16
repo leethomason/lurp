@@ -118,7 +118,7 @@ public:
 		return "Inventory";
 	};
 
-	friend void transfer(const Item& item, Inventory& src, Inventory& dst, int n = INT_MAX);
+	static void transfer(const Item& item, Inventory& src, Inventory& dst, int n);
 
 private:
 	auto findIt(const Item& item) {
@@ -130,7 +130,7 @@ private:
 			return false;
 			});
 	}
-	const auto findIt(const Item& item) const {
+	auto findIt(const Item& item) const {
 		return std::find_if(_items.begin(), _items.end(), [&](const ItemRef& it) {
 			if (it.pItem->entityID == item.entityID) {
 				assert(it.pItem == &item);	// should be unique

@@ -6,6 +6,7 @@
 #include "coredata.h"
 #include "mapdata.h"
 #include "items.h"
+#include "scriptasset.h"
 
 #include <vector>
 #include <map>
@@ -93,7 +94,7 @@ public:
 	TransferResult transferAll(const S& srcEntity, const T& dstEntity);
 
 	template<typename S, typename T>
-	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n = INT_MAX);
+	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n);
 
 	// Mode: Battle
 	const Battle& battle() const;
@@ -132,8 +133,6 @@ public:
 	static void saveTextRead(std::ostream& stream, const std::unordered_set<uint64_t>& text);
 	static void loadTextRead(ScriptBridge& loader, std::unordered_set<uint64_t>& text);
 
-	MapData mapData;
-
 	const ScriptAssets& assets() const { return _assets; }
 
 private:
@@ -144,11 +143,14 @@ private:
 	const EntityID& zoneID() const;
 	const EntityID& roomID() const;
 
-	EntityID _playerID;
 	ScriptAssets& _assets;
+	ScriptBridge& _bridge;
+	EntityID _playerID;
+public:
+	MapData mapData;
+private:
 	ScriptRef _zone;
 	ScriptRef _room;
-	ScriptBridge& _bridge;
 	ScriptDriver* _scriptDriver = nullptr;
 	std::string _endGameMsg;
 };
@@ -176,7 +178,7 @@ ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const S& srcEn
 	Inventory& src = _assets.getInventory(srcEntity);
 	Inventory& dst = _assets.getInventory(dstEntity);
 	int delta = src.numItems(item);
-	::transfer(item, src, dst, n);
+	lurp::Inventory::transfer(item, src, dst, n);
 	int count = dst.numItems(item);
 
 	const EntityID& playerID = getPlayer().entityID;

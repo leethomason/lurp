@@ -12,7 +12,9 @@
 
 // Console driver includes
 #include "argh.h"
+#ifdef _WIN32
 #include "crtdbg.h"
+#endif
 #include <fmt/core.h>
 #include <ionic/ionic.h>
 #include <plog/Log.h>
@@ -32,7 +34,7 @@
 
 using namespace lurp;
 
-static constexpr int configSpeakerWidth = 12;
+//static constexpr int configSpeakerWidth = 12;
 static constexpr ionic::Color configTextColor = ionic::Color::yellow;
 static constexpr ionic::Color configChoiceColor = ionic::Color::cyan;
 

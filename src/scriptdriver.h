@@ -21,7 +21,6 @@ class ZoneDriver;
 class ScriptDriver : public ITextHandler
 {
 public:
-
 	ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int initLuaFunc = -1);
 	ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int initLuaFunc = -1);
 
@@ -33,7 +32,7 @@ public:
 	//	ScriptBridge& bridge,
 	//	ScriptBridge& loader);
 
-	~ScriptDriver();
+	virtual ~ScriptDriver();
 
 	bool done() const;
 	void abort();

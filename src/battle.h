@@ -191,7 +191,7 @@ struct SWCombatant {
 	Die smarts;
 	Die spirit;
 	Die strength;
-	Die vigor;
+    Die vigor;
 
 	Die fighting = Die(1, 4, -2);	// agility
 	Die shooting = Die(1, 4, -2);	// agility
@@ -281,7 +281,7 @@ public:
 	const std::string& name() const { return _name; }
 	const std::vector<Region>& regions() const { return _regions; }
 	const std::vector<SWCombatant>& combatants() const { return _combatants; }
-	const int distance(int region0, int region1) const {
+	int distance(int region0, int region1) const {
 		return std::abs(_regions[region0].yards - _regions[region1].yards);
 	}
 	std::vector<SWCombatant> combatants(int team, int region, bool alive, int exclude) const; // -1 for any team or region
@@ -358,7 +358,6 @@ private:
 	void applyDamage(SWCombatant& defender, int ap, const Die& die, const Die& strDie, DamageReport& report);
 
 	Random& _random;
-	int _length = 0;
 	int _orderIndex = 0;
 	std::string _name;
 	std::vector<SWCombatant> _combatants;

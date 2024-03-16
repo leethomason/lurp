@@ -367,8 +367,8 @@ void ScriptBridge::setStrArray(const std::string& key, const std::vector<std::st
 
 	lua_pushstring(L, key.c_str());					// -1 key
 	lua_newtable(L);								// -2 key -1 table
-	for (int i = 0; i < values.size(); i++) {
-		lua_pushnumber(L, i + 1);				    // -3 key -2 table -1 index
+	for (size_t i = 0; i < values.size(); i++) {
+		lua_pushnumber(L, int(i) + 1);				    // -3 key -2 table -1 index
 		lua_pushstring(L, values[i].c_str());		// -4 key -3 table -2 index -1 value
 		lua_settable(L, -3);						// -2 key -1 table
 	}
@@ -399,8 +399,8 @@ void ScriptBridge::setIntArray(const std::string& key, const std::vector<int>& v
 	assert(lua_istable(L, -1));
 	lua_pushstring(L, key.c_str());					// -1 key
 	lua_newtable(L);								// -2 key -1 table
-	for (int i = 0; i < values.size(); i++) {
-		lua_pushnumber(L, i + 1);				    // -3 key -2 table -1 index
+	for (size_t i = 0; i < values.size(); i++) {
+		lua_pushnumber(L, int(i) + 1);				    // -3 key -2 table -1 index
 		lua_pushnumber(L, values[i]);				// -4 key -3 table -2 index -1 value
 		lua_settable(L, -3);						// -2 key -1 table
 	}
@@ -744,13 +744,13 @@ Text ScriptBridge::readText() const
 					code = getFuncField(L, "code");
 				}
 
-				int last = 0;
+				//int last = 0;
 				for (TableIt inner(L, -1); !inner.done(); inner.next()) {
 					if (inner.kType() != LUA_TNUMBER) continue;
 					Variant v = inner.value();
 					if (v.type != LUA_TSTRING) continue;
 
-					last = (int) inner.key().num;
+					//last = (int) inner.key().num;
 					t.lines.push_back({ speaker, v.str, eval, test, code });
 				}
 #if NIL_TEXT_STRINGS()
@@ -778,13 +778,13 @@ Text ScriptBridge::readText() const
 			if (hasField("s")) {
 				speaker = getStrField("s", {});
 			}
-			int last = 0;
+			//int last = 0;
 			for (TableIt it(L, -1); !it.done(); it.next()) {
 				if (it.kType() != LUA_TNUMBER) continue;
 
 				Variant v = it.value();
 				if (v.type != LUA_TSTRING) continue;
-				last = (int)it.key().num;
+				//last = (int)it.key().num;
 				t.lines.push_back({ speaker, v.str, -1, "", -1 });
 			}
 #if NIL_TEXT_STRINGS()
@@ -1067,6 +1067,8 @@ ScriptBridge::FuncInfo ScriptBridge::getFuncInfo(int funcRef)
 
 void ScriptBridge::loadLUA(const std::string& inputFilePath)
 {
+	fmt::print("Loading: {}\n", inputFilePath);
+
 	LuaStackCheck check(L);
 	doFile("script/_map.lua");
 	assert(!inputFilePath.empty());

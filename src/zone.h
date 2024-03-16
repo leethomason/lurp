@@ -108,7 +108,7 @@ struct Room : Entity {
 		return fmt::format("Room {} {}\n", entityID, name);
 	};
 
-	virtual std::pair<bool, Variant> getVar(const std::string& k) const {
+	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
 		if (k == "name") return { true, Variant(name) };
 		if (k == "desc") return { true, Variant(desc) };
 		return { false, Variant() };

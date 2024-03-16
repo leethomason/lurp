@@ -268,7 +268,7 @@ TextLine ScriptDriver::line()
 {
 	assert(!done());
 	assert(type() == ScriptType::kText);
-	assert(_textSubIndex < _mappedText.lines.size());
+	assert(_textSubIndex < int(_mappedText.lines.size()));
 	Text::Line& line = _mappedText.lines[_textSubIndex];
 	TextLine textLine;
 	textLine.speaker = line.speaker;
@@ -403,7 +403,7 @@ void ScriptDriver::advance()
 	if (ref.type == ScriptType::kText) {
 		assert(!_mappedText.lines.empty());
 		_textSubIndex++;
-		if (_textSubIndex >= _mappedText.lines.size()) {
+		if (_textSubIndex >= int(_mappedText.lines.size())) {
 			processTree(true);
 		}
 	}

@@ -87,7 +87,7 @@ static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 
 	const Item& key01 = assets.getItem("KEY_01");
 	TEST(chestInv.hasItem(key01) == true);
-	map.transfer(key01, chest, map.getPlayer());
+	map.transfer(key01, chest, map.getPlayer(), 1);
 	TEST(chestInv.hasItem(key01) == false);
 	TEST(map.mapData.newsQueue.size() == 1);
 	map.mapData.newsQueue.pop();
@@ -244,7 +244,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	const Actor& player = assets._csa.actors[assets.getScriptRef("testplayer").index];
 	Inventory& playerInventory = assets.inventories.at(player.entityID);
 
-	transfer(key01, chestInventory, playerInventory);
+	Inventory::transfer(key01, chestInventory, playerInventory, 1);
 	TEST(chestInventory.hasItem(key01) == false);
 
 	map.move("TEST_ZONE_0_ROOM_B");

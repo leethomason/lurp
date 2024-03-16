@@ -97,7 +97,7 @@ private:
 
 	template <typename T>
 	void scan(const std::vector<T>& vec) {
-		for (int i = 0; i < vec.size(); ++i) entityIDToIndex[vec[i].entityID] = { &vec[i], T::type, i };
+		for (size_t i = 0; i < vec.size(); ++i) entityIDToIndex[vec[i].entityID] = { &vec[i], T::type, int(i) };
 	}
 };
 

@@ -9,10 +9,10 @@
 using namespace lurp::swbattle;
 using namespace lurp;
 
-static constexpr int N_RANGE = 4;
-static constexpr char* RANGE[N_RANGE] = { "Short", "Medium", "Long", "Extreme" };
+//static constexpr int N_RANGE = 4;
+//static constexpr char* RANGE[N_RANGE] = { "Short", "Medium", "Long", "Extreme" };
 static constexpr int N_COVER = 5;
-static constexpr char* COVER[N_COVER] = { "None", "Light", "Medium", "Heavy", "Full" };
+static const char* COVER[N_COVER] = { "None", "Light", "Medium", "Heavy", "Full" };
 
 static std::string RollStr(const Roll& roll)
 {
@@ -84,7 +84,7 @@ static void PrintTurnOrder(const std::vector<SWCombatant>& combatants, const std
 	ionic::Table table(options);
 
 	fmt::print("\nOrder:\n");
-	for (int i = 0; i < turnOrder.size(); i++) {
+	for (size_t i = 0; i < turnOrder.size(); i++) {
 		table.addRow({ std::to_string(i), combatants[turnOrder[i]].name });
 	}
 	table.print();

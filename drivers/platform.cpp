@@ -111,6 +111,38 @@ std::string LogPath()
     return logPath;
 }
 
+#elif __APPLE__
+
+std::string OSSavePath()
+{
+    return "~/Library/Application Support/LuRP";
+}
+
+std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
+{
+    std::string savePath = OSSavePath();
+    savePath += "/";
+    savePath += dir;
+    savePath += "/";
+    savePath += stem;
+    savePath += ".lua";
+
+    std::filesystem::path p(savePath);
+    if (createDirs) {
+        std::filesystem::create_directories(p.parent_path());
+    }
+    return savePath;
+}
+
+std::string LogPath()
+{
+    std::string logPath = OSSavePath();
+    logPath += "/";
+    logPath += "lurp.txt";
+    return logPath;
+}
+
+
 #else
 
 #error Platform not defined.

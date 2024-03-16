@@ -22,34 +22,35 @@ std::string VarBinder::pushPath(const std::string& path) const
 	std::vector<std::string_view> parts = splitSV(path, '.');
 	assert(parts.size() > 0);
 
-	for (int i = 0; i<int(parts.size()) - 1; i++) {
-		const auto& part = parts[i];
-		std::string p(part);
-		if (i == 0) {
-			// i == 0 is an Entity
-			// But is it referenced by entityID or a special value?
-			// Check the EntityID first, then drop back to the 'specials'
-			_bridge.pushGlobal("Entities");
-			lua_pushstring(L, p.c_str());
-			lua_gettable(L, -2);
-			lua_remove(L, -2);
-
-			if (lua_type(L, -1) == LUA_TTABLE) {
-				// we got a lua table from the Entities table - good to go.
-			}
-			else {
-				// See if it refers to a special, named entity? (script, player, npc, etc.)
-				lua_pop(L, 1);
-				_bridge.pushGlobal(p);
-			}
-				bool isCoreTable = _bridge.getBoolField("_isCoreTable", { false });
-				if (!isCoreTable)
-					PLOG(plog::debug) << "pushPath() trying to read " << p << " and it is not a CoreTable";
-		}
-		else {
-			_bridge.pushTable(p);
-		}
-	}
+    for (int i = 0; i<int(parts.size()) - 1; i++) {
+        const auto& part = parts[i];
+        std::string p(part);
+        if (i == 0) {
+            // i == 0 is an Entity
+            // But is it referenced by entityID or a special value?
+            // Check the EntityID first, then drop back to the 'specials'
+            _bridge.pushGlobal("Entities");
+            lua_pushstring(L, p.c_str());
+            lua_gettable(L, -2);
+            lua_remove(L, -2);
+            
+            if (lua_type(L, -1) == LUA_TTABLE) {
+                // we got a lua table from the Entities table - good to go.
+            }
+            else {
+                // See if it refers to a special, named entity? (script, player, npc, etc.)
+                lua_pop(L, 1);
+                _bridge.pushGlobal(p);
+            }
+            bool isCoreTable = _bridge.getBoolField("_isCoreTable", { false });
+            if (!isCoreTable) {
+                PLOG(plog::debug) << "pushPath() trying to read " << p << " and it is not a CoreTable";
+            }
+        }
+        else {
+            _bridge.pushTable(p);
+        }
+    }
 
 	// we only need the final table. everything else can come off the stack
 	// ex: npc.subDesc.accessory

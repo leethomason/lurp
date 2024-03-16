@@ -81,8 +81,7 @@ const Item* Inventory::armor() const
 	return nullptr;
 }
 
-
-void transfer(const Item& item, Inventory& src, Inventory& dst, int n)
+void Inventory::transfer(const Item& item, Inventory& src, Inventory& dst, int n)
 {
 	ItemRef ref = src.findRef(item);
 	if (n > ref.count) n = ref.count;
@@ -94,7 +93,7 @@ void transfer(Inventory& src, Inventory& dst)
 {
 	while (!src.items().empty()) {
 		ItemRef ref = src.items()[0];
-		transfer(*ref.pItem, src, dst);
+		Inventory::transfer(*ref.pItem, src, dst, 1);
 	}
 }
 

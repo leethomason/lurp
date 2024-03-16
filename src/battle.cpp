@@ -356,15 +356,15 @@ void SWCombatant::endTurn()
 void BattleSystem::start(bool shuffleTurnOrder)
 {
 	_turnOrder.resize(_combatants.size());
-	for (int i = 0; i < _turnOrder.size(); i++)
-		_turnOrder[i] = i;
+	for (size_t i = 0; i < _turnOrder.size(); i++)
+		_turnOrder[i] = int(i);
 	if (shuffleTurnOrder)
 		_random.shuffle(_turnOrder.begin(), _turnOrder.end());
 }
 
 bool BattleSystem::victory() const
 {
-	for (int i = 1; i < _combatants.size(); ++i)
+	for (size_t i = 1; i < _combatants.size(); ++i)
 		if (!_combatants[i].dead())
 			return false;
 	return true;
@@ -651,7 +651,7 @@ BattleSystem::ActionResult BattleSystem::move(int id, int dir)
 
 	// Check for free attack.
 	for (size_t i = 0; i < _combatants.size(); i++) {
-		if (i == id) continue;
+		if (i == size_t(id)) continue;
 		if (src.dead()) continue;
 		if (i != 0 && id != 0) continue;	// FIXME: should really have some sort of "team" notion rather than checking index 0
 
