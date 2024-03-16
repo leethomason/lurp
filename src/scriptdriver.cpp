@@ -233,7 +233,7 @@ std::string ScriptDriver::substitute(const std::string& in) const
 		// Subtle. This doesn't work:
 		//		VarBinder binder = _helper->varBinder();
 		// because this ScriptDriver might have modified the npc.
-		VarBinder binder(_bridge, _mapData.coreData, _scriptEnv);
+		VarBinder binder(_assets, _bridge, _mapData.coreData, _scriptEnv);
 
 		Variant v = binder.get(in.substr(open[i] + 1, close[i] - open[i] - 1));
 		if (v.type == LUA_TSTRING)
@@ -257,7 +257,7 @@ bool ScriptDriver::textTest(const std::string& test) const
 		invert = true;
 		t = t.substr(1);
 	}
-	VarBinder binder(_bridge, _mapData.coreData, _scriptEnv);
+	VarBinder binder(_assets, _bridge, _mapData.coreData, _scriptEnv);
 	Variant v = binder.get(t);
 	bool truthy = v.isTruthy();
 	return invert ? !truthy : truthy;
@@ -588,7 +588,7 @@ bool ScriptDriver::load(ScriptBridge& loader)
 
 VarBinder ScriptDriver::varBinder() const
 {
-	VarBinder binder(_bridge, _mapData.coreData, _scriptEnv);
+	VarBinder binder(_assets, _bridge, _mapData.coreData, _scriptEnv);
 	return binder;
 }
 

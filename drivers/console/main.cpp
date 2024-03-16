@@ -446,7 +446,7 @@ int main(int argc, const char* argv[])
 	PLOG(plog::info) << "Logging started.";
 	PLOG(plog::info) << "Save path: " << savePath;
 
-#ifdef  _DEBUG
+#if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.
 	_CrtMemState s1, s2, s3;
 	_CrtMemCheckpoint(&s1);
@@ -479,7 +479,7 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_WIN32)
 	int knownNumLeak = 0;
 	int knownLeakSize = 0;
 

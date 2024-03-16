@@ -11,10 +11,16 @@ class ScriptBridge;
 class CoreData;
 struct ScriptEnv;
 
+// Order of resolution:
+// 1. const var on the Entity
+// 2. CoreData
+// 3. Lua
+
 class VarBinder
 {
 public:
 	VarBinder(
+		const ScriptAssets& assets, // looks up immutable data
 		ScriptBridge& bridge,		// connects to Lua
 		CoreData& coreData,			// connects to the core variables
 		const ScriptEnv& env);		// Allows substitution: zone.name, player.fighting, room.desc, etc.
@@ -36,6 +42,7 @@ private:
 	void corePath(const std::string& in, EntityID& entityID, std::string& path) const;
 	std::string evalPath(const ScriptEnv& env, const std::string& in) const;
 
+	const ScriptAssets& _assets;
 	ScriptBridge& _bridge;
 	CoreData& _coreData;
 	const ScriptEnv& _env;

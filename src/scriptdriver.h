@@ -24,14 +24,6 @@ public:
 	ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int initLuaFunc = -1);
 	ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int initLuaFunc = -1);
 
-	// Loader version.
-	//ScriptDriver(
-	//	const ScriptAssets& assets,
-	//	const EntityID& scriptID,
-	//	MapData& mapData,
-	//	ScriptBridge& bridge,
-	//	ScriptBridge& loader);
-
 	virtual ~ScriptDriver();
 
 	bool done() const;

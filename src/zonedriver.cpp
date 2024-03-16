@@ -618,7 +618,7 @@ VarBinder ZoneDriver::battleVarBinder() const
 {
 	assert(_scriptDriver);
 	assert(_scriptDriver->type() == ScriptType::kBattle);
-	return _scriptDriver->helper()->varBinder();	// FIXME yuck
+	return _scriptDriver->varBinder();
 }
 
 void ZoneDriver::battleDone(bool victory)

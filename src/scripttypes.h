@@ -152,9 +152,10 @@ struct Actor : Entity {
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
 		if (k == "name") return { true, Variant(name) };
 		if (k == "wild") return { true, Variant(wild) };
-		if (k == "fighting") return { true, Variant(fighting) };
-		if (k == "shooting") return { true, Variant(shooting) };
-		if (k == "arcane") return { true, Variant(arcane) };
+		// These can be changed.
+		//if (k == "fighting") return { true, Variant(fighting) };
+		//if (k == "shooting") return { true, Variant(shooting) };
+		//if (k == "arcane") return { true, Variant(arcane) };
 		return { false, Variant() };
 	}
 

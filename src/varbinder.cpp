@@ -1,11 +1,12 @@
 #include "varbinder.h"
 #include "scriptbridge.h"
 #include "coredata.h"
+#include "scriptasset.h"
 
 namespace lurp {
 
-VarBinder::VarBinder(ScriptBridge& bridge, CoreData& coreData, const ScriptEnv& env)
-	: _bridge(bridge), _coreData(coreData), _env(env)
+VarBinder::VarBinder(const ScriptAssets& assets, ScriptBridge& bridge, CoreData& coreData, const ScriptEnv& env)
+	: _assets(assets), _bridge(bridge), _coreData(coreData), _env(env)
 {
 }
 
@@ -90,16 +91,30 @@ void VarBinder::corePath(const std::string& in, EntityID& entityID, std::string&
 
 Variant VarBinder::get(const std::string& in) const
 {
+
 	std::string path = evalPath(_env, in);
 	EntityID entity;
 	std::string var;
 	corePath(path, entity, var);
 
+	// 1. const var on the entity
+	if (_assets.isAsset(entity)) {
+		const Entity* e = _assets.get(entity);
+		std::pair<bool, Variant> p = e->getVar(var);
+		if (p.first) {
+			PLOG(plog::debug) << fmt::format("Entity get{}.{} -> {}", entity, var, p.second.toLuaString());
+			return p.second;
+		}
+	}
+
+	// 2. core data
 	std::pair<bool, Variant> p = _coreData.coreGet(entity, var);
 	if (p.first) {
 		PLOG(plog::debug) << fmt::format("CoreData get{}.{} -> {}", entity, var, p.second.toLuaString());
 		return p.second;
 	}
+
+	// 3. lua script
 	lua_State* L = _bridge.getLuaState();
 	ScriptBridge::LuaStackCheck check(L);
 
@@ -118,6 +133,16 @@ void VarBinder::set(const std::string& in, const Variant& v) const
 	std::string var;
 	corePath(path, entity, var);
 
+	// 1. const var on the entity
+	if (_assets.isAsset(entity)) {
+		const Entity* e = _assets.get(entity);
+		std::pair<bool, Variant> p = e->getVar(var);
+		// Can't set immutable data.
+		if (p.first)
+			return;
+	}
+
+	// 2. core data
 	_coreData.coreSet(entity, var, v, false);
 	PLOG(plog::debug) << fmt::format("CoreData set {}.{} = {}", entity, var, v.toLuaString());
 }

@@ -35,7 +35,7 @@ public:
 	void popScriptContext();
 	int contextDepth() const { return _scriptContextCount; }
 
-	VarBinder varBinder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
+	//VarBinder varBinder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:

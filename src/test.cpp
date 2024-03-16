@@ -115,7 +115,7 @@ static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dia
 	ScriptAssets assets(ca);
 	ZoneDriver zoneDriver(assets, bridge, "testplayer");
 	ScriptDriver dd(zoneDriver, bridge, dialog);
-	VarBinder binder = dd.helper()->varBinder();
+	VarBinder binder = dd.varBinder();
 
 	TEST(!dd.done());
 	TEST(dd.type() == ScriptType::kText);
@@ -281,7 +281,7 @@ static void TestCodeEval()
 	
 	{
 		{
-			VarBinder binder(bridge, zoneDriver.mapData.coreData, env);
+			VarBinder binder(assets, bridge, zoneDriver.mapData.coreData, env);
 			binder.set("player.class", Variant("fighter"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
@@ -294,7 +294,7 @@ static void TestCodeEval()
 	}
 	{
 		{
-			VarBinder binder(bridge, zoneDriver.mapData.coreData, env);
+			VarBinder binder(assets, bridge, zoneDriver.mapData.coreData, env);
 			binder.set("player.class", Variant("druid"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
@@ -307,7 +307,7 @@ static void TestCodeEval()
 	}
 	{
 		{
-			VarBinder binder(bridge, zoneDriver.mapData.coreData, env);
+			VarBinder binder(assets, bridge, zoneDriver.mapData.coreData, env);
 			// Set up a run
 			binder.set("player.class", Variant("wizard"));
 			binder.set("player.arcaneGlow", Variant());
@@ -768,10 +768,14 @@ static void TestLuaCore()
 	TEST(cd.coreGet("ACTOR_01", "STR").second.num == 18.0);
 
 	// Test the path works the same as the Core
-	VarBinder binder = driver.helper()->varBinder();
+	VarBinder binder = driver.varBinder();
 	TEST(binder.get("ACTOR_01.STR").num == 18.0);
 	TEST(binder.get("ACTOR_01.DEX").num == 10.0);
 	TEST(binder.get("ACTOR_01.attributes.sings").boolean == true);
+	TEST(binder.get("player.name").str == "Test Player");
+
+	// Make sure we can't set a read-only value
+	binder.set("player.name", "Foozle");
 	TEST(binder.get("player.name").str == "Test Player");
 
 	// Save to a file for debugging
@@ -861,7 +865,7 @@ void BattleTest::Read()
 	ConstScriptAssets csa = bridge.readCSA("");
 	ScriptAssets assets(csa);
 	CoreData coreData;
-	VarBinder binder(bridge, coreData, ScriptEnv());
+	VarBinder binder(assets, bridge, coreData, ScriptEnv());
 
 	const Battle& battle = assets.getBattle("TEST_BATTLE_1_CURSED_CAVERN");
 	TEST(battle.name == "Cursed Cavern");
@@ -1053,7 +1057,7 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.type() == ScriptType::kBattle);
 	{
 		// FIXME: driver.helper()->binder() is not clear
-		BattleSystem battle(assets, driver.helper()->varBinder(), driver.battle(), "testplayer", zoneDriver.mapData.random);
+		BattleSystem battle(assets, driver.varBinder(), driver.battle(), "testplayer", zoneDriver.mapData.random);
 		TEST(battle.name() == "Cursed Cavern");
 		TEST(battle.combatants().size() == 5);
 		TEST(battle.regions().size() == 4);
