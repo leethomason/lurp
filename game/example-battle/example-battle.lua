@@ -221,6 +221,26 @@ Script {
     end
 }
 
+Script {
+    entityID = "SPACE_MARINE_SCRIPT",
+    code = function()
+        player.fighting = 6
+        player.shooting = 8
+        player:addItem("PLASMA_SWORD")
+        player:addItem("RECON_ARMOR");
+        player:addItem("PULSE_RIFLE")
+    end
+}
+
+Script {
+    entityID = "STAR_MAGE_SCRIPT",
+    code = function()
+        player.arcane = 10
+        player.fighting = 6
+        player:addItem("PLASMA_SWORD")
+    end
+}
+
 -- This Script wraps up a Battle and some Text about victory. (If
 -- you are defeated, the game is over, so there's only one in-game outcome.)
 Script {

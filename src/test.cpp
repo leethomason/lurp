@@ -857,6 +857,7 @@ public:
 	static void Read();
 	static void TestSystem();
 	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
+	static void TestExample();
 };
 
 void BattleTest::Read()
@@ -1048,9 +1049,6 @@ void BattleTest::TestSystem()
 void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
 	ScriptAssets assets(ca);
-	//MapData coreData(MapData::kSeed);
-	//ScriptEnv env = { "TEST_BATTLE_1", NO_ENTITY, NO_ENTITY, "testplayer", NO_ENTITY };
-	//ScriptDriver driver(assets, env, coreData, bridge);
 	ZoneDriver zoneDriver(assets, bridge, "testplayer");
 	ScriptDriver driver(zoneDriver, bridge, "TEST_BATTLE_1");
 
@@ -1087,6 +1085,28 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	}
 }
 
+void BattleTest::TestExample()
+{
+	ScriptBridge bridge;
+	ConstScriptAssets csassets = bridge.readCSA("game/example-battle/example-battle.lua");
+	ScriptAssets assets(csassets);
+	ZoneDriver driver(assets, bridge, "BATTLE_ZONE", "player");
+
+	TEST(driver.mode() == ZoneDriver::Mode::kText);	// "choose your gear"
+	driver.advance();
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);
+	driver.choose(0);
+	TEST(driver.mode() == ZoneDriver::Mode::kText);	// "to the arena!"
+	driver.advance();
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);
+	driver.choose(0);
+	TEST(driver.mode() == ZoneDriver::Mode::kBattle);
+	driver.battleDone();
+	TEST(driver.mode() == ZoneDriver::Mode::kText);	// "you win!"
+	TEST(driver.isGameOver() == true);
+}
+
+
 int RunTests()
 {
 	ScriptBridge bridge;
@@ -1121,6 +1141,7 @@ int RunTests()
 	RUN_TEST(BattleTest::Read());
 	RUN_TEST(BattleTest::TestSystem());
 	RUN_TEST(BattleTest::TestScript(csassets, bridge));
+	RUN_TEST(BattleTest::TestExample());
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

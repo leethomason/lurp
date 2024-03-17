@@ -49,15 +49,13 @@ bool CheckPath(const std::string& path, std::string& cwd)
 		PLOG(plog::error) << fmt::format("Could not open file '{}'", path);
         cwd = std::filesystem::current_path().string();
         PLOG(plog::error) << fmt::format("Current working directory: '{}'", cwd);
-        PLOG(plog::warning) << fmt::format("Basic tests failed. This is likely due to running from the incorrect directory.");
-        PLOG(plog::warning) << fmt::format("The working directory should be the root of the LuRP.");
 
-        fmt::print("Basic tests failed. This is likely due to running from the incorrect directory.\n");
-        fmt::print("The working directory should be the root of the LuRP.\n");
         if (path.substr(path.size() - 9) == "_test.lua") {
-            exit(-1);
+            PLOG(plog::warning) << fmt::format("Basic tests failed. This is likely due to running from the incorrect directory.");
+            PLOG(plog::warning) << fmt::format("The working directory should be the root of the LuRP.");
         }
-		return false;
+        exit(-1);
+        return false;
 	}
     return true;
 }
