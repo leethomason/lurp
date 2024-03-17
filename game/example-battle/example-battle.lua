@@ -178,9 +178,10 @@ Zone {
                 },
                 Text {
                     -- You can only see this text if you win. (Otherwise the game was over.)
-                    "Congratulations gladiator! You have won the battle!",
-                    code = function() EndGame("Game Over", 1) end
+                    { "Congratulations gladiator! You have won the battle!",
+                       code = function() EndGame("Game Over", 1) end }
                 }
+
             }
         }
     }
@@ -236,7 +237,7 @@ Script {
     entityID = "STAR_MAGE_SCRIPT",
     code = function()
         player.arcane = 10
-        player.fighting = 6
+        player.fighting = 8
         player:addItem("PLASMA_SWORD")
     end
 }

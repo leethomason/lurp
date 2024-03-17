@@ -686,6 +686,7 @@ Power ScriptBridge::readPower() const
 		power.cost = getIntField("cost", { 1 });
 		power.range = getIntField("range", { 1 });
 		power.strength = getIntField("strength", { 1 });
+		power.region = getBoolField("region", { false });
 	}
 	catch (std::exception& e) {
 		FatalReadError(e.what(), power);

@@ -34,7 +34,6 @@
 
 using namespace lurp;
 
-//static constexpr int configSpeakerWidth = 12;
 static constexpr ionic::Color configTextColor = ionic::Color::yellow;
 static constexpr ionic::Color configChoiceColor = ionic::Color::cyan;
 

@@ -53,6 +53,7 @@ struct Power : Entity {
 	int cost = 1;			// 1, 2, 3
 	int range = 1;			// 0, 1, 2+
 	int strength = 1;		// -3, -2, -1, 1, 2, 3
+	bool region = false;	// true if area effect
 
 	static constexpr ScriptType type{ ScriptType::kPower };
 	
@@ -65,6 +66,7 @@ struct Power : Entity {
 		if (k == "cost") return { true, Variant(cost) };
 		if (k == "range") return { true, Variant(range) };
 		if (k == "strength") return { true, Variant(strength) };
+		if (k == "region") return { true, Variant(region) };
 		return { false, Variant() };
 	}
 	virtual ScriptType getType() const override {

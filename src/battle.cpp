@@ -54,17 +54,9 @@ Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 std::string ModTypeName(ModType type)
 {
 	switch (type) {
-	case ModType::kBoost: return "Boost";
-	case ModType::kArcane: return "Arcane";
-	case ModType::kFighting: return "Fighting";
-	case ModType::kShooting: return "Shooting";
-	case ModType::kPowerCover: return "Cover";
-	case ModType::kArmor: return "Armor";
-	case ModType::kDefend: return "Defend";
-	case ModType::kGangUp: return "Gang Up";
-	case ModType::kUnarmed: return "Unarmed";
-	case ModType::kRange: return "Range";
-	case ModType::kNaturalCover: return "Cover";
+	case ModType::kRangeDebuff: return "RangeDebuff";
+	case ModType::kMeleeDebuff: return "MeleeDebuff";
+	case ModType::kCombatDebuff: return "CombatDebuff";
 	case ModType::kBolt: return "Bolt";
 	case ModType::kHeal: return "Heal";
 	}
@@ -78,17 +70,14 @@ ModType ModTypeFromName(const std::string& _name)
 
 	// Only things that can be specified as powers in
 	// the game description are valid values here.
-	if (name == "boost") return ModType::kBoost;
-	if (name == "arcane") return ModType::kArcane;
-	if (name == "fighting") return ModType::kFighting;
-	if (name == "shooting") return ModType::kShooting;
-	if (name == "cover") return ModType::kPowerCover;
-	if (name == "powercover") return ModType::kPowerCover;
-	if (name == "armor") return ModType::kArmor;
+	if (name == "randedebuff") return ModType::kRangeDebuff;
+	if (name == "meleedebuff") return ModType::kMeleeDebuff;
+	if (name == "combatdebuff") return ModType::kCombatDebuff;
 	if (name == "bolt") return ModType::kBolt;
 	if (name == "heal") return ModType::kHeal;
+	PLOG(plog::error) << "Unknown ModType: " << _name;
 	assert(false);
-	return ModType::kBoost;
+	return ModType::kBolt;
 }
 
 
@@ -137,8 +126,8 @@ std::pair<Die, int> BattleSystem::calcMelee(int attackerIndex, int defenderIndex
 		mods.push_back({ attacker.index, ModType::kUnarmed, kUnarmedTN, nullptr });
 		atkDie.b += kUnarmedTN;
 	}
-	atkDie.b += applyMods(ModType::kFighting, attacker.activePowers, mods);
-	atkDie.b += applyMods(ModType::kBoost, attacker.activePowers, mods);
+	atkDie.b -= applyMods(ModType::kMeleeDebuff, attacker.activePowers, mods);
+	atkDie.b += applyMods(ModType::kCombatDebuff, defender.activePowers, mods);
 
 	// FIXME: Should defender boost increase parry?
 	return std::make_pair(atkDie, defender.parry());
@@ -152,8 +141,8 @@ std::pair<Die, int> BattleSystem::calcRanged(int attackerIndex, int defenderInde
 		return std::make_pair(Die(0, 0, 0), 0);
 
 	Die atkDie = attacker.shooting;
-	atkDie.b += applyMods(ModType::kShooting, attacker.activePowers, mods);
-	atkDie.b += applyMods(ModType::kBoost, attacker.activePowers, mods);
+	atkDie.b -= applyMods(ModType::kRangeDebuff, attacker.activePowers, mods);
+	atkDie.b += applyMods(ModType::kCombatDebuff, defender.activePowers, mods);
 
 	// Should range and cover be applied to the roll or the TN?
 	// I think the roll, because of the negative numbers.
@@ -178,37 +167,23 @@ std::pair<Die, int> BattleSystem::calcRanged(int attackerIndex, int defenderInde
 	int coverB = -int(_regions[defender.region].cover) * 2;
 	if (coverB) {
 		atkDie.b += coverB;
-		mods.push_back({ attacker.index, ModType::kNaturalCover, coverB, nullptr });
+		mods.push_back({ attacker.index, ModType::kCover, coverB, nullptr });
 	}
-	atkDie.b += applyMods(ModType::kPowerCover, defender.activePowers, mods, -1);
+	//atkDie.b += applyMods(ModType::kPowerCover, defender.activePowers, mods, -1);
 	return std::make_pair(atkDie, 4);
 }
 
 // Remember that the power is a MULTIPLIER, so the actual mod is double the multiplier.
 // Confusing; but a challenge of the SW rules.
-int BattleSystem::applyMods(ModType type, const std::vector<ActivePower>& powers, std::vector<ModInfo>& applied, int sign)
+int BattleSystem::applyMods(ModType type, const std::vector<ActivePower>& powers, std::vector<ModInfo>& applied)
 {
-	std::vector<ModInfo> mods;
-
-	std::vector<ActivePower> positive, negative;
-	std::copy_if(powers.begin(), powers.end(), std::back_inserter(positive),
-		[type, sign](const ActivePower& ap) { return ap.power->deltaDie(sign) > 0 && ap.power->type == type; });
-	std::sort(positive.begin(), positive.end(),
-		[sign](const ActivePower& a, const ActivePower& b) { return a.power->deltaDie(sign) > b.power->deltaDie(sign); });
-
-	std::copy_if(powers.begin(), powers.end(), std::back_inserter(negative),
-		[type, sign](const ActivePower& ap) { return ap.power->deltaDie(sign) < 0 && ap.power->type == type; });
-	std::sort(negative.begin(), negative.end(),
-		[sign](const ActivePower& a, const ActivePower& b) { return a.power->deltaDie(sign) < b.power->deltaDie(sign); });
-
 	int result = 0;
-	if (!positive.empty()) {
-		result += positive[0].power->deltaDie(sign);
-		applied.push_back({ positive[0].caster, type, positive[0].power->deltaDie(sign), positive[0].power });
-	}
-	if (!negative.empty()) {
-		result += negative[0].power->deltaDie(sign);
-		applied.push_back({ negative[0].caster, type, negative[0].power->deltaDie(sign), negative[0].power });
+	for (const ActivePower& ap : powers) {
+		if (ap.power->type == type) {
+			assert(ap.power->effectMult > 0);
+			result += ap.power->effectMult;
+			applied.push_back({ ap.caster, type, ap.power->effectMult, ap.power });
+		}
 	}
 	return result;
 }
@@ -631,7 +606,6 @@ BattleSystem::ActionResult BattleSystem::checkPower(int combatant, int target, i
 		return ActionResult::kInvalid;
 	if (power->type == ModType::kHeal && dst.wounds == 0)
 		return ActionResult::kInvalid;
-
 	return ActionResult::kSuccess;
 }
 
@@ -679,7 +653,8 @@ void BattleSystem::applyDamage(SWCombatant& defender, int ap, const Die& die, co
 	report.damage = report.damageRoll.value() + report.strengthRoll.value();
 	report.ap = ap;
 
-	int armor = std::max(0, defender.armor.armor - ap);	// remove ap from armor
+	int defenderArmor = defender.armor.armor;
+	int armor = std::max(0, defenderArmor - ap);	// remove ap from armor
 	int toughness = defender.toughness() + armor;
 
 	if (report.damage && report.damage >= toughness) {
@@ -730,9 +705,9 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		if (attack.success) {
 			// FIXME: does boost apply to damage?
 			Die strengthDie = src.strength;
-			strengthDie.b += applyMods(ModType::kBoost, src.activePowers, attack.damageMods);
+			//strengthDie.b += applyMods(ModType::kBoost, src.activePowers, attack.damageMods);
 
-			applyDamage(dst, 0, src.meleeWeapon.damageDie, strengthDie, attack.damage);
+			applyDamage(dst, 0, src.meleeWeapon.damageDie, strengthDie, attack.damageReport);
 		}
 	}
 	else {
@@ -742,7 +717,7 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		int value = attack.attackRoll.value();
 		attack.success = !attack.attackRoll.criticalFailure() && value >= tn;
 		if (attack.success) {
-			applyDamage(dst, src.rangedWeapon.ap, src.rangedWeapon.damageDie, Die(0, 0, 0), attack.damage);
+			applyDamage(dst, src.rangedWeapon.ap, src.rangedWeapon.damageDie, Die(0, 0, 0), attack.damageReport);
 		}
 	}
 	queue.push({ Action::Type::kAttack, attack });
@@ -760,15 +735,9 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 	action.target = targetIndex;
 	action.power = power;
 
-	int powerRange = power->rangeMult * src.smarts.d;
-	int targetRange = distance(src.region, dst.region);
-
-	if (powerRange < targetRange)
-		return ActionResult::kOutOfRange;
-	if (src.team != dst.team && power->forAllies())
-		return ActionResult::kInvalid;
-	if (src.team == dst.team && power->forEnemies())
-		return ActionResult::kInvalid;
+	ActionResult result = checkPower(srcIndex, targetIndex, pIndex);
+	if (result != ActionResult::kSuccess)
+		return result;
 
 	int tn = power->tn() + countMaintainedPowers(src.index);
 	src.flags[SWCombatant::kHasUsedAction] = true;
@@ -788,12 +757,32 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 	action.activated = true;
 	action.raise = (roll.value() - tn) / 4;
 
+	if (power->region) {
+		for (SWCombatant& c : _combatants) {
+			if (c.region == dst.region && c.team == dst.team) {
+				PowerAction altAction = action;
+				powerActivated(srcIndex, power, altAction, c);
+			}
+		}
+	}
+	else {
+		powerActivated(srcIndex, power, action, dst);
+	}
+	return ActionResult::kSuccess;
+}
+
+void BattleSystem::powerActivated(int srcIndex, const SWPower* power, PowerAction& action, SWCombatant& dst)
+{
 	if (power->type == ModType::kBolt) {
 		// Bolt is WEIRD. The initial roll determines activation, but then modifiers are applied,
 		// and that determines to hit. There's just one roll. But that all adds complexity to the system,
 		// so it's wrapped into "activation" above.
 		// Note the 'effectMult` is an effect multiplier, not an absolute value
-		Die d(1 + 2 * power->effectMult + (action.raise ? 1 : 0), 6, 0);
+
+		Die d(2, 6, 0);
+		d.d += power->effectMult * 2; // effect mult increases the die, not number (?)
+		d.n += action.raise;
+
 		applyDamage(dst, 0, d, Die(0, 0, 0), action.damage);
 	}
 	else if (power->type == ModType::kHeal) {
@@ -804,7 +793,6 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 		dst.activePowers.push_back(ap);
 	}
 	queue.push({ Action::Type::kPower, action });
-	return ActionResult::kSuccess;
 }
 
 std::pair<int, int> BattleSystem::findPower(int combatant) const

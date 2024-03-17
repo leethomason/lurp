@@ -25,31 +25,6 @@ bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) co
 	return true;
 }
 
-/*
-ScriptDriver::ScriptDriver(
-	const ScriptAssets& assets,
-	const ScriptEnv& env,
-	MapData& mapData,
-	ScriptBridge& bridge,
-	int initCode)
-	:	_scriptEnv(env),
-		_assets(assets),
-		_mapData(mapData),
-		_tree(assets, env.script),
-		_treeIt(_tree)
-{
-	assert(!env.script.empty());
-	assert(!env.player.empty());
-
-	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, env);
-	_helper->bridge().setIText(this);
-	_helper->pushScriptContext();
-	_helper->call(initCode, 0);
-
-	processTree(false);
-}
-*/
-
 ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int func)
 	:	_assets(zoneDriver.assets()),
 		_bridge(bridge),
@@ -93,35 +68,6 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const S
 
 	processTree(false);
 }
-
-/*
-ScriptDriver::ScriptDriver(
-	const ScriptAssets& assets,
-	const EntityID& scriptID,
-	MapData& mapData,
-	ScriptBridge& bridge,
-	ScriptBridge& loader)
-	:	_assets(assets),
-		_mapData(mapData),
-		_tree(assets, scriptID),
-		_treeIt(_tree)
-{
-	assert(!scriptID.empty());
-	assert(_assets.get(scriptID).type == ScriptType::kScript);
-
-	_scriptEnv = loadEnv(loader);
-	assert(_scriptEnv.script == scriptID);
-	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
-
-	_helper->bridge().setIText(this);
-	_helper->pushScriptContext();
-
-	bool okay = loadContext(loader);
-	if (!okay) {
-		clear();
-	}
-}
-*/
 
 ScriptDriver::~ScriptDriver()
 {
@@ -177,6 +123,7 @@ Text ScriptDriver::filterText(const Text& text) const
 		Text::Line tl;
 		tl.speaker = substitute(line.speaker);
 		tl.text = substitute(line.text);
+		tl.code = line.code;
 		result.lines.push_back(tl);
 	}
 	return result;
@@ -284,6 +231,8 @@ TextLine ScriptDriver::line()
 	else {
 		textLine.alreadyRead = true;
 	}
+
+	_helper.get()->call(line.code, 0);
 	return textLine;
 }
 
@@ -409,14 +358,6 @@ void ScriptDriver::advance()
 	}
 	else {
 		processTree(true);
-	}
-
-	// if the advance() moved us to a line of text, need to run the code()
-	if (_helper && !done()) {
-		ScriptRef newRef = _treeIt.get();
-		if (newRef.type == ScriptType::kText) {
-			_helper->call(_mappedText.lines[_textSubIndex].code, 0);
-		}
 	}
 }
 

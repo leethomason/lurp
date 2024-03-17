@@ -20,34 +20,32 @@ namespace swbattle {
 struct SWPower;
 
 enum class ModType {
-	// These can be caused by powers, edges, etc.
-	kBoost,		// negative numbers de-buff
-	kArcane,
-	kFighting,	// affects attack but not parry
-	kShooting,
-	kPowerCover,
-	kArmor,
+	// The general power system really wasn't working.
+	// Instead, a more specific set of powers.
+
+	kRangeDebuff,	// penalize range attacks
+	kMeleeDebuff,	// penalize melee attacks
+	kCombatDebuff,	// penalize all attacks
 
 	// These are caused by situtations
 	kDefend,
 	kGangUp,
 	kUnarmed,
 	kRange,
-	kNaturalCover,
+	kCover,
 
 	// These are transient; they should never show up as a mod
-	kBolt,	// always does damage (no heal)
-	kHeal,	// always heals (no damage)
+	kBolt,	// attack one target
+	kHeal,	// heals
 };
 
-// "Boost", "Defend", "Cover", etc. 
 std::string ModTypeName(ModType type);
 ModType ModTypeFromName(const std::string& name);
 
 struct ModInfo {
 	int src = 0;
 	ModType type;
-	int delta = 0;
+	int delta = 0;	// FIXME: what does this do??
 	const SWPower* power = nullptr;
 };
 
@@ -64,6 +62,7 @@ struct SWPower {
 	int cost = 1;
 	int rangeMult = 1;
 	int effectMult = 1;
+	bool region = false;
 
 	int tn() const { return 4 + (cost + 1) / 2; }
 	bool forAllies() const {
@@ -74,7 +73,7 @@ struct SWPower {
 	bool forEnemies() const { return !forAllies(); }
 	bool doesDamage() const { return type == ModType::kBolt; }
 
-	int deltaDie(int sign) const { return 2 * sign * effectMult; }
+	int deltaDie() const { return 2 * effectMult; }
 
 	static SWPower convert(const lurp::Power&);
 };
@@ -122,12 +121,11 @@ struct AttackAction {
 	bool melee = false;					// if true, melee attack, else ranged
 
 	std::vector<ModInfo> mods;			// mods applied to attack (for reporting)
-	std::vector<ModInfo> damageMods;
 	Roll attackRoll;
 
 	bool freeAttack = false;
 	bool success = false;
-	DamageReport damage;
+	DamageReport damageReport;			// set if there was "success"
 };
 
 struct RecoverAction {
@@ -345,12 +343,13 @@ public:
 	}
 
 	// internal
-	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied, int mult = 1);
+	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied);
 
 private:
 	int countMaintainedPowers(int combatant) const;
 	void recover(int combatant);
 	void filterActivePowers();
+	void powerActivated(int srcIndex, const SWPower* power, PowerAction& action, SWCombatant& dst);
 
 	// power, target
 	std::pair<int, int> findPower(int combatant) const;

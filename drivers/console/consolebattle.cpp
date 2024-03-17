@@ -9,8 +9,6 @@
 using namespace lurp::swbattle;
 using namespace lurp;
 
-//static constexpr int N_RANGE = 4;
-//static constexpr char* RANGE[N_RANGE] = { "Short", "Medium", "Long", "Extreme" };
 static constexpr int N_COVER = 5;
 static const char* COVER[N_COVER] = { "None", "Light", "Medium", "Heavy", "Full" };
 
@@ -235,7 +233,7 @@ static void PrintActions(BattleSystem& system)
 				fmt::print("  TN = 4\n");
 
 			if (a.success)
-				PrintDamageReport(defender, a.melee, a.damage, a.damageMods);
+				PrintDamageReport(defender, a.melee, a.damage, a.damage.armorMods);
 			else
 				fmt::print("  Miss\n");
 			break;

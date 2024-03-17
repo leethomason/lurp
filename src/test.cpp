@@ -1077,7 +1077,16 @@ void BattleTest::TestExample()
 	driver.choose(0);
 	TEST(driver.mode() == ZoneDriver::Mode::kBattle);
 	driver.battleDone();
+
+	// Well this is subtle. When does the 'code' property actually run?
+	// `battleDone()` actually advances to the text w/ code
+	// `mode()` doesn't have to be called
+	// `text()` could get called more than once...
+	// Okay. `text()` is the one you would expect, I think.
+
 	TEST(driver.mode() == ZoneDriver::Mode::kText);	// "you win!"
+	driver.text();									
+	driver.advance();
 	TEST(driver.isGameOver() == true);
 }
 
