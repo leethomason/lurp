@@ -637,23 +637,29 @@ BattleSystem::ActionResult BattleSystem::power(int srcIndex, int targetIndex, in
 	if (result != ActionResult::kSuccess)
 		return result;
 
-	int tn = power->tn() + countMaintainedPowers(src.index);
+	action.tn = power->tn() + countMaintainedPowers(src.index);
 	src.flags[SWCombatant::kHasUsedAction] = true;
+	Die die = src.arcane;
 
 	if (power->type == ModType::kBolt) {
 		// See notes on Bolt below.
-		if (src.region != dst.region)
-			tn += int(_regions[dst.region].cover) * 2;
+		if (src.region != dst.region) {
+			int coverBonus = -int(_regions[dst.region].cover) * 2;
+			if (coverBonus) {
+				action.mods.push_back({ srcIndex, ModType::kCover, coverBonus, nullptr });
+				die.b += coverBonus;
+			}
+		}
 	}
 
-	Roll roll = doRoll(src.arcane, src.wild);
-	action.activated = roll.value() >= tn;
+	action.roll = doRoll(die, src.wild);
+	action.activated = action.roll.value() >= action.tn;
 	if (!action.activated) {
 		queue.push({ Action::Type::kPower, action });
 		return ActionResult::kSuccess;
 	}
 	action.activated = true;
-	action.raise = (roll.value() - tn) / 4;
+	action.raise = (action.roll.value() - action.tn) / 4;
 
 	if (power->region) {
 		for (SWCombatant& c : _combatants) {

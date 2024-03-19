@@ -252,11 +252,17 @@ static void PrintActions(BattleSystem& system)
 			const auto& src = system.combatants()[a.src];
 			const auto& dst = system.combatants()[a.target];
 
+			fmt::print("{} uses {} ({}) on {}.\n", src.name, a.power->name, a.roll.die.toString(), dst.name);
+			fmt::print("  Power roll: {} on tn of {} ", RollStr(a.roll), a.tn);
+			if (!a.mods.empty())
+				fmt::print("({})", ModStr(a.mods));
+			fmt::print("\n");
+
 			if (!a.activated) {
-				fmt::print("{} tried to use {} on {} but failed.\n", src.name, a.power->name, dst.name);
+				fmt::print("  Power failed to activate.\n");
 			}
 			else {
-				fmt::print("{} used {} on {}.\n", src.name, a.power->name, dst.name);
+				fmt::print("  {} succeeded.\n", a.power->name);
 				if (a.raise)
 					fmt::print("  Raise: {}\n", a.raise);
 				if (a.power->doesDamage())

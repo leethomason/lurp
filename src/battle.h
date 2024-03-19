@@ -67,7 +67,7 @@ struct SWPower {
 	int effectMult = 1;
 	bool region = false;
 
-	int tn() const { return 4 + (cost + 1) / 2; }
+	int tn() const { return 4 + cost / 2; }	// should be (cost+1)/2 but difficulty seems skewed
 	bool forAllies() const {
 		if (type == ModType::kHeal) return true;
 		if (type == ModType::kBolt) return false;
@@ -139,6 +139,11 @@ struct RecoverAction {
 struct PowerAction {
 	int src = 0;
 	int target = 0;
+
+	std::vector<ModInfo> mods;			// mods applied to attack (for reporting)
+	Roll roll;
+	int tn = 0;
+
 	const SWPower* power = nullptr;
 	bool activated = false;
 	int raise = 0;
