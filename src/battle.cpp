@@ -57,6 +57,13 @@ std::string ModTypeName(ModType type)
 	case ModType::kRangeBuff: return "RangeBuff";
 	case ModType::kMeleeBuff: return "MeleeBuff";
 	case ModType::kCombatBuff: return "CombatBuff";
+
+	case ModType::kDefend: return "Defend";
+	case ModType::kGangUp: return "GangUp";
+	case ModType::kUnarmed: return "Unarmed";
+	case ModType::kRange: return "Range";
+	case ModType::kCover: return "Cover";
+
 	case ModType::kBolt: return "Bolt";
 	case ModType::kHeal: return "Heal";
 	}
@@ -671,7 +678,7 @@ void BattleSystem::powerActivated(int srcIndex, const SWPower* power, PowerActio
 		// Note the 'effectMult` is an effect multiplier, not an absolute value
 
 		Die d(2, 6, 0);
-		d.d += power->effectMult * 2; // effect mult increases the die, not number (?)
+		d.d += (power->effectMult - 1) * 2; // effect mult increases the die, not number (?)
 		d.n += action.raise;
 
 		applyDamage(dst, 0, d, Die(0, 0, 0), action.damageReport);
@@ -701,22 +708,7 @@ std::pair<int, int> BattleSystem::findPower(int combatant) const
 	for (size_t i = 0; i < powers.size(); i++) {
 		for (size_t j = 0; j < targets.size(); j++) {
 			if (checkPower(combatant, targets[j], powers[i]) == ActionResult::kSuccess) {
-				const SWPower& power = src.powers[powers[i]];
-				if (power.type == ModType::kBolt) {
-					// can repeat.
-					return std::make_pair(powers[i], targets[j]);
-				}
-				else {
-					if (power.forAllies() && _combatants[targets[j]].team != src.team)
-						continue;
-					if (power.forEnemies() && _combatants[targets[j]].team == src.team)
-						continue;
-					if (power.forAllies() && _combatants[targets[j]].buffed())
-						continue;
-					if( power.forEnemies() && _combatants[targets[j]].debuffed())
-						continue;
-					return std::make_pair(powers[i], targets[j]);
-				}
+				return std::make_pair(powers[i], targets[j]);
 			}
 		}
 	}

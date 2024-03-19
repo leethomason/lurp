@@ -165,12 +165,14 @@ static void PrintDamageReport(const SWCombatant& defender,
 	const DamageReport& damage)
 {
 	if (melee)
-		fmt::print("  Hit! damage roll: ({}) + ({}) = {} ",
+		fmt::print("  Hit! damage roll ({}): ({}) + ({}) = {} ",
+			damage.damageRoll.die.toString(),
 			RollStr(damage.damageRoll),
 			RollStr(damage.strengthRoll),
 			damage.damage);
 	else
-		fmt::print("  Hit! damage roll: {} ",
+		fmt::print("  Hit! damage roll ({}): {} ",
+			damage.damageRoll.die.toString(),
 			RollStr(damage.damageRoll));
 
 	fmt::print("\n");
@@ -336,8 +338,8 @@ bool ConsoleBattleDriver(const ScriptAssets& assets, const VarBinder& binder, co
 				rc = system.move(0, -1);
 			else if (v.type == Value::Type::kChar && v.hasOption() && within(v.option, 1, (int)system.combatants().size()))
 				rc = system.attack(0, v.option);
-			else if (v.type == Value::Type::kCharInt && v.hasOption() && within(v.option, 0, (int)pc.powers.size()))
-				rc = system.power(0, v.intVal, v.option);
+			else if (v.type == Value::Type::kCharInt && v.hasOption() && within(v.intVal, 0, (int)pc.powers.size()))
+				rc = system.power(0, v.option, v.intVal);
 			else if (v.rawStr == "d")
 				system.advance();
 

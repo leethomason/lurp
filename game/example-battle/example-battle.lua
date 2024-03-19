@@ -30,15 +30,6 @@ Power {
 }
 
 Power {
-    entityID = "ARMOR_BOOST",
-    name = "Armor++",
-    effect = "armor",
-    cost = 1,
-    range = 0,      -- touch (same region)
-    strength = 1,
-}
-
-Power {
     entityID = "HEAL",
     name = "Heal",
     effect = "heal",
@@ -137,7 +128,7 @@ Actor {
     -- There is a limitation in the current version of LuRP that tables on Entinies
     -- are only read only. We can do this, BUT the powers can never change and must
     -- be set here in the declaration.
-    powers = { "FIRE_BOLT", "ARMOR_BOOST", "HEAL" },
+    powers = { "FIRE_BOLT", "HEAL" },
 }
 
 --[[
