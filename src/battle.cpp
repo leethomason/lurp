@@ -54,9 +54,9 @@ Roll BattleSystem::doRoll(Random& random, Die d, bool useWild)
 std::string ModTypeName(ModType type)
 {
 	switch (type) {
-	case ModType::kRangeDebuff: return "RangeDebuff";
-	case ModType::kMeleeDebuff: return "MeleeDebuff";
-	case ModType::kCombatDebuff: return "CombatDebuff";
+	case ModType::kRangeBuff: return "RangeBuff";
+	case ModType::kMeleeBuff: return "MeleeBuff";
+	case ModType::kCombatBuff: return "CombatBuff";
 	case ModType::kBolt: return "Bolt";
 	case ModType::kHeal: return "Heal";
 	}
@@ -70,9 +70,9 @@ ModType ModTypeFromName(const std::string& _name)
 
 	// Only things that can be specified as powers in
 	// the game description are valid values here.
-	if (name == "randedebuff") return ModType::kRangeDebuff;
-	if (name == "meleedebuff") return ModType::kMeleeDebuff;
-	if (name == "combatdebuff") return ModType::kCombatDebuff;
+	if (name == "randebuff") return ModType::kRangeBuff;
+	if (name == "meleebuff") return ModType::kMeleeBuff;
+	if (name == "combatbuff") return ModType::kCombatBuff;
 	if (name == "bolt") return ModType::kBolt;
 	if (name == "heal") return ModType::kHeal;
 	PLOG(plog::error) << "Unknown ModType: " << _name;
@@ -126,8 +126,10 @@ std::pair<Die, int> BattleSystem::calcMelee(int attackerIndex, int defenderIndex
 		mods.push_back({ attacker.index, ModType::kUnarmed, kUnarmedTN, nullptr });
 		atkDie.b += kUnarmedTN;
 	}
-	atkDie.b -= applyMods(ModType::kMeleeDebuff, attacker.activePowers, mods);
-	atkDie.b += applyMods(ModType::kCombatDebuff, defender.activePowers, mods);
+	atkDie.b += applyMods(
+		uint32_t(ModType::kMeleeBuff) | uint32_t(ModType::kCombatBuff),
+		attacker.activePowers, 
+		mods);
 
 	// FIXME: Should defender boost increase parry?
 	return std::make_pair(atkDie, defender.parry());
@@ -141,8 +143,10 @@ std::pair<Die, int> BattleSystem::calcRanged(int attackerIndex, int defenderInde
 		return std::make_pair(Die(0, 0, 0), 0);
 
 	Die atkDie = attacker.shooting;
-	atkDie.b -= applyMods(ModType::kRangeDebuff, attacker.activePowers, mods);
-	atkDie.b += applyMods(ModType::kCombatDebuff, defender.activePowers, mods);
+	atkDie.b += applyMods(
+		uint32_t(ModType::kRangeBuff) | uint32_t(ModType::kCombatBuff),
+		attacker.activePowers, 
+		mods);
 
 	// Should range and cover be applied to the roll or the TN?
 	// I think the roll, because of the negative numbers.
@@ -175,14 +179,13 @@ std::pair<Die, int> BattleSystem::calcRanged(int attackerIndex, int defenderInde
 
 // Remember that the power is a MULTIPLIER, so the actual mod is double the multiplier.
 // Confusing; but a challenge of the SW rules.
-int BattleSystem::applyMods(ModType type, const std::vector<ActivePower>& powers, std::vector<ModInfo>& applied)
+int BattleSystem::applyMods(uint32_t filter, const std::vector<ActivePower>& powers, std::vector<ModInfo>& applied)
 {
 	int result = 0;
 	for (const ActivePower& ap : powers) {
-		if (ap.power->type == type) {
-			assert(ap.power->effectMult > 0);
-			result += ap.power->effectMult;
-			applied.push_back({ ap.caster, type, ap.power->effectMult, ap.power });
+		if (uint32_t(ap.power->type) & filter) {
+			result += ap.power->deltaDie();
+			applied.push_back({ ap.caster, ap.power->type, ap.power->deltaDie(), ap.power});
 		}
 	}
 	return result;
@@ -218,103 +221,6 @@ double BattleSystem::wildChance(int tn, Die die)
 	double c = chance(tn, die);
 	double w = chance(tn, Die(1, 6, die.b));
 	return chanceAorBSucceeds(c, w);
-}
-
-bool SWCombatant::autoLevelFighting()
-{
-	// fighting / agility	 0
-	// strength				-2
-	// vigor				-2
-	// spirit				-4
-	// shooting				-4
-	// smarts				-6
-	if (fighting.d == 4 && fighting.b < 0) {
-		fighting = Die(1, 4, 0);	// aquire fighting skill!
-		return true;
-	}
-	if (fighting.d < agility.d) { fighting.d += 2; return true; }
-	if (agility.d < 6) { agility.d += 2; return true; }
-	if (agility.d == 12 || strength.d < agility.d - 2) { strength.d += 2; return true; }
-	if (agility.d == 12 || vigor.d < agility.d - 2) { vigor.d += 2; return true; }
-	if (agility.d == 12 || spirit.d < agility.d - 4) { spirit.d += 2; return true; }
-	if (agility.d == 12 || shooting.d < agility.d - 4) { shooting.d += 2; return true; }
-	if (agility.d == 12 || smarts.d < agility.d - 6) { smarts.d += 2; return true; }
-	if (agility.d < 12) { agility.d += 2; return true; }
-	return false;
-}
-
-bool SWCombatant::autoLevelShooting()
-{
-	// shooting / agility	 0
-	// vigor				-2
-	// spirit				-4
-	// fighting				-4
-	// strength				-6
-	// smarts				-6
-	if (shooting.d == 4 && shooting.b < 0) {
-		shooting = Die(1, 4, 0);	// aquire shooting skill!
-		return true;
-	}
-	if (shooting.d < agility.d) { shooting.d += 2; return true; }
-	if (agility.d < 6) { agility.d += 2; return true; }
-	if (agility.d == 12 || vigor.d < agility.d - 2) { vigor.d += 2; return true; }
-	if (agility.d == 12 || spirit.d < agility.d - 4) { spirit.d += 2; return true; }
-	if (agility.d == 12 || fighting.d < agility.d - 4) { fighting.d += 2; return true; }
-	if (agility.d == 12 || strength.d < agility.d - 6) { strength.d += 2; return true; }
-	if (agility.d == 12 || smarts.d < agility.d - 6) { smarts.d += 2; return true; }
-	if (agility.d < 12) { agility.d += 2; return true; }
-	return false;
-}
-
-bool SWCombatant::autoLevelArcane()
-{
-	// arcane / smarts		0
-	// vigor				-4
-	// spirit				-4
-	// agility				-6
-	// strength				-6
-	if (arcane.d == 4 && arcane.b < 0) {
-		arcane = Die(1, 4, 0);	// aquire arcane skill!
-		return true;
-	}
-	if (arcane.d < smarts.d) { arcane.d += 2; return true; }
-	if (vigor.d < smarts.d - 4) { vigor.d += 2; return true; }
-	if (spirit.d < smarts.d - 4) { spirit.d += 2; return true; }
-	if (agility.d < smarts.d - 6) { agility.d += 2; return true; }
-	if (strength.d < smarts.d - 6) { strength.d += 2; return true; }
-	if (smarts.d < 12) { smarts.d += 2; return true; }
-	return false;
-}
-
-void SWCombatant::autoLevel(int n, int f, int s, int a, uint32_t seed)
-{
-	while (n--) {
-		int fightingScore = fighting.d + fighting.b + strength.d / 2 + shooting.d / 4 + agility.d / 4;
-		int shootingScore = shooting.d + shooting.b + agility.d / 2 + fighting.d / 2;
-		int arcaneScore = arcane.d + arcane.b + smarts.d;
-
-		if (seed & 0x01) fightingScore++;
-		if (seed & 0x02) shootingScore++;
-		if (seed & 0x04) arcaneScore++;
-
-		int fightingPriority = f - fightingScore;
-		int shootingPriority = s - shootingScore;
-		int arcanePriority = a - arcaneScore;
-
-		if (s == 0) fightingPriority = INT_MIN;
-		if (f == 0) shootingPriority = INT_MIN;
-		if (a == 0) arcanePriority = INT_MIN;
-
-		if (shootingPriority >= fightingPriority && shootingPriority >= arcanePriority) {
-			autoLevelShooting();
-		}
-		else if (fightingPriority >= arcanePriority) {
-			autoLevelFighting();
-		}
-		else {
-			autoLevelArcane();
-		}
-	}
 }
 
 void SWCombatant::endTurn()
@@ -479,12 +385,6 @@ SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& a
 	r.name = c.name;
 	r.wild = c.wild;
 
-	r.agility = convertFromSkill(std::max(c.fighting, c.shooting) + c.bias);
-	r.smarts = convertFromSkill(c.arcane + c.bias);
-	r.spirit = convertFromSkill(mean(c.fighting, c.shooting, c.arcane) + c.bias);
-	r.strength = convertFromSkill(mean(c.fighting, c.shooting, c.fighting) + c.bias);
-	r.vigor = convertFromSkill(mean(c.fighting, c.shooting, c.arcane) + c.bias);
-
 	r.fighting = convertFromSkill(c.fighting);
 	r.shooting = convertFromSkill(c.shooting);
 	r.arcane = convertFromSkill(c.arcane);
@@ -526,12 +426,6 @@ SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& asset
 	int fighting = (int) bind.get(c.entityID + "." + "fighting").num;
 	int shooting = (int) bind.get(c.entityID + "." + "shooting").num;
 	int arcane = (int) bind.get(c.entityID + "." + "arcane").num;
-
-	r.agility = convertFromSkill(std::max(fighting, shooting));
-	r.smarts = convertFromSkill(arcane);
-	r.spirit = convertFromSkill(mean(fighting, shooting, arcane));
-	r.strength = convertFromSkill(mean(fighting, shooting, fighting));
-	r.vigor = convertFromSkill(mean(fighting, shooting, arcane));
 
 	r.fighting = convertFromSkill(fighting);
 	r.shooting = convertFromSkill(shooting);
@@ -595,7 +489,7 @@ BattleSystem::ActionResult BattleSystem::checkPower(int combatant, int target, i
 	const SWCombatant& dst = _combatants[target];
 	const SWPower* power = &src.powers[pIndex];
 
-	int powerRange = power->rangeMult * src.smarts.d;
+	int powerRange = power->rangeMult * src.smarts();
 	int targetRange = distance(src.region, dst.region);
 
 	if (powerRange < targetRange)
@@ -703,10 +597,7 @@ BattleSystem::ActionResult BattleSystem::attack(int attacker, int defender, bool
 		int value = attack.attackRoll.value();
 		attack.success = !attack.attackRoll.criticalFailure() && value >= tn;
 		if (attack.success) {
-			// FIXME: does boost apply to damage?
-			Die strengthDie = src.strength;
-			//strengthDie.b += applyMods(ModType::kBoost, src.activePowers, attack.damageMods);
-
+			Die strengthDie(1, src.strength(), 0);
 			applyDamage(dst, 0, src.meleeWeapon.damageDie, strengthDie, attack.damageReport);
 		}
 	}
@@ -783,7 +674,7 @@ void BattleSystem::powerActivated(int srcIndex, const SWPower* power, PowerActio
 		d.d += power->effectMult * 2; // effect mult increases the die, not number (?)
 		d.n += action.raise;
 
-		applyDamage(dst, 0, d, Die(0, 0, 0), action.damage);
+		applyDamage(dst, 0, d, Die(0, 0, 0), action.damageReport);
 	}
 	else if (power->type == ModType::kHeal) {
 		dst.wounds = std::max(0, dst.wounds - power->effectMult - action.raise);
@@ -898,9 +789,9 @@ void BattleSystem::recover(int combatant)
 		return;
 
 	src.flags[SWCombatant::kHasRecovered] = true;
-	Die spirit = src.spirit;
+	Die spirit(1, src.spirit(), 0);
 	spirit.b -= src.wounds;
-	Roll roll = doRoll(src.spirit, src.wild);
+	Roll roll = doRoll(spirit, src.wild);
 	RecoverAction action;
 	action.combatant = combatant;
 

@@ -7,6 +7,7 @@
 #include <string>
 #include <variant>
 #include <bitset>
+#include <algorithm>
 
 namespace lurp {
 struct Combatant;
@@ -23,12 +24,14 @@ enum class ModType {
 	// The general power system really wasn't working.
 	// Instead, a more specific set of powers.
 
-	kRangeDebuff,	// penalize range attacks
-	kMeleeDebuff,	// penalize melee attacks
-	kCombatDebuff,	// penalize all attacks
+	// The bufs/debuffs are bit flags
+	kRangeBuff = 0x01,		// increase range attacks
+	kMeleeBuff = 0x02,		// increase melee attacks
+	kCombatBuff = 0x04,		// increase all attacks
 
+	// Everything else is a regular flag
 	// These are caused by situtations
-	kDefend,
+	kDefend = 0x100,
 	kGangUp,
 	kUnarmed,
 	kRange,
@@ -45,13 +48,13 @@ ModType ModTypeFromName(const std::string& name);
 struct ModInfo {
 	int src = 0;
 	ModType type;
-	int delta = 0;	// FIXME: what does this do??
+	int delta = 0; // the die delta, needed because power may be null
 	const SWPower* power = nullptr;
 };
 
 struct SWPower {
 	SWPower() {}
-	SWPower(ModType type, const std::string& name, int cost, int rangeMult, int effectMult = 1)
+	SWPower(ModType type, const std::string& name, int cost, int rangeMult, int effectMult)
 		: type(type), name(name), cost(cost), rangeMult(rangeMult), effectMult(effectMult)
 	{
 		assert(!name.empty());
@@ -139,7 +142,7 @@ struct PowerAction {
 	const SWPower* power = nullptr;
 	bool activated = false;
 	int raise = 0;
-	DamageReport damage;
+	DamageReport damageReport;
 };
 
 struct Action {
@@ -185,15 +188,17 @@ struct SWCombatant {
 
 	bool wild = false;
 
-	Die agility;
-	Die smarts;
-	Die spirit;
-	Die strength;
-    Die vigor;
-
 	Die fighting = Die(1, 4, -2);	// agility
 	Die shooting = Die(1, 4, -2);	// agility
 	Die arcane = Die(1, 4, -2);		// smarts
+
+	// There are derived (although they certainly are not in SWADE)
+	// Desperately need to simplify the combat system.
+	int agility() const { return std::max(fighting.d, shooting.d); }
+	int smarts() const { return arcane.d; }
+	int spirit() const { return (fighting.d + shooting.d + arcane.d + 2) / 3; }
+	int strength() const { return (fighting.d + shooting.d + 1) / 2; }
+	int vigor() const { return (fighting.d + shooting.d + arcane.d + 2) / 3; }
 
 	MeleeWeapon meleeWeapon;
 	RangedWeapon rangedWeapon;
@@ -205,7 +210,7 @@ struct SWCombatant {
 	bool dead() const { return wild ? wounds > 3 : wounds > 0; }
 	std::vector<ActivePower> activePowers;
 
-	int toughness() const { return 2 + vigor.d / 2; }
+	int toughness() const { return 2 + vigor() / 2; }
 	int parry() const { return 2 + fighting.d / 2; }
 
 	enum {
@@ -233,20 +238,6 @@ struct SWCombatant {
 
 	double baseMelee() const;
 	double baseRanged() const;
-
-	// Auto "level" where n is the number of advances (although this system much
-	// more narrowly defines advances than Savage Worlds, so that isn't quite correct either.)
-	// Very roughly: an advance will increase a die, witht the priorities given. So calling with:
-	//    `autoLevel(n, 6, 4, 2)`
-	// Will generally move to a fighting die 2 higher than the shooting, and the shooting 2 higher than 
-	// the arcane. `n` should be in the range of 1 to ~20. If any of fighting/shooting/arcane are
-	// 0, that skill tree will be ignored.
-	// The `seed` adds a little wiggle randomness to the auto-level.
-	void autoLevel(int n, int fighting, int shooting, int arcane, uint32_t seed = 0);
-
-	bool autoLevelFighting();
-	bool autoLevelShooting();
-	bool autoLevelArcane();
 
 	static SWCombatant convert(const lurp::Combatant& c, const ScriptAssets&);
 	static SWCombatant convert(const lurp::Actor& c, const ScriptAssets&, const VarBinder& bind);
@@ -343,7 +334,7 @@ public:
 	}
 
 	// internal
-	static int applyMods(ModType type, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied);
+	static int applyMods(uint32_t filter, const std::vector<ActivePower>& potential, std::vector<ModInfo>& applied);
 
 private:
 	int countMaintainedPowers(int combatant) const;

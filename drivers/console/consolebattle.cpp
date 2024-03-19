@@ -62,7 +62,8 @@ static std::string ModStr(const std::vector<ModInfo>& mods)
 		if (m.power)
 			name = m.power->name;
 
-		r += fmt::format("{:+d} {}", m.delta, name);
+		r += fmt::format("{:+d} {}", m.delta
+			, name);
 	}
 	return r;
 }
@@ -161,8 +162,7 @@ static void PrintCombatants(const std::vector<SWCombatant>& combatants, const st
 
 static void PrintDamageReport(const SWCombatant& defender,
 	bool melee,
-	const DamageReport& damage,
-	const std::vector<ModInfo>& damageMods)
+	const DamageReport& damage)
 {
 	if (melee)
 		fmt::print("  Hit! damage roll: ({}) + ({}) = {} ",
@@ -173,8 +173,6 @@ static void PrintDamageReport(const SWCombatant& defender,
 		fmt::print("  Hit! damage roll: {} ",
 			RollStr(damage.damageRoll));
 
-	if (!damageMods.empty())
-		fmt::print("({})", ModStr(damageMods));
 	fmt::print("\n");
 
 	fmt::print("  toughness={} ({})",
@@ -233,7 +231,7 @@ static void PrintActions(BattleSystem& system)
 				fmt::print("  TN = 4\n");
 
 			if (a.success)
-				PrintDamageReport(defender, a.melee, a.damage, a.damage.armorMods);
+				PrintDamageReport(defender, a.melee, a.damageReport);
 			else
 				fmt::print("  Miss\n");
 			break;
@@ -260,7 +258,7 @@ static void PrintActions(BattleSystem& system)
 				if (a.raise)
 					fmt::print("  Raise: {}\n", a.raise);
 				if (a.power->doesDamage())
-					PrintDamageReport(dst, false, a.damage, std::vector<ModInfo>());
+					PrintDamageReport(dst, false, a.damageReport);
 			}
 			break;
 		}
@@ -378,20 +376,18 @@ static void TestRollStr()
 
 static void TestModStr()
 {
-	SWPower superBoost = { ModType::kBoost, "Super Boost", 3, 1, 2 };
-	SWPower okayBoost = { ModType::kBoost, "Okay Boost", 2, 1, 1 };
-	SWPower fuzzyMind = { ModType::kBoost, "Fuzzy Mind", 2, 1, -1 };
-	SWPower iceWall = { ModType::kPowerCover, "Frozen", 1, 0, 1 };
+	SWPower superBoost = { ModType::kCombatBuff, "Super Boost", 3, 1, 2 };
+	SWPower okayBoost = { ModType::kCombatBuff, "Okay Boost", 2, 1, 1 };
+	SWPower fuzzyMind = { ModType::kRangeBuff, "Fuzzy Mind", 2, 1, -1 };
 
 	ActivePower apSuperBoost = { 1, &superBoost };
 	ActivePower apOkayBoost = { 1, &okayBoost };
 	ActivePower apFuzzyMind = { 1, &fuzzyMind };
-	ActivePower apIceWall = { 1, &iceWall };
 
 	{
 		std::vector<ModInfo> mods;
-		std::vector<ActivePower> active = { apOkayBoost, apIceWall };
-		int result = BattleSystem::applyMods(ModType::kBoost, active, mods);
+		std::vector<ActivePower> active = { apOkayBoost };
+		int result = BattleSystem::applyMods(uint32_t(ModType::kCombatBuff), active, mods);
 
 		TEST(result == 2);
 		TEST(mods.size() == 1);
@@ -399,30 +395,21 @@ static void TestModStr()
 	}
 	{
 		std::vector<ModInfo> mods;
-		std::vector<ActivePower> active = { apOkayBoost, apIceWall, apSuperBoost };
-		int result = BattleSystem::applyMods(ModType::kBoost, active, mods);
+		std::vector<ActivePower> active = { apOkayBoost, apSuperBoost };
+		int result = BattleSystem::applyMods(uint32_t(ModType::kCombatBuff), active, mods);
+
+		TEST(result == 6);
+		TEST(mods.size() == 2);
+		TEST(ModStr(mods) == "+2 Okay Boost, +4 Super Boost");
+	}
+	{
+		std::vector<ModInfo> mods;
+		std::vector<ActivePower> active = { apOkayBoost, apSuperBoost, apFuzzyMind };
+		int result = BattleSystem::applyMods(uint32_t(ModType::kCombatBuff) | uint32_t(ModType::kRangeBuff), active, mods);
 
 		TEST(result == 4);
-		TEST(mods.size() == 1);
-		TEST(ModStr(mods) == "+4 Super Boost");
-	}
-	{
-		std::vector<ModInfo> mods;
-		std::vector<ActivePower> active = { apOkayBoost, apIceWall, apSuperBoost, apFuzzyMind };
-		int result = BattleSystem::applyMods(ModType::kBoost, active, mods);
-
-		TEST(result == 2);
-		TEST(mods.size() == 2);
-		TEST(ModStr(mods) == "+4 Super Boost, -2 Fuzzy Mind");
-	}
-	{
-		std::vector<ModInfo> mods;
-		std::vector<ActivePower> active = { apOkayBoost, apIceWall, apSuperBoost, apFuzzyMind };
-		int result = BattleSystem::applyMods(ModType::kPowerCover, active, mods);
-
-		TEST(result == 2);
-		TEST(mods.size() == 1);
-		TEST(ModStr(mods) == "+2 Frozen");
+		TEST(mods.size() == 3);
+		TEST(ModStr(mods) == "+2 Okay Boost, +4 Super Boost, -2 Fuzzy Mind");
 	}
 }
 

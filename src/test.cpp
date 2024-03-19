@@ -769,62 +769,32 @@ static void TestLuaCore()
 
 void TestCombatant()
 {
-	{
-		SWCombatant c;
-		c.autoLevel(8, 4, 2, 1);
-		TEST(c.fighting.d > 4);
-		TEST(c.fighting.d >= c.shooting.d);
-		TEST(c.shooting.d >= c.arcane.d);
-	}
-	{
-		SWCombatant c;
-		c.autoLevel(8, 4, 2, 0);
-		TEST(c.fighting.d > 4);
-		TEST(c.fighting.d >= c.shooting.d);
-		TEST(c.arcane.d == 4 && c.arcane.b == -2);
-	}
-	{
-		SWCombatant c;
-		c.autoLevel(8, 2, 4, 0);
-		TEST(c.shooting.d > 4);
-		TEST(c.shooting.d >= c.fighting.d);
-		TEST(c.arcane.d == 4 && c.arcane.b == -2);
-	}
-	{
-		SWCombatant c;
-		c.autoLevel(8, 1, 1, 8);
-		TEST(c.arcane.d > 4);
-		TEST(c.arcane.d >= c.fighting.d);
-		TEST(c.arcane.d >= c.shooting.d);
-	}
-	{
-		Random random(123);
-		// The basics...
-		BattleSystem system(random);
-		system.setBattlefield("Field");
-		system.addRegion({ "End", 100, Cover::kNoCover });
-		system.addRegion({ "Start", 0, Cover::kNoCover });
-		system.addRegion({ "Middle", 0, Cover::kNoCover });
+	Random random(123);
+	// The basics...
+	BattleSystem system(random);
+	system.setBattlefield("Field");
+	system.addRegion({ "End", 100, Cover::kNoCover });
+	system.addRegion({ "Start", 0, Cover::kNoCover });
+	system.addRegion({ "Middle", 0, Cover::kNoCover });
 
-		SWCombatant a;
-		SWCombatant b;
-		system.addCombatant(a);
-		system.addCombatant(b);
+	SWCombatant a;
+	SWCombatant b;
+	system.addCombatant(a);
+	system.addCombatant(b);
 
-		TEST(system.combatants().size() == 2);
-		TEST(system.regions().size() == 3);
-		TEST(system.distance(0, 2) == 100);
+	TEST(system.combatants().size() == 2);
+	TEST(system.regions().size() == 3);
+	TEST(system.distance(0, 2) == 100);
 
-		a = system.combatants()[0];
-		b = system.combatants()[1];
-		TEST(a.index == 0);
-		TEST(a.team == 0);
-		TEST(a.region == 0);
+	a = system.combatants()[0];
+	b = system.combatants()[1];
+	TEST(a.index == 0);
+	TEST(a.team == 0);
+	TEST(a.region == 0);
 
-		TEST(b.index == 1);
-		TEST(b.team == 1);
-		TEST(b.region == 2);
-	}
+	TEST(b.index == 1);
+	TEST(b.team == 1);
+	TEST(b.region == 2);
 }
 
 class BattleTest {
@@ -944,28 +914,33 @@ void BattleTest::TestSystem()
 	RangedWeapon blaster = { "blaster", {2, 6, 0}, 2, 30 };
 	MeleeWeapon baton = { "baton", {1, 4, 0} };
 	Armor riotGear = { "riot gear", 2 };
-	SWPower starCharm = { ModType::kBoost, "StarCharm", 3, 1, 1 };
-	SWPower farCharm = { ModType::kBoost, "FarCharm", 3, 4, 1 };
-	SWPower swol = { ModType::kBoost, "Swol", 1, 1, 1 };
+
+	// cost, range, effect
+	SWPower starCharm = { ModType::kCombatBuff, "StarCharm", 3, 1, 1 };
+	SWPower farCharm = { ModType::kCombatBuff, "FarCharm", 3, 4, 1 };
+	SWPower swol = { ModType::kMeleeBuff, "Swol", 1, 1, 1 };
 	SWPower spark = { ModType::kBolt, "Spark", 1, 1, 1 };
 
 	SWCombatant a;
 	a.name = "Rogue Rebel";
 	a.wild = true;
-	a.autoLevel(8, 2, 4, 2, 0);
+	a.fighting = Die(1, 6, 0);
+	a.shooting = Die(1, 8, 0);
+	a.arcane = Die(1, 6, 0);
 	a.rangedWeapon = blaster;
 	a.powers.push_back(starCharm);
 	a.powers.push_back(farCharm);
 
 	SWCombatant b;
 	b.name = "Brute";
-	b.autoLevel(6, 4, 2, 0, 0);
+	b.fighting = Die(1, 6, 0);
 	b.meleeWeapon = baton;	
 	b.armor = riotGear;
 
 	SWCombatant c;
 	c.name = "Sparky";
-	c.autoLevel(6, 0, 2, 4, 0);
+	c.shooting = Die(1, 6, 0);
+	c.arcane = Die(1, 6, 0);
 	c.rangedWeapon = blaster;
 	c.powers.push_back(spark);
 	c.powers.push_back(swol);
@@ -993,17 +968,17 @@ void BattleTest::TestSystem()
 
 	std::vector<ModInfo> mods;
 	std::pair<Die, int> p = system.calcRanged(0, 1, mods);
-	TEST(p.first == Die(1, 6, -6));
+	TEST(p.first == Die(1, 8, -6));
 	TEST(p.second == 4);
 	TEST(mods.size() == 2);
 	TEST(mods[0].type == ModType::kRange);
-	TEST(mods[1].type == ModType::kNaturalCover);
+	TEST(mods[1].type == ModType::kCover);
 	mods.clear();
 
 	system.place(0, 2);
 	p = system.calcMelee(0, 1, mods);
 	TEST(p.first == Die(1, 6, 0));
-	TEST(p.second == 6);
+	TEST(p.second == 5);
 	TEST(mods.size() == 0);
 
 	system.place(0, 0);
@@ -1014,9 +989,8 @@ void BattleTest::TestSystem()
 	const AttackAction& aa = std::get<AttackAction>(action.data);
 	TEST(aa.attacker == 0);
 	TEST(aa.defender == 1);
-	TEST(aa.attackRoll.die == Die(1, 6, -6));
+	TEST(aa.attackRoll.die == Die(1, 8, -6));
 	TEST(aa.mods.size() == 2);
-	TEST(aa.damageMods.size() == 0);
 	TEST(aa.success == false);
 
 }
