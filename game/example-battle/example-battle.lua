@@ -165,7 +165,9 @@ Zone {
                 },
                 Choices {
                     { text = "Small Skeleton Battle", next = "SMALL_SKELETON_BATTLE"},
-                    { text = "Skeleton Battle", next = "SKELETON_BATTLE"}
+                    { text = "Skeleton Battle", next = "SKELETON_BATTLE"},
+                    { text = "Small Space Battle", next = "SMALL_SPACE_BATTLE"},
+                    { text = "Space Battle", next = "SPACE_BATTLE"}
                 },
                 Text {
                     -- You can only see this text if you win. (Otherwise the game was over.)
@@ -303,5 +305,71 @@ Script {
             bias = -1,
             items = { "SHORTSWORD", "BOW"},
         },
+    },
+}
+
+Script {
+    entityID = "SPACE_BATTLE",
+    Battle {
+        name = "Space Battle",
+
+        -- The regions of the battlefield - a board in 1D
+        regions = {
+            { "Landing zone", 0, "light"},   -- name, distance, cover. Player starts here.
+            { "Catwalk", 15, "none"},
+            { "Crates", 30, "medium"},
+        },
+        Combatant {
+            name = "Brute",
+            count = 2,                      -- number of this type of combatant
+            fighting = 6,
+            shooting = 0,
+            arcane = 0,
+            bias = -1,                      -- bias makes a "little better" (+1) or "little worse" (-1)
+            items = { "PLASMA_SWORD"},
+        },
+        Combatant {
+            name = "Guard",
+            fighting = 4,
+            shooting = 6,
+            arcane = 0,
+            items = { "RECON_ARMOR", "PULSE_RIFLE"},
+        },
+        Combatant {
+            name = "Psi-op",
+            arcane = 6,
+            powers = { "FIRE_BOLT", "HEAL"},
+            items = { "PLASMA_SWORD"}
+        }
+    },
+}
+
+Script {
+    entityID = "SMALL_SPACE_BATTLE",
+    Battle {
+        entityID = "Small Space Battle",
+        name = "Space Battle",
+
+        -- The regions of the battlefield - a board in 1D
+        regions = {
+            { "Landing zone", 0, "light"},   -- name, distance, cover. Player starts here.
+            { "Catwalk", 15, "none"},
+            { "Crates", 30, "medium"},
+        },
+        Combatant {
+            name = "Brute",
+            count = 1,                      -- number of this type of combatant
+            fighting = 6,
+            shooting = 0,
+            arcane = 0,
+            bias = -1,                      -- bias makes a "little better" (+1) or "little worse" (-1)
+            items = { "PLASMA_SWORD"},
+        },
+        Combatant {
+            name = "Psi-op",
+            arcane = 6,
+            powers = { "FIRE_BOLT", "HEAL"},
+            items = { "PLASMA_SWORD"}
+        }
     },
 }

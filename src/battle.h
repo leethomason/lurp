@@ -190,6 +190,7 @@ struct SWCombatant {
 	int index = 0;
 	int team = 0;		// 0 player, 1 monster
 	int region = -1;
+	int bias = 0;
 
 	bool wild = false;
 
@@ -199,11 +200,11 @@ struct SWCombatant {
 
 	// There are derived (although they certainly are not in SWADE)
 	// Desperately need to simplify the combat system.
-	int agility() const { return std::max(fighting.d, shooting.d); }
-	int smarts() const { return arcane.d; }
-	int spirit() const { return (fighting.d + shooting.d + arcane.d + 2) / 3; }
-	int strength() const { return (fighting.d + shooting.d + 1) / 2; }
-	int vigor() const { return (fighting.d + shooting.d + arcane.d + 2) / 3; }
+	int agility() const { return std::max(fighting.d, shooting.d) + bias; }
+	int smarts() const { return arcane.d + bias; }
+	int spirit() const { return (fighting.d + shooting.d + arcane.d + 2) / 3 + bias; }
+	int strength() const { return (fighting.d + shooting.d + 1) / 2 + bias; }
+	int vigor() const { return (fighting.d + shooting.d + arcane.d + 2) / 3 + bias; }
 
 	MeleeWeapon meleeWeapon;
 	RangedWeapon rangedWeapon;

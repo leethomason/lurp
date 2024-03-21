@@ -391,6 +391,7 @@ SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& a
 	r.link = c.entityID;
 	r.name = c.name;
 	r.wild = c.wild;
+	r.bias = c.bias;
 
 	r.fighting = convertFromSkill(c.fighting);
 	r.shooting = convertFromSkill(c.shooting);
@@ -506,6 +507,8 @@ BattleSystem::ActionResult BattleSystem::checkPower(int combatant, int target, i
 	if (src.team == dst.team && power->forEnemies())
 		return ActionResult::kInvalid;
 	if (power->type == ModType::kHeal && dst.wounds == 0)
+		return ActionResult::kInvalid;
+	if (dst.dead() || src.dead())
 		return ActionResult::kInvalid;
 	return ActionResult::kSuccess;
 }

@@ -8,6 +8,7 @@
   * Script
 * Deployment
 * Auto-save before battle
+* Test: area of effect spells
 * Examples:
   * simplest zone
   * simplest script
