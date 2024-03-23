@@ -15,7 +15,11 @@ struct ScriptEnv;
 // 1. const var on the Entity
 // 2. CoreData
 // 3. Lua
-
+//
+// This is the definitive way to access variables in the game.
+// Still digging out some old code paths - everything should go
+// through the VarBinder.
+//
 class VarBinder
 {
 public:

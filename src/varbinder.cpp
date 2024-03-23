@@ -91,7 +91,6 @@ void VarBinder::corePath(const std::string& in, EntityID& entityID, std::string&
 
 Variant VarBinder::get(const std::string& in) const
 {
-
 	std::string path = evalPath(_env, in);
 	EntityID entity;
 	std::string var;

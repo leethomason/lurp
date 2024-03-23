@@ -5,14 +5,14 @@
 * Delete: Simple: minimal but complete
 * Docs
   * Readme
-  * Script
+  * Script docs (done)
 * Deployment
 * Auto-save before battle
 * Test: area of effect spells
 * Examples:
-  * simplest zone
+  * simplest zone (done)
   * simplest script
-  * simplest battle
+  * simplest battle (done)
 
 ## Ideas / Icebox
 

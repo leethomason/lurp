@@ -25,8 +25,6 @@ public:
 
 	bool callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const;
 
-	//void save(std::ostream& stream) const;
-
 	// fixme: hacky - for the driver to get access
 	ScriptBridge& bridge() const { return _bridge; }
 
@@ -35,7 +33,6 @@ public:
 	void popScriptContext();
 	int contextDepth() const { return _scriptContextCount; }
 
-	//VarBinder varBinder() const { return VarBinder(_bridge, _coreData, _scriptEnv); }
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:

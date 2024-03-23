@@ -40,7 +40,7 @@ version looks like:
 Entity("myContainer").locked = false -- this will unlock the door
 ```
 
-Because the `Entity()` function returns a "core table" that is mutable and tied into the game state.
+Because the `Entity()` function returns a `CoreTable` that is mutable and tied into the game state.
 
 Which brings up the question: what is an Entity?
 
@@ -321,18 +321,6 @@ Containers hold stuff the player can interact with. Chests, barrels, etc.
 * key - itemID to unlock
 * items - table of items initially present in the container
 
-### Container
-
-Containers hold stuff the player can interact with.
-
-* entityID
-* name - "iron chest" for example
-* `eval()` - is the container visible?
-* locked - initial locked state
-* key: itemID to unlock
-* items[]: list of itemIDs or {itemID, count} in *initial* state
-* eval()
-
 ### Interaction
 
 An Interaction is something on the map you can talk to, investigate, look at, or otherwise interact with.
@@ -432,13 +420,32 @@ Text {
 }
 ```
 
+Text supports a terse text that is sometimes useful. This doesn't do anything special, and does
+less than `eval()`, but it's sometimes a nice shortcut.
+
+```Lua
+    Text {
+        { test = "{player.isDruid}", "You see the rare bloom Evensky everywhere." },
+        { test = "{~player.isDruid}", "You see pretty flowers." }
+    }
+```
+
+If `isDruid` is true or "truthy" on the player object, then the first line will be shown. If it is
+false, nil, or "falsy", then the second line will be shown.
+
 ### Choices
 
-* text
-* next: EntityID, Script, or CallScript
-  * 'done': End the choices. Move to the next event in the script.
+Options presented to the player, that can trigger other events. Also dialog trees.
+
+Note: Dialog trees should be a special case of Choices. A future version of LuRP will have a
+more specialized dialog tree.
+
+* text - brief text describing the choice
+* next - the Entityt to call when the choice is made. Scripts, Text, etc. 
+  There are also special values:
+  * 'done' - End the choices. Move to the next event in the script.
     Default action.
-  * 'repeat': repeats the choices.
+  * 'repeat' - repeats the choices. Common in dialog.
   * 'rewind': move to the beginning of the script, replay the events.
   * 'pop': end this script. Return to the caller.
 * eval()
@@ -446,26 +453,22 @@ Text {
 
 ### Battle
 
-* entityID
-* enemy: Actor
+Battles instert fights, conflicts, and action into your game. The Battle objects
+is based on the Savage Worlds RPG system (SWADE). It is an excerpt of the rules,
+but gear tables should work straight out of the rules, and the basic combat is
+implemented as well.
+
+See "example-battle" for a simple example. Battles aren't complex, but they take
+setup beyond a single Entity.
 
 ### CallScript
 
+Calls another script. Useful to re-use script, set up variable and code, test
+before calling, and similar.
+
 * entityID
-* scriptID: the script to call
-* npc: the npc used by the script
-* params: lua object copied to the script context
+* scriptID - the script to call
+* npc - the npc used by the script (optional)
 * code()
 * eval()
-
-## Variable Resolution
-
-Take 3, maybe?
-Globals in script scope:
-
-* script
-* player
-* npc
-* zone
-* room
 
