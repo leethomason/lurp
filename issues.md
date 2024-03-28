@@ -6,7 +6,6 @@
 * Docs
   * Readme
   * Script docs (done)
-* Deployment
 * Auto-save before battle
 * Test: area of effect spells
 * Examples:
@@ -21,6 +20,7 @@
 
 ## Done
 
+* Packaging for release
 * npc is broken everywhere
 * read from Entities
 * testing
