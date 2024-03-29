@@ -12,6 +12,7 @@
   * simplest zone (done)
   * simplest script
   * simplest battle (done)
+* Ionic 2-column bug
 
 ## Ideas / Icebox
 
