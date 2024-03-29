@@ -31,6 +31,7 @@
 #include <vector>
 #include <algorithm>
 #include <array>
+#include <filesystem>
 
 using namespace lurp;
 
@@ -344,6 +345,31 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	}
 }
 
+std::string SelectGame(const std::vector<std::filesystem::path>& paths)
+{
+	ionic::TableOptions options;
+	options.outerBorder = false;
+	options.innerHDivider = false;
+	options.textColor = configChoiceColor;
+	options.tableColor = configChoiceColor;
+	ionic::Table table(options);
+
+	table.addRow({ "0", "Exit"});
+	int i = 1;
+	for(const auto& path : paths) {
+		table.addRow({ std::to_string(i), path.stem().string() });
+		i++;
+	}
+	table.print();
+	fmt::print("> ");
+
+	Value v = Value::ParseValue(ReadString());
+	int option = v.intVal - 1;
+	if (option >= 0 && option < paths.size())
+		return paths[option].string();
+	return "";
+}
+
 static void RunConsoleTests()
 {
 	RUN_TEST(Value::Test());
@@ -453,7 +479,7 @@ int main(int argc, const char* argv[])
 	_CrtMemCheckpoint(&s1);
 #endif
 	{
-
+		std::string gameFile = scriptFile; // prevents a false positive in the leak check.
 		{
 			RunTests();
 			RunConsoleTests();
@@ -470,10 +496,16 @@ int main(int argc, const char* argv[])
 		}
 		Globals::debugSave = debugSave;
 
+		if (gameFile.empty()) {
+			auto gameList = ScanGameFiles();
+			if (!gameList.empty())
+				gameFile = SelectGame(gameList);
+		}
+
 		// Run game.
-		if (!scriptFile.empty()) {
+		if (!gameFile.empty()) {
 			ScriptBridge bridge;
-			ConstScriptAssets csassets = bridge.readCSA(scriptFile);
+			ConstScriptAssets csassets = bridge.readCSA(gameFile);
 			ScriptAssets assets(csassets);
 
 			ConsoleZoneDriver(assets, bridge, startingZone, dir, seed);
@@ -484,12 +516,19 @@ int main(int argc, const char* argv[])
 	int knownNumLeak = 0;
 	int knownLeakSize = 0;
 
-	printf("Memory report:\n");
 	_CrtMemCheckpoint(&s2);
 	_CrtMemDifference(&s3, &s1, &s2);
 	_CrtMemDumpStatistics(&s3);
-	printf("Leak count=%lld size=%lld\n", s3.lCounts[1], s3.lSizes[1]);
-	printf("High water=%lldk nAlloc=%lld\n", s3.lHighWaterCount / 1024, s3.lTotalCount);
+
+	auto leakCount = s3.lCounts[1];
+	auto leakSize = s3.lSizes[1];
+	auto totalAllocaton = s3.lTotalCount;
+	auto highWater = s3.lHighWaterCount / 1024;
+	plog::Severity severity = leakCount ? plog::warning : plog::info;
+
+	PLOG(severity) << "Memory report:";
+	PLOG(severity) << "Leak count = " << leakCount << " size = " << leakSize;
+	PLOG(severity) << "High water = " << highWater << " total allocated = " << totalAllocaton;
 	assert(s3.lCounts[1] <= knownNumLeak);
 	assert(s3.lSizes[1] <= knownLeakSize);
 #endif

@@ -64,3 +64,11 @@ set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run suc
 
 add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
 target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
+
+install(TARGETS lurp
+        EXPORT lurp
+        #LIBRARY DESTINATION lib
+        #ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        #INCLUDES DESTINATION include
+        )

@@ -30,7 +30,7 @@ std::ofstream OpenSaveStream(const std::string& path)
     std::ofstream stream;
     stream.open(path, std::ios::out);
     assert(stream.is_open());
-	return stream;
+    return stream;
 }
 
 std::ifstream OpenLoadStream(const std::string& path)
@@ -46,7 +46,7 @@ bool CheckPath(const std::string& path, std::string& cwd)
     std::ofstream stream;
     stream.open(path, std::ios::in);
     if (!stream.is_open()) {
-		PLOG(plog::error) << fmt::format("Could not open file '{}'", path);
+        PLOG(plog::error) << fmt::format("Could not open file '{}'", path);
         cwd = std::filesystem::current_path().string();
         PLOG(plog::error) << fmt::format("Current working directory: '{}'", cwd);
 
@@ -56,7 +56,7 @@ bool CheckPath(const std::string& path, std::string& cwd)
         }
         exit(-1);
         return false;
-	}
+    }
     return true;
 }
 
@@ -96,8 +96,8 @@ std::string SavePath(const std::string& dir, const std::string& stem, bool creat
 
     std::filesystem::path p(savePath);
     if (createDirs) {
-		std::filesystem::create_directories(p.parent_path());
-	}
+        std::filesystem::create_directories(p.parent_path());
+    }
     return savePath;
 }
 
@@ -107,6 +107,25 @@ std::string LogPath()
     logPath += "\\";
     logPath += "lurp.txt";
     return logPath;
+}
+
+std::vector<std::filesystem::path> ScanGameFiles()
+{
+    std::vector<std::filesystem::path> gameFiles;
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator("game")) {
+            if (entry.is_directory()) {
+                std::string dirName = entry.path().filename().string();
+                std::filesystem::path gamePath = entry / (dirName + ".lua");
+                if (std::filesystem::exists(gamePath))
+                    gameFiles.push_back(gamePath);
+            }
+        }
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        PLOG(plog::error) << fmt::format("Error scanning game files: {}", e.what());
+    }
+    return gameFiles;
 }
 
 #elif __APPLE__
