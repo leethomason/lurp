@@ -33,7 +33,6 @@ A command line (console) driver is provided. A 2D visual driver is in the works.
 
 Unzip the release somewhere convenient. (You can just unzip it into the "Downloads" direcory.) 
 
-
 ## A Simple Example
 
 ## Console Driver
@@ -41,5 +40,4 @@ Unzip the release somewhere convenient. (You can just unzip it into the "Downloa
 ## 2D Driver
 
 ## Getting Started Writing a Game
-
 
