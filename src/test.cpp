@@ -803,6 +803,7 @@ public:
 	static void TestSystem();
 	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
 	static void TestExample();
+	static void TestRegionSpells();
 };
 
 void BattleTest::Read()
@@ -897,6 +898,47 @@ void BattleTest::Read()
 		TEST(c.arcane.d == 4);
 		TEST(c.powers.size() == 1);
 	}
+}
+
+void BattleTest::TestRegionSpells()
+{
+	using namespace lurp::swbattle;
+
+	Random random(100);
+	BattleSystem system(random);
+
+	system.setBattlefield("Landing Pad");
+	system.addRegion({ "Mooring", 0, Cover::kLightCover });
+	system.addRegion({ "Catwalk", 10, Cover::kNoCover });
+	system.addRegion({ "Dock", 20, Cover::kMediumCover });
+
+	SWPower arcaneStorm = { ModType::kBolt, "ArcaneStorm", 1, 4, 1, true };
+
+	SWCombatant a;
+	a.name = "StarBlaster";
+	a.wild = true;
+	a.arcane = Die(1, 12, 0);
+	a.powers.push_back(arcaneStorm);
+
+	SWCombatant b;
+	b.name = "Brute B";
+	b.fighting = Die(1, 6, 0);
+
+	SWCombatant c;
+	b.name = "Brute C";
+	b.fighting = Die(1, 6, 0);
+
+	system.addCombatant(a);
+	system.addCombatant(b);
+	system.addCombatant(c);
+
+	system.start(false);
+
+	TEST(system.queue.empty());
+	TEST(system.turn() == 0);
+	TEST(system.checkPower(0, 1, 0) == BattleSystem::ActionResult::kSuccess);
+	system.power(0, 1, 0);
+	TEST(system.queue.size() == 2);
 }
 
 void BattleTest::TestSystem()
@@ -1100,6 +1142,7 @@ int RunTests()
 	RUN_TEST(BattleTest::TestSystem());
 	RUN_TEST(BattleTest::TestScript(csassets, bridge));
 	RUN_TEST(BattleTest::TestExample());
+	RUN_TEST(BattleTest::TestRegionSpells());
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

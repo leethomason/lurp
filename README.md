@@ -47,7 +47,6 @@ lurp <path/to/lua/file> <starting-zone>
 Will run the game. You need to be in directory of the `lurp.exe` file, but the file you
 run can be anywhere. The `starting-zone` is optional.
 
-
 ## A Simple Example
 
 ## Console Driver
@@ -55,5 +54,4 @@ run can be anywhere. The `starting-zone` is optional.
 ## 2D Driver
 
 ## Getting Started Writing a Game
-
 

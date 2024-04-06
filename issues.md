@@ -6,12 +6,14 @@
 * Docs
   * Readme
   * Script docs (done)
-* Auto-save before battle
-* Test: area of effect spells
 * Examples:
   * simplest zone (done)
   * simplest script
   * simplest battle (done)
+
+## Open / Next
+
+* Auto-save before battle
 
 ## Ideas / Icebox
 
@@ -20,6 +22,7 @@
 
 ## Done
 
+* Test: area of effect spells
 * Packaging for release
 * npc is broken everywhere
 * read from Entities

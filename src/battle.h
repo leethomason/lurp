@@ -54,8 +54,8 @@ struct ModInfo {
 
 struct SWPower {
 	SWPower() {}
-	SWPower(ModType type, const std::string& name, int cost, int rangeMult, int effectMult)
-		: type(type), name(name), cost(cost), rangeMult(rangeMult), effectMult(effectMult)
+	SWPower(ModType type, const std::string& name, int cost, int rangeMult, int effectMult, bool region = false)
+		: type(type), name(name), cost(cost), rangeMult(rangeMult), effectMult(effectMult), region(region)
 	{
 		assert(!name.empty());
 	}
