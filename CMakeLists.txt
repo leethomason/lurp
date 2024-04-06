@@ -57,7 +57,7 @@ set_target_properties(lurp PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 
 add_test(
   NAME lurp
-  COMMAND lurp --log info
+  COMMAND lurp --log info --noScan
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")

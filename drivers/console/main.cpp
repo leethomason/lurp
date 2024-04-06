@@ -444,10 +444,12 @@ int main(int argc, const char* argv[])
 		fmt::print("  -s, --debugSave   Save everything with warnings.\n");
 		fmt::print("  --seed            Random number seed\n");
 		fmt::print("  --outputTests     Run output tests\n");
+		fmt::print("  --noScan          Do not scan for games or display menu\n");
 	}
 
 	bool debugSave = cmdl[{ "-s", "--debugSave" }];
 	bool outputTests = cmdl[{ "--outputTests" }];
+	bool doScan = !cmdl[{ "--noScan" }];
 
 	uint32_t seed = Random::getTime();
 	cmdl({ "--seed" }, seed) >> seed;
@@ -496,7 +498,7 @@ int main(int argc, const char* argv[])
 		}
 		Globals::debugSave = debugSave;
 
-		if (gameFile.empty()) {
+		if (doScan && gameFile.empty()) {
 			auto gameList = ScanGameFiles();
 			if (!gameList.empty())
 				gameFile = SelectGame(gameList);
