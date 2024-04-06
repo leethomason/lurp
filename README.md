@@ -31,7 +31,21 @@ A command line (console) driver is provided. A 2D visual driver is in the works.
 
 ## Give it a Try
 
-Unzip the release somewhere convenient. (You can just unzip it into the "Downloads" direcory.) 
+### Windows
+
+Unzip the release somewhere convenient. (You can just unzip it into the "Downloads" direcory.)
+
+You can double-click on `lurp.exe` from the Windows Explorer, and it will run the console
+and present you with a list of (simple) games to try.
+
+From the command line,
+
+```
+lurp <path/to/lua/file> <starting-zone>
+```
+
+Will run the game. You need to be in directory of the `lurp.exe` file, but the file you
+run can be anywhere. The `starting-zone` is optional.
 
 
 ## A Simple Example
