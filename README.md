@@ -8,8 +8,8 @@ LuRP is a story engine. It provides more services than a scripting engine, but l
 engine. It strives to "play well with others" so you can integrate LuRP into your engine or
 framework of choice.
 
-The Lua Role Playing game engine is a framework for creating role playing, adventure, and visual 
-novel games. 
+The Lua Role Playing game engine is a framework for creating role playing, adventure, and visual
+novel games.
 
 The idea of LuRP is to write the parts of a game - characters, items, rooms, story,
 choices, etc. - seperate from how the game is drawn. An entire LuRP game could be written and
@@ -40,7 +40,7 @@ and present you with a list of (simple) games to try.
 
 From the command line,
 
-```
+```shell
 lurp <path/to/lua/file> <starting-zone>
 ```
 

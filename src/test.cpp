@@ -938,7 +938,7 @@ void BattleTest::TestRegionSpells()
 	TEST(system.turn() == 0);
 	TEST(system.checkPower(0, 1, 0) == BattleSystem::ActionResult::kSuccess);
 	system.power(0, 1, 0);
-	TEST(system.queue.size() == 2);
+	TEST(system.queue.size() == 2);	// possible this will fail if the PRNG changes
 }
 
 void BattleTest::TestSystem()

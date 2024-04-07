@@ -7,6 +7,7 @@
 
 std::string ReadString()
 {
+	fflush(stdout);
 	std::string r;
 
 	while (true) {

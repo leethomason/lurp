@@ -2,14 +2,11 @@
 
 ## Open Issues
 
-* Delete: Simple: minimal but complete
 * Docs
   * Readme
   * Script docs (done)
-* Examples:
-  * simplest zone (done)
-  * simplest script
-  * simplest battle (done)
+* OSX deployment
+* Release!
 
 ## Open / Next
 
@@ -22,6 +19,10 @@
 
 ## Done
 
+* Delete: Simple: minimal but complete
+* simplest zone (done)
+* simplest script (done)
+* simplest battle (done)
 * Test: area of effect spells
 * Packaging for release
 * npc is broken everywhere
