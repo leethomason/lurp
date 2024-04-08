@@ -1,8 +1,14 @@
-# Lua Interface
+# Game Declaration and Scripting Reference
 
-LuRP is a game engine written in C++ (the Core) that uses Lua to describe the game. All the parts of the game
-you write will be in Lua, although the use of Lua is very  This document is the reference and explanation 
-for declaring the game and how the Lua interface works.
+LuRP is a game engine written in C++ (the Core) that uses Lua to describe the game. Although Lua
+is used as the programming language, it is used in a very declarative way. You can write a story
+without any scripting. Even at intermediate complexity, the scripting is simple and very
+"cut and paste".
+
+This file is a reference the objects you can declare and what they do.
+
+If you haven't already, you should start with the general README.md file. And take a look at
+`example-zone`, `example-script`, or `example-battle` before diving into this reference.
 
 ## General
 
@@ -57,7 +63,7 @@ Here is a "fully specified" Entity:
 ```lua
 Container {
   entityID = "CHEST_01",
-  name = "Wooded Chest"
+  name = "Wooden Chest"
 }
 ```
 

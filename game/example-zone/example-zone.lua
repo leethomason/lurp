@@ -19,7 +19,7 @@ Item {
 }
 
 Zone {
-    entityID = "EXZONE",
+    entityID = "ZONE",
     name = "Example Building",
 
     Room {

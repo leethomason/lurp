@@ -2,14 +2,16 @@
 
 ![Build](https://github.com/leethomason/lurp/actions/workflows/c-cpp.yml/badge.svg)
 
-A story engine for Windows. Mac and Linux support coming soon.
+A story engine for Windows. (Mac and Linux support is planned.)
 
 LuRP is a story engine. It provides more services than a scripting engine, but less than a game
 engine. It strives to "play well with others" so you can integrate LuRP into your engine or
 framework of choice.
 
-The Lua Role Playing game engine is a framework for creating role playing, adventure, and visual
-novel games.
+So much of what an adventure or role playing game is - whether it is a modern RPG or a
+classic Infocom text game - is a story telling engine. There are actors, dialog, objects,
+locations, and events. LuRP extracts those elements and is a framework for creating role
+playing, adventure, and visual novel games.
 
 The idea of LuRP is to write the parts of a game - characters, items, rooms, story,
 choices, etc. - seperate from how the game is drawn. An entire LuRP game could be written and
@@ -29,7 +31,38 @@ one.
 
 A command line (console) driver is provided. A 2D visual driver is in the works.
 
-## Give it a Try
+## Status
+
+LuRP is in development. It is quite usable for writing games and playing them on the console.
+A graphical 2D driver is very important. Documentation gets fixed as needed, but there are
+certainly still errors. The API will evolve as the ideas evolve. How much LuRP develops
+is realistically dependent on how much interest there is in it, of course. Features and PRs
+drive priorities.
+
+## Feedback
+
+Is most welcome. Please open an issue for any problems, questions, or suggestions. If needed
+and desired, I may open a "discussion" or "wiki" pages.
+
+### Games (Chullu, example-xyz)
+
+Happy to take improvements to the writing. The `example` games should remain small and focused,
+so I don't want too many words there. `chullu` would be fun to improve and expand into a proper
+game. (The new location should be in separate files, so there's some work to do there.)
+
+All content should remain appropriate for general audiences, of course.
+
+### Engine
+
+Pull requests for the C++ / Lua code appreciated as PRs. Changes to the API surface will be
+required but require some thought and balancing concerns. (Usability, limitations of the
+C++/Lua interface, etc.)
+
+### Console / 2D Driver
+
+Always looking to make that look better and be more usable.
+
+## Installation: Give it a Try
 
 ### Windows
 
@@ -38,20 +71,20 @@ Unzip the release somewhere convenient. (You can just unzip it into the "Downloa
 You can double-click on `lurp.exe` from the Windows Explorer, and it will run the console
 and present you with a list of (simple) games to try.
 
-From the command line,
+If you are running LuRP from the command line, you can just run `lurp.exe` from the installation
+directory. If you want to specify a game:
 
 ```shell
 lurp <path/to/lua/file> <starting-zone>
 ```
 
-Will run the game. You need to be in directory of the `lurp.exe` file, but the file you
+You need to be in directory of the `lurp.exe` file, but the file you
 run can be anywhere. The `starting-zone` is optional.
 
-## A Simple Example
+## Writing a Game
 
-## Console Driver
+### Basic Concepts
 
-## 2D Driver
+### Battle System
 
-## Getting Started Writing a Game
-
+## Future Work: 2D Driver
