@@ -11,6 +11,7 @@
 ## Open / Next
 
 * Auto-save before battle
+* Actors move between rooms
 
 ## Ideas / Icebox
 

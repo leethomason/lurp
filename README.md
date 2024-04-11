@@ -83,8 +83,59 @@ run can be anywhere. The `starting-zone` is optional.
 
 ## Writing a Game
 
+The example games are a good place to start to see how to write a game. You should
+start with `example-zone` and then `example-script`. `example-battle` can wait until
+you wish to add combat.
+
 ### Basic Concepts
+
+The world of your game is made up of *Zones*. Each Zone has *Rooms* that are connected
+to each other by *Edges*. The Zone, Rooms, and Edges create the basic map of your game.
+
+There are *Actors* in the game. Actors can be in a Room. There are *Items* in the world,
+that can be in containers or held by Actors. Items may be weapons, keys, gold, or almost
+anything.
+
+*Interaction*s are things or people or events that you can talk to or interact with
+through *Script*s. Scripts are the heart of the game, and allow for *Text*, *Choices*,
+and branching logic.
+
+Zones, Scripts, Interactions, Items, and many others are Entities.
+`script.md` is a reference to the various game entities.
 
 ### Battle System
 
-## Future Work: 2D Driver
+The battle system is based on the Savage Worlds Adventure Edition (SWADE) rules.
+It is a subset - the full rule system goes well beyond the scope of combat -
+but does provide ready-to-go combat system so you don't have to roll your own.
+
+There's lots to love about SWADE, but where it matches well for LuRP is that it
+is generic rules that don't assume a setting. Modern, Future, and Ancient settings
+work just as well as Medeival Fantasy. You can take the values from the "Gear" section
+straight into LuRP items, which gives a good reference for consistent definitions.
+
+The Savage World Adventure Edition Core Rules cover everything. LuRP is not affiliated
+with SWADE or Pinnacle in any way. (Except being a fan of the rule set.)
+
+## Future Work
+
+### Usability
+
+Writing some games and using that to inform how to improve, streamline, and make the API
+more powerful will help. The simple games are too small to really stress the API usability.
+
+Will be investigating this area, and very open to feedback on how to improve!
+
+### 2D Driver
+
+Having a 2D driver (a la Ren'Py for example) is the other short term missing component.
+Games need visuals! Even simple ones. The other main area of improvement going forward.
+
+### Linux and OSX
+
+The code runs on these platfors already, but needs to be packaged up and the deployment
+sorted out. (Where are save games placed? How is the binary bundled for release?)
+
+## Thanks
+
+Thank you for checking out LuRP - I hope you find it useful!

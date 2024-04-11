@@ -477,4 +477,3 @@ before calling, and similar.
 * npc - the npc used by the script (optional)
 * code()
 * eval()
-
