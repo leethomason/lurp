@@ -1059,7 +1059,7 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		TEST(battle.checkAttack(0, 1) == BattleSystem::ActionResult::kSuccess);
 		TEST(battle.attack(0, 1) == BattleSystem::ActionResult::kSuccess);
 
-		TEST(battle.queue.size() == 1);	// failure (if random/algo doesn't change)
+		TEST(battle.queue.size() == 1);	// could fail if the PRNG changes
 		battle.queue.pop();
 
 		battle.advance();

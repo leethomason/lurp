@@ -2,8 +2,9 @@
 
 ## Open Issues
 
+* Test example-xyz (to some simple level)
 * Docs
-  * Readme
+  * Readme (done)
   * Script docs (done)
 * OSX deployment
 * Release!
