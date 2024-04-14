@@ -464,7 +464,9 @@ std::string ScriptBridge::getStrField(const std::string& key, const std::optiona
 {
 	Variant v = getField(L, key, 0);
 	if (v.type == LUA_TNIL && def) return def.value();
-	assert(v.type == LUA_TSTRING);
+	if (v.type != LUA_TSTRING) {
+		throw std::runtime_error(fmt::format("Expected string for key '{}'", key));
+	}
 	return v.str;
 }
 
@@ -1068,7 +1070,7 @@ ScriptBridge::FuncInfo ScriptBridge::getFuncInfo(int funcRef)
 
 void ScriptBridge::loadLUA(const std::string& inputFilePath)
 {
-	fmt::print("Loading: {}\n", inputFilePath);
+	PLOG(plog::info) << fmt::format("Loading: '{}'", inputFilePath);
 
 	LuaStackCheck check(L);
 	doFile("script/_map.lua");

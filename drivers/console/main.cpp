@@ -475,7 +475,7 @@ int main(int argc, const char* argv[])
 #endif
 	{
 		std::string gameFile = scriptFile; // prevents a false positive in the leak check.
-		{
+		if (true) {
 			RunTests();
 			RunConsoleTests();
 			rc = TestReturnCode();

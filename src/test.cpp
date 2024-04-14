@@ -1106,6 +1106,10 @@ void BattleTest::TestExample()
 	TEST(driver.isGameOver() == true);
 }
 
+void TestExampleZone()
+{
+
+}
 
 int RunTests()
 {

@@ -309,7 +309,7 @@ local function CoreTable(e)
             if type(v) == "table" or type(v) == "function" then
                 ePrime[k] = v
             end
-            -- Mutable Usper Prop
+            -- Mutable User Prop
             if type(v) == "number" or type(v) == "string" or type(v) == "boolean" then
                 if not ePrime[k] then
                     CCoreSet(e.entityID, k, v, true)
@@ -332,7 +332,7 @@ local function CoreTable(e)
             -- print("__index", t.entityID, key)
             -- the core can have a value set to nil, and that
             -- overrides the default. this necessitates returning
-            -- 'okay' if the core has the value seperate from the value
+            -- 'okay' if the core has the value separate from the value
             local okay, v = CCoreGet(t.entityID, key)
             if okay then return v end
             -- if not in the core, return the immutable source value

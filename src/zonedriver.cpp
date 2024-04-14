@@ -55,6 +55,7 @@ void ZoneDriver::setZone(const EntityID& cz, EntityID room)
 	if (room.empty()) {
 		const Zone& z = _assets.getZone(zone);
 		const Room* r = z.firstRoom(_assets);
+		if (!r) FatalError(fmt::format("Zone '{}' has no Room", z.name));
 		assert(r);
 		room = r->entityID;
 	}
