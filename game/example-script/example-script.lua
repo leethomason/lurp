@@ -51,7 +51,7 @@ Script {
         { s = " ", test = "{player.dress}", "...in the mirror and double-check the semi-auto inside your purse." },
         { s = " ", "The doors open and you walk out onto the Casino floor. Walking across the noise "..
           "and lights of the Casino you approach the roulette table. The same table - not "..
-          "coinicidentally - where Victor Xero is playing."},
+          "coincidentally - where Victor Xero is playing."},
         { s = "{player.name}", "Waitress, I'll have a..."}
     },
     -- this writes to the 'script' object, which only lives as long as the Script does
@@ -69,6 +69,6 @@ Script {
     Text {
         { s = " ", "The wheel spins as you await your drink. You watch Victor as the ball bounces around the wheel. "..
            "What is Victor's real game tonight?" },
-        { s = " ", "The waitres places your {script.drink} on the table."},
+        { s = " ", "The waitress places your {script.drink} on the table."},
     }
 }

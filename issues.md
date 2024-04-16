@@ -2,8 +2,9 @@
 
 ## Open Issues
 
+* Test example-xyz (to some simple level)
 * Docs
-  * Readme
+  * Readme (done)
   * Script docs (done)
 * Release!
 
@@ -12,6 +13,7 @@
 * Auto-save before battle
 * OSX 
 * Linux
+* Actors move between rooms
 
 ## Ideas / Icebox
 

@@ -102,7 +102,9 @@ void ScriptAssets::scan()
 
 #define TYPE_BODY(vecName, itemEnum) \
 	ScriptRef ref = getScriptRef(entityID); \
-	assert(ref.type == ScriptType::itemEnum); \
+	if (ref.type != ScriptType::itemEnum) { \
+		FatalError(fmt::format("entity '{}' is not a {}", entityID, #itemEnum)); \
+	} \
 	return _csa.vecName[ref.index];
 
 const Script& ScriptAssets::getScript(const EntityID& entityID) const { TYPE_BODY(scripts, kScript); }

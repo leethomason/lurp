@@ -38,17 +38,6 @@ using namespace lurp;
 static constexpr ionic::Color configTextColor = ionic::Color::yellow;
 static constexpr ionic::Color configChoiceColor = ionic::Color::cyan;
 
-static void PrintTextLine(const std::string& text, ionic::Color color)
-{
-	ionic::TableOptions options;
-	options.outerBorder = false;
-	options.textColor = color;
-
-	ionic::Table table(options);
-	table.addRow({ ionic::Table::normalizeMD(text, 2) });
-	table.print();
-}
-
 static void PrintText(std::string speaker, const std::string& text)
 {
 	ionic::TableOptions options;
@@ -95,16 +84,16 @@ static void PrintNews(NewsQueue& queue)
 			assert(ni.item);
 			int bias = ni.delta < 0 ? -1 : 1;
 			ionic::Color color = ni.delta < 0 ? ionic::Color::red : ionic::Color::green;
-			PrintTextLine(
-				fmt::format("You {} {} {}", ni.verb(), ni.delta * bias, ni.item->name),
-				color
-			);
+			fmt::print("{}\n",
+				ionic::Table::colorize(color,
+					fmt::format("You {} {} {}", ni.verb(), ni.delta * bias, ni.item->name)));
 		}
 		else if (ni.type == NewsType::kLocked || ni.type == NewsType::kUnlocked) {
-			std::string s = fmt::format("The {} was {}",ni.noun(), ni.verb());
+			std::string s = fmt::format("The {} was {}", ni.noun(), ni.verb());
 			if (ni.item)
 				s += fmt::format(" by the {}", ni.item->name);
-			PrintTextLine(s, ionic::Color::green);
+			fmt::print("{}\n",
+				ionic::Table::colorize(ionic::Color::green, s));
 		}
 	}
 }
@@ -148,14 +137,16 @@ static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
 		std::string istr;
 		if (!locked) {
 			const Inventory& inv = driver.getInventory(*container);
+			if (inv.emtpy())
+				istr = "empty";
 			for (const auto& itemRef : inv.items()) {
 				if (!istr.empty())
 					istr += " | ";
-					istr += fmt::format("{}: {}", itemRef.pItem->name, itemRef.count);
+				istr += fmt::format("{}: {}", itemRef.pItem->name, itemRef.count);
 			}
 		}
 		std::string option = fmt::format("c{}", idx);
-		table.addRow({ option, container->name, locked ? "(locked)" : "", istr });
+		table.addRow({ option, container->name, locked ? "locked" : "unlocked", istr });
 		idx++;
 	}
 	table.print();
@@ -195,9 +186,9 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 
 	for (const DirEdge& e : edges) {
 		if (e.dir != Edge::Dir::kUnknown)
-			table.addRow({ e.dirShort, e.name, e.locked ? " (locked)" : "" });
+			table.addRow({ e.dirShort, e.name, e.locked ? "locked" : "unlocked" });
 		else
-			table.addRow({ std::to_string(idx), e.name, e.locked ? " (locked)" : "" });
+			table.addRow({ std::to_string(idx), e.name, e.locked ? "locked" : "unlocked" });
 		idx++;
 	}
 	std::cout << table << std::endl;
@@ -301,7 +292,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				
 				ZoneDriver::TransferResult tr = driver.transferAll(*c, player);
 				if (tr == ZoneDriver::TransferResult::kLocked)
-					PrintTextLine("The container is locked.", ionic::Color::red);
+					fmt::print("{}",
+						ionic::Table::colorize(ionic::Color::red, "The container is locked."));
 			}
 			else if (v.charIntInRange('i', (int)interactionVec.size())) {
 				driver.startInteraction(interactionVec[v.intVal]);
@@ -310,7 +302,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				int dirIdx = SelectEdge(v, edges);
 				if (dirIdx >= 0) {
 					if (driver.move(edges[dirIdx].dstRoom) == ZoneDriver::MoveResult::kLocked)
-						PrintTextLine("That way is locked.", ionic::Color::red);
+						fmt::print("{}",
+							ionic::Table::colorize(ionic::Color::red, "That way is locked."));
 				}
 			}
 			if (driver.mode() == ZoneDriver::Mode::kNavigation) {
@@ -341,11 +334,11 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			color = ionic::Color::red;
 		else if (driver.endGameBias() > 0)
 			color = ionic::Color::green;
-		PrintTextLine(driver.endGameMsg(), color);
+		fmt::print("{}", ionic::Table::colorize(color, driver.endGameMsg()));
 	}
 }
 
-std::string SelectGame(const std::vector<std::filesystem::path>& paths)
+static std::string SelectGame(const std::vector<std::filesystem::path>& paths)
 {
 	ionic::TableOptions options;
 	options.outerBorder = false;
@@ -482,7 +475,7 @@ int main(int argc, const char* argv[])
 #endif
 	{
 		std::string gameFile = scriptFile; // prevents a false positive in the leak check.
-		{
+		if (true) {
 			RunTests();
 			RunConsoleTests();
 			rc = TestReturnCode();

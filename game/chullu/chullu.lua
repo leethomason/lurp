@@ -21,7 +21,7 @@ Item {
 
 Actor {
     entityID = "player",
-    name = "Emmerson",
+    name = "Emerson",
     level = 1,
     items = { { "GOLD", 20 } },
 }
@@ -76,7 +76,7 @@ local meetGiselleAtLibrary = Text {
 You make your way through the doors of the old, regal Library. You find Giselle in 
 the back research rooms.
 
-"{player.name} it's goood to see you!" she says with a warm hug. She's easy on the eyes in a 
+"{player.name} it's good to see you!" she says with a warm hug. She's easy on the eyes in a 
 wearing a dress suitable for academia and at home in the library. "You had the vision as well?"
 
 "I did. Wish I hadn't. But I did. Can't shake it. It means...?"
@@ -109,9 +109,9 @@ local coffeeWithGiselle = Script {
     Text { 
         code = function() player:removeItem("SHAHIR_JOURNAL") end,
 [[
-{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table.
+{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table. 
 "Nice work {player.name}. Although I'll give "myself some credit for talking to that bore Deweyish.
-Grab youself a sip and a pastry. I want a look at this thing."
+Grab yourself a sip and a pastry. I want a look at this thing."
 
 {npc.name} starts reading through the journal while you order tea and samosas. You make notes in your 
 own journal, collecting your thoughts on the turn of events.
@@ -266,7 +266,7 @@ Zone {
     },
     Room {
         entityID = "SFO",
-        name = "SF Intenational Aeroport",
+        name = "SF International Aeroport",
         desc = "San Francisco's airport with connections all over the world.",
         Interaction {
             required = true,
