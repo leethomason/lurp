@@ -5,12 +5,13 @@
 * Docs
   * Readme
   * Script docs (done)
-* OSX deployment
 * Release!
 
 ## Open / Next
 
 * Auto-save before battle
+* OSX 
+* Linux
 
 ## Ideas / Icebox
 

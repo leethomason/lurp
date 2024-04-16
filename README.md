@@ -50,7 +50,7 @@ Happy to take improvements to the writing. The `example` games should remain sma
 so I don't want too many words there. `chullu` would be fun to improve and expand into a proper
 game. (The new location should be in separate files, so there's some work to do there.)
 
-All content should remain appropriate for general audiences, of course.
+All content should remain appropriate for general audiences.
 
 ### Engine
 
