@@ -109,7 +109,7 @@ local coffeeWithGiselle = Script {
     Text { 
         code = function() player:removeItem("SHAHIR_JOURNAL") end,
 [[
-{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table.
+{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table. 
 "Nice work {player.name}. Although I'll give "myself some credit for talking to that bore Deweyish.
 Grab yourself a sip and a pastry. I want a look at this thing."
 

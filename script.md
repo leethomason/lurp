@@ -202,7 +202,7 @@ when removing an item from somewhere to add it somewhere else, so it isn't lost.
   adjacent room.
 
   If teleport is true, then the player is moved without checking locks. The destination
-  room does not need to be adjacaent or even in the same Zone. This allows for travelling
+  room does not need to be adjacent or even in the same Zone. This allows for traveling
   to a new Zone.
 * `EndGame(reason)` - flags the driver the game is over, for the 'reason' string specified.
   The driver will then exit the game.
@@ -245,7 +245,7 @@ IF the Item is armor:
 
 ### Inventory
 
-Some entitities have an inventory. (Actors, Combatants, and Containers). The inventory is a list of items that the Entity starts with. It is a Lua table.
+Some entities have an inventory. (Actors, Combatants, and Containers). The inventory is a list of items that the Entity starts with. It is a Lua table.
 
 ```lua
     items = {
@@ -274,7 +274,7 @@ Zones (using the `MovePlayer()` API).
 The Zone is a top level group of Rooms. You should
 interpret "Zone" and "Room" to make sense for your
 game. Perhaps a Zone is a dungeon full of rooms...
-or perhaps a Zone is a contintent with countries
+or perhaps a Zone is a continent with countries
 you can visit.
 
 * entityID
@@ -297,8 +297,7 @@ An Edge allows travel between rooms.
 * entityID
 * name - "door", "window", etc.
 * dir - an optional direction ('n', 'ne', 'e', 'w' etc.) optional from room1 to room2. If not specified,
-the Rooms are still connected, but without a 
-particular direction.
+the Rooms are still connected, but without a particular direction.
 * room1 - entityID (required)
 * room2 - entityID (required)
 * locked - initial locked state
@@ -335,11 +334,11 @@ allow the player to select Interactions in the Room.
 
 * entityID
 * name
-* `eval()` - determines if the interaction is avaibable. If not, will be hidden.
+* `eval()` - determines if the interaction is available. If not, will be hidden.
 * `code()` - called when the interaction is activated
 * next - script (table or entityID) to call when the interaction is activated
 * actor - npc to use for the Interaction, if appropriate
-* required - if true this Interaction will automaticall be run when the player enters the room. If there are multiple 'required' Interactions, they will be run in the order they are defined.
+* required - if true this Interaction will automatically be run when the player enters the room. If there are multiple 'required' Interactions, they will be run in the order they are defined.
 
 ## Script Interface
 
@@ -377,12 +376,12 @@ multiple lines of text:
 
 ```lua
 Text {
-  "Hello, there", "You've travelled far."
+  "Hello, there", "You've traveled far."
 }
 -- OR --
 Text {
   { "Hello, there." },
-  { "You've travelled far." }
+  { "You've traveled far." }
 }
 ```
 
@@ -447,7 +446,7 @@ Note: Dialog trees should be a special case of Choices. A future version of LuRP
 more specialized dialog tree.
 
 * text - brief text describing the choice
-* next - the Entityt to call when the choice is made. Scripts, Text, etc. 
+* next - the Entity to call when the choice is made. Scripts, Text, etc. 
   There are also special values:
   * 'done' - End the choices. Move to the next event in the script.
     Default action.
@@ -459,7 +458,7 @@ more specialized dialog tree.
 
 ### Battle
 
-Battles instert fights, conflicts, and action into your game. The Battle objects
+Battles insert fights, conflicts, and action into your game. The Battle objects
 is based on the Savage Worlds RPG system (SWADE). It is an excerpt of the rules,
 but gear tables should work straight out of the rules, and the basic combat is
 implemented as well.

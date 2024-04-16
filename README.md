@@ -14,10 +14,10 @@ locations, and events. LuRP extracts those elements and is a framework for creat
 playing, adventure, and visual novel games.
 
 The idea of LuRP is to write the parts of a game - characters, items, rooms, story,
-choices, etc. - seperate from how the game is drawn. An entire LuRP game could be written and
+choices, etc. - separate from how the game is drawn. An entire LuRP game could be written and
 played in text basically just an old-school adventure game. But with a little
 more meta-data, the game could be played in a 2D or even 3D engine. Not all those pieces are
-in place yet. But the core of the idea - that the story part of the game is seperate from the
+in place yet. But the core of the idea - that the story part of the game is separate from the
 presentation - is in place.
 
 LuRP games are written in a very declarative style of Lua. While there is some scripting,
@@ -101,17 +101,17 @@ through *Script*s. Scripts are the heart of the game, and allow for *Text*, *Cho
 and branching logic.
 
 Zones, Scripts, Interactions, Items, and many others are Entities.
-`script.md` is a reference to the various game entities.
+[script.md](script.md) is a reference to the various game entities.
 
 ### Battle System
 
-The battle system is based on the Savage Worlds Adventure Edition (SWADE) rules.
+The battle system is based on the [Savage Worlds Adventure Edition](https://peginc.com/savage-settings/savage-worlds/) (SWADE) rules.
 It is a subset - the full rule system goes well beyond the scope of combat -
 but does provide ready-to-go combat system so you don't have to roll your own.
 
 There's lots to love about SWADE, but where it matches well for LuRP is that it
 is generic rules that don't assume a setting. Modern, Future, and Ancient settings
-work just as well as Medeival Fantasy. You can take the values from the "Gear" section
+work just as well as Medieval Fantasy. You can take the values from the "Gear" section
 straight into LuRP items, which gives a good reference for consistent definitions.
 
 The Savage World Adventure Edition Core Rules cover everything. LuRP is not affiliated
@@ -133,7 +133,7 @@ Games need visuals! Even simple ones. The other main area of improvement going f
 
 ### Linux and OSX
 
-The code runs on these platfors already, but needs to be packaged up and the deployment
+The code runs on these platforms already, but needs to be packaged up and the deployment
 sorted out. (Where are save games placed? How is the binary bundled for release?)
 
 ## Thanks
