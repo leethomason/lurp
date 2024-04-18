@@ -368,36 +368,30 @@ void ZoneDriver::endGame(const std::string& msg, int bias)
 	_endGameBias = bias;
 }
 
-bool ZoneDriver::unlock(const Edge& e)
+bool ZoneDriver::tryUnlock(const Entity& e)
 {
-	if (!locked(e))
+	if (!isLocked(e.entityID))
 		return true;
 
-	if (e.key.empty()) {
-		return false;		// has to be opened a different way?
-	}
-	const Item& key = _assets.getItem(e.key);
-	Inventory& inv = _assets.inventories.at(_playerID);
+	std::string keyName;
+	const Edge* edge = dynamic_cast<const Edge*>(&e);
+	const Container* container = dynamic_cast<const Container*>(&e);
 
+	if (edge)
+		keyName = edge->key;
+	else if (container)
+		keyName = container->key;
+	else
+		return false;
+
+	const Item& key = _assets.getItem(keyName);
+	Inventory& inv = _assets.inventories.at(_playerID);
 	if (inv.hasItem(key)) {
 		mapData.coreData.coreSet(e.entityID, "locked", false, false);
-		mapData.newsQueue.push(NewsItem::lock(false, e, &key));
-		return true;
-	}
-	return false;
-}
-
-bool ZoneDriver::unlock(const Container& c)
-{
-	if (!locked(c))
-		return true;
-	if (c.key.empty())
-		return false;
-	const Item& key = _assets.getItem(c.key);
-	Inventory& inv = _assets.inventories.at(_playerID);
-	if (inv.hasItem(key)) {
-		mapData.coreData.coreSet(c.entityID, "locked", false, false);
-		mapData.newsQueue.push(NewsItem::lock(false, c, &key));
+		if (edge)
+			mapData.newsQueue.push(NewsItem::lock(false, *edge, &key));
+		else if (container)
+			mapData.newsQueue.push(NewsItem::lock(false, *container, &key));
 		return true;
 	}
 	return false;
@@ -417,10 +411,10 @@ ZoneDriver::MoveResult ZoneDriver::move(const EntityID& roomEntityID)
 	if (it == _assets._csa.edges.end())
 		return MoveResult::kNoConnection;
 
-	if (locked(*it))
-		unlock(*it);
+	if (isLocked(*it))
+		tryUnlock(*it);
 
-	if (locked(*it))
+	if (isLocked(*it))
 		return MoveResult::kLocked;
 
 	teleport(roomEntityID);
@@ -631,5 +625,38 @@ void ZoneDriver::battleDone()
 	checkScriptDriver();
 }
 
+ZoneDriver::TransferResult ZoneDriver::transferAll(const EntityID& srcEntity, const EntityID& dstEntity) {
+	CHECK(_assets.isAsset(srcEntity));
+	CHECK(_assets.isAsset(dstEntity));
+
+	if (isLocked(srcEntity))
+		tryUnlock(srcEntity);
+
+	if (isLocked(srcEntity) || isLocked(dstEntity))
+		return TransferResult::kLocked;
+
+	Inventory& src = _assets.getInventory(*_assets.get(srcEntity));
+	while (!src.emtpy()) {
+		this->transfer(*src.items()[0].pItem, srcEntity, dstEntity, INT_MAX);
+	}
+	return TransferResult::kSuccess;
+}
+
+ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const EntityID& srcEntity, const EntityID& dstEntity, int n) {
+	if (isLocked(srcEntity) || isLocked(dstEntity))
+		return TransferResult::kLocked;
+
+	Inventory& src = _assets.getInventory(*_assets.get(srcEntity));
+	Inventory& dst = _assets.getInventory(*_assets.get(dstEntity));
+	int delta = src.numItems(item);
+	lurp::Inventory::transfer(item, src, dst, n);
+	int count = dst.numItems(item);
+
+	const EntityID& playerID = getPlayer().entityID;
+	if (srcEntity == playerID || dstEntity == playerID) {
+		mapData.newsQueue.push(NewsItem::itemDelta(item, delta, count));
+	}
+	return TransferResult::kSuccess;
+}
 
 } // namespace lurp

@@ -87,7 +87,7 @@ static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 
 	const Item& key01 = assets.getItem("KEY_01");
 	TEST(chestInv.hasItem(key01) == true);
-	map.transfer(key01, chest, map.getPlayer(), 1);
+	map.transfer(key01, chest.entityID, map.getPlayer().entityID, 1);
 	TEST(chestInv.hasItem(key01) == false);
 	TEST(map.mapData.newsQueue.size() == 1);
 	map.mapData.newsQueue.pop();
@@ -670,14 +670,14 @@ static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	const Container& chestA = *containerVec[0];
 	const Container& chestB = *containerVec[1];
 
-	TEST(zone.transferAll(chestA, player) == ZoneDriver::TransferResult::kLocked);
+	TEST(zone.transferAll(chestA.entityID, player.entityID) == ZoneDriver::TransferResult::kLocked);
 	TEST(zone.mapData.newsQueue.empty());
 
-	TEST(zone.transferAll(chestB, player) == ZoneDriver::TransferResult::kSuccess);
+	TEST(zone.transferAll(chestB.entityID, player.entityID) == ZoneDriver::TransferResult::kSuccess);
 	TEST(zone.mapData.newsQueue.size() == 1); // got a key
 	zone.mapData.newsQueue.clear();
 
-	TEST(zone.transferAll(chestA, player) == ZoneDriver::TransferResult::kSuccess);
+	TEST(zone.transferAll(chestA.entityID, player.entityID) == ZoneDriver::TransferResult::kSuccess);
 	TEST(zone.getInventory(player).numItems(assets.getItem("GOLD")) == 100);
 	TEST(zone.mapData.newsQueue.size() == 2);	// unlocked and have gold
 }
