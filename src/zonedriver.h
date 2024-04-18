@@ -36,9 +36,6 @@ public:
 	// FIXME: hides a MapData getting constructed with a default seed
 
 	// Create a map with navigation, containers, and interactions.
-	// This defines a small game. For interactions w/ script,
-	// and calls into Scripts, a ScriptBridge is required.
-	// Sometimes useful to test the base map functionality without the bridge.
 	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player);
 	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player);
 	~ZoneDriver();
@@ -70,16 +67,12 @@ public:
 
 	void setZone(const EntityID& zone, EntityID room);
 
-	template<typename ENTITY>
-	bool locked(const ENTITY& e) {
-		return mapData.coreData.coreBool(e.entityID, "locked", e.locked);
-	}
+	bool locked(const Entity& e);
 	bool unlock(const Edge& e);
 	bool unlock(const Container& c);
 	bool unlock(const EntityID& e);
 
-	template<typename E>
-	const Inventory& getInventory(const E& e) const {
+	const Inventory& getInventory(const Entity& e) const {
 		return _assets.getInventory(e);
 	}
 

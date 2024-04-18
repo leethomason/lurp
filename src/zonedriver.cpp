@@ -368,6 +368,18 @@ void ZoneDriver::endGame(const std::string& msg, int bias)
 	_endGameBias = bias;
 }
 
+bool ZoneDriver::locked(const Entity& e) {
+	bool initLocked = false;
+	const Edge* edge = dynamic_cast<const Edge*>(&e);
+	if (edge)
+		initLocked = edge->locked;
+	const Container* container = dynamic_cast<const Container*>(&e);
+	if (container)
+		initLocked = container->locked;
+
+	return mapData.coreData.coreBool(e.entityID, "locked", initLocked);
+}
+
 bool ZoneDriver::unlock(const EntityID& e)
 {
 	const Entity* entity = _assets.get(e);
