@@ -1108,7 +1108,18 @@ void BattleTest::TestExample()
 
 void TestExampleZone()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets csassets = bridge.readCSA("game/example-zone/example-zone.lua");
+	ScriptAssets assets(csassets);
+	ZoneDriver driver(assets, bridge, "ZONE", "player");
 
+	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
+	TEST(driver.getContainers().size() == 1);
+	const Container* c = driver.getContainers()[0];
+	driver.transferAll(*c, driver.getPlayer());			// fixme: the container syntax needs cleaning
+	TEST(c->inventory.emtpy());
+
+	TEST(driver.move("Main Hall") == ZoneDriver::MoveResult::kSuccess);	
 }
 
 int RunTests()
@@ -1147,6 +1158,7 @@ int RunTests()
 	RUN_TEST(BattleTest::TestScript(csassets, bridge));
 	RUN_TEST(BattleTest::TestExample());
 	RUN_TEST(BattleTest::TestRegionSpells());
+	TestExampleZone();
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

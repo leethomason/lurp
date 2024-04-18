@@ -3,9 +3,6 @@
 ## Open Issues
 
 * Test example-xyz (to some simple level)
-* Docs
-  * Readme (done)
-  * Script docs (done)
 * Release!
 
 ## Open / Next
