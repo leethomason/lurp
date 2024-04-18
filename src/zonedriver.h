@@ -67,11 +67,6 @@ public:
 
 	void setZone(const EntityID& zone, EntityID room);
 
-	bool locked(const Entity& e);
-	bool unlock(const Edge& e);
-	bool unlock(const Container& c);
-	bool unlock(const EntityID& e);
-
 	const Inventory& getInventory(const Entity& e) const {
 		return _assets.getInventory(e);
 	}
@@ -103,6 +98,7 @@ public:
 
 	// go anywhere; don't check for locks
 	void teleport(const EntityID& roomID);
+
 	// IMapHandler
 	virtual uint32_t getRandom() { return mapData.random.rand(); }
 	virtual bool isLocked(const EntityID& id) const;
@@ -111,6 +107,13 @@ public:
 	virtual int numItems(const EntityID& id, const EntityID& item) const;
 	virtual void movePlayer(const EntityID& dst, bool teleport);
 	virtual void endGame(const std::string& msg, int bias);
+
+	bool isLocked(const Entity& e) const { return isLocked(e.entityID);  }
+	bool tryUnlock(const Entity& e);
+	bool tryUnlock(const EntityID& id) {
+		CHECK(_assets.isAsset(id));
+		return tryUnlock(*_assets.get(id));
+	}
 
 	bool isGameOver() const { return !_endGameMsg.empty(); }
 	std::string endGameMsg() const { return _endGameMsg; }

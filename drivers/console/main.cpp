@@ -133,7 +133,7 @@ static void PrintContainers(ZoneDriver& driver, const ContainerVec& vec)
 	int idx = 0;
 	for (const auto container : vec) {
 		if (idx == 0) fmt::print("Containers: \n");
-		bool locked = driver.locked(*container);
+		bool locked = driver.isLocked(*container);
 		std::string istr;
 		if (!locked) {
 			const Inventory& inv = driver.getInventory(*container);

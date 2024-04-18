@@ -62,6 +62,10 @@ function PrintTable(t, d)
     end
 end
 
+-- Move the player to a new room.
+-- @param dstID The entityID of the room to move to.
+-- @param teleport If true, the move always succeeds. If false, it's a regular move
+--         and the player must pass any locks on the edge.
 function MovePlayer(dstID, teleport)
     if type(dstID) == "table" then
         dstID = dstID.entityID
