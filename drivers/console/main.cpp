@@ -290,7 +290,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			else if (v.charIntInRange('c', (int)containerVec.size())) {
 				const Container* c = driver.getContainer(containerVec[v.intVal]->entityID);
 				
-				ZoneDriver::TransferResult tr = driver.transferAll(*c, player);
+				ZoneDriver::TransferResult tr = driver.transferAll(c->entityID, player.entityID);
 				if (tr == ZoneDriver::TransferResult::kLocked)
 					fmt::print("{}",
 						ionic::Table::colorize(ionic::Color::red, "The container is locked."));

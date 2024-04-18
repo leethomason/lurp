@@ -76,22 +76,19 @@ public:
 	}
 	bool unlock(const Edge& e);
 	bool unlock(const Container& c);
-
-	enum class TransferResult {
-		kSuccess,
-		kLocked
-	};
+	bool unlock(const EntityID& e);
 
 	template<typename E>
 	const Inventory& getInventory(const E& e) const {
 		return _assets.getInventory(e);
 	}
 
-	template<typename S, typename T>
-	TransferResult transferAll(const S& srcEntity, const T& dstEntity);
-
-	template<typename S, typename T>
-	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n);
+	enum class TransferResult {
+		kSuccess,
+		kLocked
+	};
+	TransferResult transferAll(const EntityID& srcEntity, const EntityID& dstEntity);
+	TransferResult transfer(const Item& item, const EntityID& srcEntity, const EntityID&, int n);
 
 	// Mode: Battle
 	const Battle& battle() const;
@@ -156,39 +153,5 @@ private:
 	std::string _endGameMsg;
 	int _endGameBias = 0;
 };
-
-template<typename S, typename T>
-ZoneDriver::TransferResult ZoneDriver::transferAll(const S& srcEntity, const T& dstEntity) {
-	if (isLocked(srcEntity.entityID))
-		unlock(srcEntity);
-
-	if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
-		return TransferResult::kLocked;
-
-	Inventory& src = _assets.getInventory(srcEntity);
-	while (!src.emtpy()) {
-		this->transfer(*src.items()[0].pItem, srcEntity, dstEntity, INT_MAX);
-	}
-	return TransferResult::kSuccess;
-}
-
-template<typename S, typename T>
-ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n) {
-	if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
-		return TransferResult::kLocked;
-
-	Inventory& src = _assets.getInventory(srcEntity);
-	Inventory& dst = _assets.getInventory(dstEntity);
-	int delta = src.numItems(item);
-	lurp::Inventory::transfer(item, src, dst, n);
-	int count = dst.numItems(item);
-
-	const EntityID& playerID = getPlayer().entityID;
-	if (srcEntity.entityID == playerID || dstEntity.entityID == playerID) {
-		mapData.newsQueue.push(NewsItem::itemDelta(item, delta, count));
-	}
-	return TransferResult::kSuccess;
-}
-
 
 } // namespace lurp

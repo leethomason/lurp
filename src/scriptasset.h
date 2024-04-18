@@ -67,13 +67,11 @@ struct ScriptAssets : public IAssetHandler
 	const Edge& getEdge(const EntityID& entityID) const;
 	const Power& getPower(const EntityID& entityID) const;
 
-	template <typename T>
-	Inventory& getInventory(const T& entity) {
+	Inventory& getInventory(const Entity& entity) {
 		return inventories.at(entity.entityID);
 	}
 
-	template <typename T>
-	const Inventory& getInventory(const T& entity) const{
+	const Inventory& getInventory(const Entity& entity) const{
 		return inventories.at(entity.entityID);
 	}
 
