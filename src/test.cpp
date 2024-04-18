@@ -1116,8 +1116,10 @@ void TestExampleZone()
 	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
 	TEST(driver.getContainers().size() == 1);
 	const Container* c = driver.getContainers()[0];
-	driver.transferAll(*c, driver.getPlayer());			// fixme: the container syntax needs cleaning
-	TEST(c->inventory.emtpy());
+	TEST(c);
+	driver.transferAll(c->entityID, driver.getPlayer().entityID);
+	const Inventory& inv = assets.getInventory(*c);
+	TEST(inv.emtpy());
 
 	TEST(driver.move("Main Hall") == ZoneDriver::MoveResult::kSuccess);	
 }
