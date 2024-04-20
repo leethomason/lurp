@@ -2,17 +2,15 @@
 
 ## Open Issues
 
-* Delete: Simple: minimal but complete
-* Docs
-  * Readme
-  * Script docs (done)
+* Test example-xyz (to some simple level)
+* Release!
+
+## Open / Next
+
 * Auto-save before battle
-* Test: area of effect spells
-* Examples:
-  * simplest zone (done)
-  * simplest script
-  * simplest battle (done)
-* Ionic 2-column bug
+* OSX 
+* Linux
+* Actors move between rooms
 
 ## Ideas / Icebox
 
@@ -21,6 +19,11 @@
 
 ## Done
 
+* Delete: Simple: minimal but complete
+* simplest zone (done)
+* simplest script (done)
+* simplest battle (done)
+* Test: area of effect spells
 * Packaging for release
 * npc is broken everywhere
 * read from Entities

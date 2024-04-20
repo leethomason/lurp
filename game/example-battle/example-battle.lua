@@ -8,10 +8,10 @@ And then you are teleported to the Arena to fight enemies of choice.
 LuRP uses a subset of the Savage Worlds (SW) rules. (Specifically the SWADE
 rules.) One HUGE advantage is that you can buy the rule book and simply
 look up gear, costs, that sort of thing. SW is more well rounded and a larger
-ruleset than LuRP, but I've tried to make it as re-usable as possible.
+rule set than LuRP, but I've tried to make it as re-usable as possible.
 
 NOTE: In SW, the distance in the rules is specified in tabletop inches.
-      1" = 2 yards. LuRP uses yards / tabletop inches interchangably,
+      1" = 2 yards. LuRP uses yards / tabletop inches interchangeably,
       so there is a factor of 2 error, than in practice seems to wash 
       out. So when moving from SW to LuRP, the distance value is used as-is.
 ]]--
@@ -74,7 +74,7 @@ Item {
     damage = "3d6"
 }
 
--- Item that is a mellee weapon
+-- Item that is a melee weapon
 Item {
     entityID = "PLASMA_SWORD",
     name = "plasma sword",
@@ -125,7 +125,7 @@ Actor {
     shooting = 4,
     arcane = 4,
 
-    -- There is a limitation in the current version of LuRP that tables on Entinies
+    -- There is a limitation in the current version of LuRP that tables on Entities
     -- are only read only. We can do this, BUT the powers can never change and must
     -- be set here in the declaration.
     powers = { "FIRE_BOLT", "HEAL" },
@@ -141,12 +141,13 @@ Zone {
     name = "Battle Zone",
 
     Room {
+        entityID = "LOBBY",
         name = "Lobby",
         desc = "Outside the Battle Arena",
 
         -- We want the player to start in the lobby, but choose
         -- fighter / shooter / arcane and then go straight to
-        -- the battle. Required Intereraction + Choices do that.
+        -- the battle. Required Interaction + Choices do that.
         Interaction {
             required = true,
             next = Script {

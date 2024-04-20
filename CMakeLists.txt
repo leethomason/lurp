@@ -30,7 +30,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   ionic
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
-  GIT_TAG        a0c225c53092281a5f86c6c7f37a574da1f5e968
+  GIT_TAG        462ea2b699e00c3acebc75b24394100761da9884
 )
 FetchContent_Declare(
   plog
@@ -57,7 +57,7 @@ set_target_properties(lurp PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 
 add_test(
   NAME lurp
-  COMMAND lurp --log info
+  COMMAND lurp --log info --noScan
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")

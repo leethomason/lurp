@@ -87,7 +87,7 @@ static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 
 	const Item& key01 = assets.getItem("KEY_01");
 	TEST(chestInv.hasItem(key01) == true);
-	map.transfer(key01, chest, map.getPlayer(), 1);
+	map.transfer(key01, chest.entityID, map.getPlayer().entityID, 1);
 	TEST(chestInv.hasItem(key01) == false);
 	TEST(map.mapData.newsQueue.size() == 1);
 	map.mapData.newsQueue.pop();
@@ -670,14 +670,14 @@ static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	const Container& chestA = *containerVec[0];
 	const Container& chestB = *containerVec[1];
 
-	TEST(zone.transferAll(chestA, player) == ZoneDriver::TransferResult::kLocked);
+	TEST(zone.transferAll(chestA.entityID, player.entityID) == ZoneDriver::TransferResult::kLocked);
 	TEST(zone.mapData.newsQueue.empty());
 
-	TEST(zone.transferAll(chestB, player) == ZoneDriver::TransferResult::kSuccess);
+	TEST(zone.transferAll(chestB.entityID, player.entityID) == ZoneDriver::TransferResult::kSuccess);
 	TEST(zone.mapData.newsQueue.size() == 1); // got a key
 	zone.mapData.newsQueue.clear();
 
-	TEST(zone.transferAll(chestA, player) == ZoneDriver::TransferResult::kSuccess);
+	TEST(zone.transferAll(chestA.entityID, player.entityID) == ZoneDriver::TransferResult::kSuccess);
 	TEST(zone.getInventory(player).numItems(assets.getItem("GOLD")) == 100);
 	TEST(zone.mapData.newsQueue.size() == 2);	// unlocked and have gold
 }
@@ -803,6 +803,8 @@ public:
 	static void TestSystem();
 	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
 	static void TestExample();
+	static void TestRegionSpells();
+	static void TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge);
 };
 
 void BattleTest::Read()
@@ -897,6 +899,47 @@ void BattleTest::Read()
 		TEST(c.arcane.d == 4);
 		TEST(c.powers.size() == 1);
 	}
+}
+
+void BattleTest::TestRegionSpells()
+{
+	using namespace lurp::swbattle;
+
+	Random random(100);
+	BattleSystem system(random);
+
+	system.setBattlefield("Landing Pad");
+	system.addRegion({ "Mooring", 0, Cover::kLightCover });
+	system.addRegion({ "Catwalk", 10, Cover::kNoCover });
+	system.addRegion({ "Dock", 20, Cover::kMediumCover });
+
+	SWPower arcaneStorm = { ModType::kBolt, "ArcaneStorm", 1, 4, 1, true };
+
+	SWCombatant a;
+	a.name = "StarBlaster";
+	a.wild = true;
+	a.arcane = Die(1, 12, 0);
+	a.powers.push_back(arcaneStorm);
+
+	SWCombatant b;
+	b.name = "Brute B";
+	b.fighting = Die(1, 6, 0);
+
+	SWCombatant c;
+	b.name = "Brute C";
+	b.fighting = Die(1, 6, 0);
+
+	system.addCombatant(a);
+	system.addCombatant(b);
+	system.addCombatant(c);
+
+	system.start(false);
+
+	TEST(system.queue.empty());
+	TEST(system.turn() == 0);
+	TEST(system.checkPower(0, 1, 0) == BattleSystem::ActionResult::kSuccess);
+	system.power(0, 1, 0);
+	TEST(system.queue.size() == 2);	// possible this will fail if the PRNG changes
 }
 
 void BattleTest::TestSystem()
@@ -1017,7 +1060,7 @@ void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		TEST(battle.checkAttack(0, 1) == BattleSystem::ActionResult::kSuccess);
 		TEST(battle.attack(0, 1) == BattleSystem::ActionResult::kSuccess);
 
-		TEST(battle.queue.size() == 1);	// failure (if random/algo doesn't change)
+		TEST(battle.queue.size() == 1);	// could fail if the PRNG changes
 		battle.queue.pop();
 
 		battle.advance();
@@ -1064,6 +1107,35 @@ void BattleTest::TestExample()
 	TEST(driver.isGameOver() == true);
 }
 
+void BattleTest::TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	ScriptAssets assets(ca);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "TEST_BATTLE_2");
+
+	TEST(driver.type() == ScriptType::kBattle);
+
+	BattleSystem battle(assets, driver.varBinder(), driver.battle(), "testplayer", zoneDriver.mapData.random);
+	TEST(battle.combatants().size() == 4);
+}
+
+void TestExampleZone()
+{
+	ScriptBridge bridge;
+	ConstScriptAssets csassets = bridge.readCSA("game/example-zone/example-zone.lua");
+	ScriptAssets assets(csassets);
+	ZoneDriver driver(assets, bridge, "ZONE", "player");
+
+	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
+	TEST(driver.getContainers().size() == 1);
+	const Container* c = driver.getContainers()[0];
+	TEST(c);
+	driver.transferAll(c->entityID, driver.getPlayer().entityID);
+	const Inventory& inv = assets.getInventory(*c);
+	TEST(inv.emtpy());
+
+	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);	
+}
 
 int RunTests()
 {
@@ -1100,6 +1172,9 @@ int RunTests()
 	RUN_TEST(BattleTest::TestSystem());
 	RUN_TEST(BattleTest::TestScript(csassets, bridge));
 	RUN_TEST(BattleTest::TestExample());
+	RUN_TEST(BattleTest::TestRegionSpells());
+	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
+	TestExampleZone();
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

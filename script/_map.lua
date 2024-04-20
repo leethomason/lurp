@@ -62,6 +62,10 @@ function PrintTable(t, d)
     end
 end
 
+-- Move the player to a new room.
+-- @param dstID The entityID of the room to move to.
+-- @param teleport If true, the move always succeeds. If false, it's a regular move
+--         and the player must pass any locks on the edge.
 function MovePlayer(dstID, teleport)
     if type(dstID) == "table" then
         dstID = dstID.entityID
@@ -75,9 +79,8 @@ function EndGame(reason, bias)
 end
 
 local poolID = {}
-local function createEntityID(entityID, name, base)
+local function createEntityID(entityID, base)
     if entityID then return entityID end
-    if name then return name end
 
     assert(base ~= nil, "base required")
 
@@ -132,7 +135,7 @@ end
 
 function Script(d)
     d.type = "Script"
-    d.entityID = createEntityID(d.entityID, d.name, "SCRIPT")
+    d.entityID = createEntityID(d.entityID, "SCRIPT")
     Scripts[d.entityID] = d
     addToEntities(d)
     return d
@@ -140,7 +143,7 @@ end
 
 function Actor(actor)
     actor.type = "Actor"
-    actor.entityID = createEntityID(actor.entityID, actor.name, "ACTOR")
+    actor.entityID = createEntityID(actor.entityID, "ACTOR")
     Actors[actor.entityID] = actor
     addToEntities(actor)
     addItemMethods(actor)
@@ -149,7 +152,7 @@ end
 
 function Text(t)
     t.type = "Text"
-    t.entityID = createEntityID(t.entityID, t.name, "TEXT")
+    t.entityID = createEntityID(t.entityID, "TEXT")
     Texts[t.entityID] = t
     addToEntities(t)
     return t
@@ -157,7 +160,7 @@ end
 
 function Battle(b)
     b.type = "Battle"
-    b.entityID = createEntityID(b.entityID, b.name, "BATTLE")
+    b.entityID = createEntityID(b.entityID, "BATTLE")
     Battles[b.entityID] = b
     addToEntities(b)
     return b
@@ -165,7 +168,7 @@ end
 
 function Combatant(c)
     c.type = "Combatant"
-    c.entityID = createEntityID(nil, nil, "COMBATANT")
+    c.entityID = createEntityID(c.entityID, "COMBATANT")
     Combatants[c.entityID] = c
     addToEntities(c)
     return c
@@ -173,7 +176,7 @@ end
 
 function Choices(c)
     c.type = "Choices"
-    c.entityID = createEntityID(c.entityID, c.name, "CHOICES")
+    c.entityID = createEntityID(c.entityID, "CHOICES")
     AllChoices[c.entityID] = c
     addToEntities(c)
     c.allTextRead = function(self)
@@ -184,7 +187,8 @@ end
 
 function Item(i)
     i.type = "Item"
-    i.entityID = createEntityID(i.entityID, i.name, nil)
+    assert(i.entityID ~= nil, "Items require an 'entityID'")
+    i.entityID = createEntityID(i.entityID, nil)
     Items[i.entityID] = i
     addToEntities(i)
     return i
@@ -192,7 +196,8 @@ end
 
 function Power(p)
     p.type = "Power"
-    p.entityID = createEntityID(p.entityID, p.name, nil)
+    assert(p.entityID ~= nil, "Powers require an 'entityID'")
+    p.entityID = createEntityID(p.entityID, nil)
     Powers[p.entityID] = p
     addToEntities(p)
     return p
@@ -200,7 +205,8 @@ end
 
 function Zone(z)
     z.type = "Zone"
-    z.entityID = createEntityID(z.entityID, z.name, nil)
+    assert(z.entityID ~= nil, "Zones require an 'entityID'")
+    z.entityID = createEntityID(z.entityID, nil)
     Zones[z.entityID] = z
     addToEntities(z)
     return z
@@ -208,7 +214,8 @@ end
 
 function Room(r)
     r.type = "Room"
-    r.entityID = createEntityID(r.entityID, r.name, nil)
+    assert(r.entityID ~= nil, "Rooms require an 'entityID'")
+    r.entityID = createEntityID(r.entityID, nil)
     Rooms[r.entityID] = r
     addToEntities(r)
     return r
@@ -243,7 +250,7 @@ end
 
 function Container(c)
     c.type = "Container"
-    c.entityID = createEntityID(c.entityID, c.name, "CONTAINER")
+    c.entityID = createEntityID(c.entityID, "CONTAINER")
     Containers[c.entityID] = c
     addToEntities(c)
     addItemMethods(c)
@@ -271,7 +278,7 @@ function Interaction(c)
         base = base.."::"..append
     end
 
-    c.entityID = createEntityID(c.entityID, c.name, base)
+    c.entityID = createEntityID(c.entityID, base)
     Interactions[c.entityID] = c
     addToEntities(c)
     return c
@@ -279,7 +286,7 @@ end
 
 function CallScript(cs)
     cs.type = "CallScript";
-    cs.entityID = createEntityID(cs.entityID, cs.name, "CALLSCRIPT")
+    cs.entityID = createEntityID(cs.entityID, "CALLSCRIPT")
     CallScripts[cs.entityID] = cs
     return cs
 end
@@ -309,7 +316,7 @@ local function CoreTable(e)
             if type(v) == "table" or type(v) == "function" then
                 ePrime[k] = v
             end
-            -- Mutable Usper Prop
+            -- Mutable User Prop
             if type(v) == "number" or type(v) == "string" or type(v) == "boolean" then
                 if not ePrime[k] then
                     CCoreSet(e.entityID, k, v, true)
@@ -332,7 +339,7 @@ local function CoreTable(e)
             -- print("__index", t.entityID, key)
             -- the core can have a value set to nil, and that
             -- overrides the default. this necessitates returning
-            -- 'okay' if the core has the value seperate from the value
+            -- 'okay' if the core has the value separate from the value
             local okay, v = CCoreGet(t.entityID, key)
             if okay then return v end
             -- if not in the core, return the immutable source value

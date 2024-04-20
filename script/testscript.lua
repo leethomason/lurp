@@ -381,3 +381,31 @@ Script {
         },
     }
 }
+
+Combatant {
+    entityID = "GOBLIN_1",
+    name = "Goblin Warrior"
+}
+
+Combatant {
+    entityID = "GOBLIN_2",
+    name = "Goblin Archer"
+}
+
+Script {
+    entityID = "TEST_BATTLE_2",
+    Battle {
+        entityID = "TEST_BATTLE_2_BATTLE",
+        name = "Test Battle 2",
+        regions = {
+            { "Stalagmites", 0, "light"},
+            { "Shallow Pool", 8, "none"},
+            { "Crumbling Stones", 16, "medium"},
+            { "Wide Steps", 24, "none"},
+        },
+        combatants = {
+            { "GOBLIN_1", 2 },
+            { "GOBLIN_2", 1 },
+        }
+    }
+}

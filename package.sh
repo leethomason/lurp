@@ -25,6 +25,6 @@ mkdir $1/game
 cp -r game/* $1/game
 
 # zip the folder
-7z a $1.zip $1
+# 7z a $1.zip $1
 
 

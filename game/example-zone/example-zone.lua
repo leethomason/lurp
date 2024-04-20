@@ -10,6 +10,7 @@ Actor {
 }
 
 Actor {
+    entityID = "Rando",
     name = "Rando"
 }
 
@@ -19,10 +20,11 @@ Item {
 }
 
 Zone {
-    entityID = "EXZONE",
+    entityID = "ZONE",
     name = "Example Building",
 
     Room {
+        entityID = "FOYER",
         name = "Foyer",
         Container {
             name = "Key Hook",
@@ -30,6 +32,7 @@ Zone {
         }
     },
     Room {
+        entityID = "MAIN_HALL",
         name = "Main Hall",
         Interaction {
             entityID = "RANDO_SAYS_HI",     -- unique name of the interaction. can't be 'Rando' because that's the Actor name
@@ -42,8 +45,8 @@ Zone {
     },
     Edge {
         name = "Door",
-        room1 = "Foyer",
-        room2 = "Main Hall",
+        room1 = "FOYER",
+        room2 = "MAIN_HALL",
         locked = true,
         key = "KEY"
     }

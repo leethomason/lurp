@@ -36,9 +36,6 @@ public:
 	// FIXME: hides a MapData getting constructed with a default seed
 
 	// Create a map with navigation, containers, and interactions.
-	// This defines a small game. For interactions w/ script,
-	// and calls into Scripts, a ScriptBridge is required.
-	// Sometimes useful to test the base map functionality without the bridge.
 	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player);
 	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player);
 	~ZoneDriver();
@@ -70,28 +67,16 @@ public:
 
 	void setZone(const EntityID& zone, EntityID room);
 
-	template<typename ENTITY>
-	bool locked(const ENTITY& e) {
-		return mapData.coreData.coreBool(e.entityID, "locked", e.locked);
+	const Inventory& getInventory(const Entity& e) const {
+		return _assets.getInventory(e);
 	}
-	bool unlock(const Edge& e);
-	bool unlock(const Container& c);
 
 	enum class TransferResult {
 		kSuccess,
 		kLocked
 	};
-
-	template<typename E>
-	const Inventory& getInventory(const E& e) const {
-		return _assets.getInventory(e);
-	}
-
-	template<typename S, typename T>
-	TransferResult transferAll(const S& srcEntity, const T& dstEntity);
-
-	template<typename S, typename T>
-	TransferResult transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n);
+	TransferResult transferAll(const EntityID& srcEntity, const EntityID& dstEntity);
+	TransferResult transfer(const Item& item, const EntityID& srcEntity, const EntityID&, int n);
 
 	// Mode: Battle
 	const Battle& battle() const;
@@ -113,6 +98,7 @@ public:
 
 	// go anywhere; don't check for locks
 	void teleport(const EntityID& roomID);
+
 	// IMapHandler
 	virtual uint32_t getRandom() { return mapData.random.rand(); }
 	virtual bool isLocked(const EntityID& id) const;
@@ -121,6 +107,13 @@ public:
 	virtual int numItems(const EntityID& id, const EntityID& item) const;
 	virtual void movePlayer(const EntityID& dst, bool teleport);
 	virtual void endGame(const std::string& msg, int bias);
+
+	bool isLocked(const Entity& e) const { return isLocked(e.entityID);  }
+	bool tryUnlock(const Entity& e);
+	bool tryUnlock(const EntityID& id) {
+		CHECK(_assets.isAsset(id));
+		return tryUnlock(*_assets.get(id));
+	}
 
 	bool isGameOver() const { return !_endGameMsg.empty(); }
 	std::string endGameMsg() const { return _endGameMsg; }
@@ -156,39 +149,5 @@ private:
 	std::string _endGameMsg;
 	int _endGameBias = 0;
 };
-
-template<typename S, typename T>
-ZoneDriver::TransferResult ZoneDriver::transferAll(const S& srcEntity, const T& dstEntity) {
-	if (isLocked(srcEntity.entityID))
-		unlock(srcEntity);
-
-	if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
-		return TransferResult::kLocked;
-
-	Inventory& src = _assets.getInventory(srcEntity);
-	while (!src.emtpy()) {
-		this->transfer(*src.items()[0].pItem, srcEntity, dstEntity, INT_MAX);
-	}
-	return TransferResult::kSuccess;
-}
-
-template<typename S, typename T>
-ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const S& srcEntity, const T& dstEntity, int n) {
-	if (isLocked(srcEntity.entityID) || isLocked(dstEntity.entityID))
-		return TransferResult::kLocked;
-
-	Inventory& src = _assets.getInventory(srcEntity);
-	Inventory& dst = _assets.getInventory(dstEntity);
-	int delta = src.numItems(item);
-	lurp::Inventory::transfer(item, src, dst, n);
-	int count = dst.numItems(item);
-
-	const EntityID& playerID = getPlayer().entityID;
-	if (srcEntity.entityID == playerID || dstEntity.entityID == playerID) {
-		mapData.newsQueue.push(NewsItem::itemDelta(item, delta, count));
-	}
-	return TransferResult::kSuccess;
-}
-
 
 } // namespace lurp
