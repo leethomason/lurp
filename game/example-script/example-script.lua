@@ -15,6 +15,7 @@ Zone {
     name = "Zephyr Hotel",
 
     Room {
+        entityID = "CASINO",
         name = "Casino",
         Interaction {
             entityID = "CASINO_INTERACTION",

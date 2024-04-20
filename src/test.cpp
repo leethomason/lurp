@@ -1134,7 +1134,7 @@ void TestExampleZone()
 	const Inventory& inv = assets.getInventory(*c);
 	TEST(inv.emtpy());
 
-	TEST(driver.move("Main Hall") == ZoneDriver::MoveResult::kSuccess);	
+	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);	
 }
 
 int RunTests()

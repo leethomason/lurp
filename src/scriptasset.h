@@ -90,6 +90,7 @@ struct ScriptAssets : public IAssetHandler
 
 private:
 	std::map<EntityID, ScriptRef> entityIDToIndex;
+	void validateEdges();
 
 	void scan();
 
