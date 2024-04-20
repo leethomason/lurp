@@ -804,6 +804,7 @@ public:
 	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
 	static void TestExample();
 	static void TestRegionSpells();
+	static void TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge);
 };
 
 void BattleTest::Read()
@@ -1106,6 +1107,18 @@ void BattleTest::TestExample()
 	TEST(driver.isGameOver() == true);
 }
 
+void BattleTest::TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	ScriptAssets assets(ca);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "TEST_BATTLE_2");
+
+	TEST(driver.type() == ScriptType::kBattle);
+
+	BattleSystem battle(assets, driver.varBinder(), driver.battle(), "testplayer", zoneDriver.mapData.random);
+	TEST(battle.combatants().size() == 4);
+}
+
 void TestExampleZone()
 {
 	ScriptBridge bridge;
@@ -1160,6 +1173,7 @@ int RunTests()
 	RUN_TEST(BattleTest::TestScript(csassets, bridge));
 	RUN_TEST(BattleTest::TestExample());
 	RUN_TEST(BattleTest::TestRegionSpells());
+	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
 	TestExampleZone();
 
 	assert(gNTestPass > 0);

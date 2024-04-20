@@ -1002,12 +1002,21 @@ Battle ScriptBridge::readBattle() const
 				}
 			}
 			lua_pop(L, 1);
+		}
 
-			for (TableIt it(L, -1); !it.done(); it.next()) {
-				if (it.kType() == LUA_TNUMBER) {
-					EntityID id = readEntityID("entityID", {});
-					b.combatants.push_back(id);
+		if (hasField("combatants")) {
+			std::vector<StringCount> sc = getStrCountArray("combatants");
+			for (const auto& s : sc) {
+				for (int i = 0; i < s.count; ++i) {
+					b.combatants.push_back(s.str);
 				}
+			}
+		}
+
+		for (TableIt it(L, -1); !it.done(); it.next()) {
+			if (it.kType() == LUA_TNUMBER) {
+				EntityID id = readEntityID("entityID", {});
+				b.combatants.push_back(id);
 			}
 		}
 	}

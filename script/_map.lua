@@ -169,7 +169,7 @@ end
 
 function Combatant(c)
     c.type = "Combatant"
-    c.entityID = createEntityID(nil, nil, "COMBATANT")
+    c.entityID = createEntityID(c.entityID, c.name, "COMBATANT")
     Combatants[c.entityID] = c
     addToEntities(c)
     return c
