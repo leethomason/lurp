@@ -75,6 +75,26 @@ void ScriptAssets::load(ScriptBridge& loader)
 	lua_pop(L, 1);
 }
 
+void ScriptAssets::validateEdges()
+{
+	for (const Edge& edge : _csa.edges) {
+		if (!isAsset(edge.room1)) {
+			FatalError(fmt::format("Edge='{}' room1='{}' does not exist", edge.entityID, edge.room1));
+			ScriptRef ref = getScriptRef(edge.room1);
+			if (ref.type != ScriptType::kRoom) {
+				FatalError(fmt::format("Edge='{}' room1='{}' is not a room", edge.entityID, edge.room1));
+			}
+		}
+		if (!isAsset(edge.room2)) {
+			FatalError(fmt::format("Edge='{}' room2='{}' does not exist", edge.entityID, edge.room2));
+			ScriptRef ref = getScriptRef(edge.room2);
+			if (ref.type != ScriptType::kRoom) {
+				FatalError(fmt::format("Edge='{}' room2='{}' is not a room", edge.entityID, edge.room2));
+			}
+		}
+	}
+}
+
 void ScriptAssets::scan()
 {
 	scan(_csa.scripts);
@@ -98,6 +118,8 @@ void ScriptAssets::scan()
 	for (size_t i = 0; i < _csa.actors.size(); ++i) {
 		inventories[_csa.actors[i].entityID] = _csa.actors[i].inventory;
 	}
+
+	validateEdges();
 }
 
 #define TYPE_BODY(vecName, itemEnum) \

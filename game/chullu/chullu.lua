@@ -176,9 +176,11 @@ Be careful and I'll see you soon.
 }
 
 Zone {
+    entityID = "SAN_FRANCISCO",
     name = "San Francisco",
 
     Room {
+        entityID = "APARTMENT",
         name = "Your Apartment",
         desc = "A small one bedroom in the Mission district. A bit run down but with a beautiful view.",
         Interaction { required = true, next = startScript },
@@ -280,7 +282,7 @@ Zone {
     },
 
     EdgeGroup {
-        rooms = { "Your Apartment", "SF_LIBRARY", "SF_CAFE", "SFO" },
+        rooms = { "APARTMENT", "SF_LIBRARY", "SF_CAFE", "SFO" },
     },
 
     Edge {

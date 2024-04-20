@@ -563,7 +563,7 @@ Edge ScriptBridge::readEdge() const
 	LuaStackCheck check(L);
 
 	try {
-		re.entityID = getStrField("entityID", {});
+		re.entityID = readEntityID("entityID", {});
 		std::string dir = toLower(getStrField("dir", { "" }));
 
 		if (!dir.empty()) {
@@ -596,7 +596,7 @@ Container ScriptBridge::readContainer() const
 	LuaStackCheck check(L);
 
 	try {
-		c.entityID = getStrField("entityID", {});
+		c.entityID = readEntityID("entityID", {});
 		c.name = getStrField("name", {});
 		c.locked = getBoolField("locked", { false });
 		c.key = getStrField("key", { "" });
@@ -632,7 +632,7 @@ Room ScriptBridge::readRoom() const
 	LuaStackCheck check(L);
 
 	try {
-		r.entityID = getStrField("entityID", {});
+		r.entityID = readEntityID("entityID", {});
 		r.name = getStrField("name", {});
 		r.desc = getStrField("desc", { "" });
 		r.objects = readObjects();
@@ -648,7 +648,7 @@ Zone ScriptBridge::readZone() const
 	Zone z;
 	LuaStackCheck check(L);
 	try {
-		z.entityID = getStrField("entityID", {});
+		z.entityID = readEntityID("entityID", {});
 		z.objects = readObjects();
 		z.name = getStrField("name", { "" });
 	}
@@ -663,7 +663,7 @@ Item ScriptBridge::readItem() const
 	Item item;
 	LuaStackCheck check(L);
 	try {
-		item.entityID = getStrField("entityID", {});
+		item.entityID = readEntityID("entityID", {});
 		item.name = getStrField("name", {});
 		item.desc = getStrField("desc", { "" });
 		item.range = getIntField("range", { 0 });
@@ -682,7 +682,7 @@ Power ScriptBridge::readPower() const
 	Power power;
 	LuaStackCheck check(L);
 	try {
-		power.entityID = getStrField("entityID", {});
+		power.entityID = readEntityID("entityID", {});
 		power.name = getStrField("name", {});
 		power.effect = getStrField("effect", {});
 		power.cost = getIntField("cost", { 1 });
@@ -702,7 +702,7 @@ Text ScriptBridge::readText() const
 	LuaStackCheck check(L);
 	try {
 
-		t.entityID = getStrField("entityID", {});
+		t.entityID = readEntityID("entityID", {});
 		t.eval = getFuncField(L, "eval");
 		t.test = getStrField("test", { "" });
 		t.code = getFuncField(L, "code");
@@ -820,13 +820,13 @@ Script ScriptBridge::readScript() const
 	Script s;
 	LuaStackCheck check(L);
 	try {
-		s.entityID = getStrField("entityID", {});
+		s.entityID = readEntityID("entityID", {});
 		s.code = getFuncField(L, "code");
 		s.npc = getStrField("npc", {""});
 
 		for (TableIt it(L, -1); !it.done(); it.next()) {
 			if (it.kType() == LUA_TNUMBER) {
-				EntityID id = getStrField("entityID", {});
+				EntityID id = readEntityID("entityID", {});
 				ScriptType type = toScriptType(getStrField("type", {}));
 				s.events.push_back({ id, type });
 			}
@@ -1002,12 +1002,21 @@ Battle ScriptBridge::readBattle() const
 				}
 			}
 			lua_pop(L, 1);
+		}
 
-			for (TableIt it(L, -1); !it.done(); it.next()) {
-				if (it.kType() == LUA_TNUMBER) {
-					EntityID id = readEntityID("entityID", {});
-					b.combatants.push_back(id);
+		if (hasField("combatants")) {
+			std::vector<StringCount> sc = getStrCountArray("combatants");
+			for (const auto& s : sc) {
+				for (int i = 0; i < s.count; ++i) {
+					b.combatants.push_back(s.str);
 				}
+			}
+		}
+
+		for (TableIt it(L, -1); !it.done(); it.next()) {
+			if (it.kType() == LUA_TNUMBER) {
+				EntityID id = readEntityID("entityID", {});
+				b.combatants.push_back(id);
 			}
 		}
 	}

@@ -407,6 +407,10 @@ ZoneDriver::MoveResult ZoneDriver::move(const EntityID& roomEntityID)
 		return (a == e.room1 && b == e.room2) || (a == e.room2 && b == e.room1);
 		});
 
+	if (it == _assets._csa.edges.end()) {
+		FatalError(fmt::format("Can not find Room with entityID='{}'", roomEntityID));
+	}
+
 	assert(it != _assets._csa.edges.end());
 	if (it == _assets._csa.edges.end())
 		return MoveResult::kNoConnection;

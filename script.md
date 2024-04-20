@@ -54,11 +54,7 @@ Which brings up the question: what is an Entity?
 
 An Entity is a thing in the game. It can be a room, an item, a character, a script, etc. It must have
 a globally unique ID. You will get an error if you try to create two entities with the same
-entityID. There are a few ways to specify an entityID:
-
-#### Fully Specified
-
-Here is a "fully specified" Entity:
+entityID.
 
 ```lua
 Container {
@@ -71,29 +67,6 @@ To unlock it, you would write:
 
 ```lua
 Entity("CHEST_01").locked = false
-```
-
-#### Name Only
-
-Sometimes, that is more info than needed. For a Actor (for example) they should have unique
-names. So if a name is provided, and not an entityID, then the name is used as the entityID.
-
-```lua
-Actor {
-  name = "Grom",
-}
-```
-
-And this accesses the Actor:
-
-```lua
-if Entity("Grom").STR >= 18 then...
-```
-
-But generally, you won't need that, because the relevant Actor is set in the 'npc' variable:
-
-```lua
-if npc.STR >= 18 then...
 ```
 
 #### Automatic

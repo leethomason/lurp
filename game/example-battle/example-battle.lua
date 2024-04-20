@@ -141,6 +141,7 @@ Zone {
     name = "Battle Zone",
 
     Room {
+        entityID = "LOBBY",
         name = "Lobby",
         desc = "Outside the Battle Arena",
 
