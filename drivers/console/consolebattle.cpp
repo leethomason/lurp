@@ -419,10 +419,15 @@ void RunConsoleBattleTests()
 
 void BattleOutputTests()
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+    
 	SWCombatant a = { "PLAYER", "Player" };
 	SWCombatant b = { "ENEMY B", "Enemy B" };
 	SWCombatant c = { "ENEMY C", "Enemy C" };
 
+#pragma GCC diagnostic pop
+    
 	a.region = 0;
 	a.meleeWeapon = { "sword", Die(1, 8, 0) };
 	a.armor = { "chain", 3 };
