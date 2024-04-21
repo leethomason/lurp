@@ -206,7 +206,8 @@ Script {
 I'm going to tell a story.
 {s="Listener"}
 Yay!
-{s="Another" test="{script.more}"}
+{s="Another" test={script.more}}
+I'm want to hear too!
 ]]
     }
 }

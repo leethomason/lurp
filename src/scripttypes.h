@@ -86,6 +86,17 @@ struct Text : Entity {
 	virtual ScriptType getType() const override {
 		return type;
 	}
+
+	struct SubLine {
+		std::string speaker;
+		std::string test;
+		std::string text;
+	};
+	static std::vector<SubLine> subParse(const std::string& str, const EntityID& id);
+
+private:
+	static size_t findSubLine(size_t start, const std::string& str);
+	static size_t parseSubLine(size_t start, const std::string& str, std::string& speaoker, std::string& test);
 };
 
 struct Choices : Entity {

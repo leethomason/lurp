@@ -1,6 +1,8 @@
 #include "util.h"
 #include "SpookyV2.h"
+#include "debug.h"
 
+#include <fmt/core.h>
 #include <chrono>
 
 namespace lurp {
@@ -55,5 +57,28 @@ uint64_t Hash(const std::string& a, const std::string& b, const std::string& c, 
     spooky.Final(&hash, &unused);
     return hash;
 }
+
+size_t region(const std::string& str, size_t start, char open, char close)
+{
+    assert(str[start] == open);
+    int count = 1;
+    size_t end = start + 1;
+
+    while (count && end < str.size()) {
+        if (str[end] == open)
+            count++;
+        else if (str[end] == close)
+            count--;
+        end++;
+    }
+    assert(end > 0);
+    if (str[end - 1] != close) {
+        std::string msg = fmt::format("Mismatched brackets in string '{}' starting at '{}'",
+            str.substr(0, 12), str.substr(start, 12));
+        FatalError(msg);
+    }
+    return end;
+}
+
 
 } // namespace lurp
