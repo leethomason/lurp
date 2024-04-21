@@ -196,17 +196,17 @@ static void PrintEdges(const std::vector<DirEdge>& edges) {
 
 static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver& zd)
 {
-	std::string path = SavePath(dir, "save");
+	std::filesystem::path path = SavePath(dir, "save");
 
 	if (s == "/s" || s == "/c") {
-		fmt::print("Saving to '{}'...\n", path);
+		fmt::print("Saving to '{}'...\n", path.string());
 		std::ofstream stream = OpenSaveStream(path);
 		zd.save(stream);
 	}
 	if (s == "/l" || s == "/c") {
-		fmt::print("Loading from '{}'...\n", path);
+		fmt::print("Loading from '{}'...\n", path.string());
 		ScriptBridge loader;
-		loader.loadLUA(path);
+		loader.loadLUA(path.string());
 		zd.load(loader);
 	}
 	if (s == "/q") {
@@ -455,8 +455,8 @@ int main(int argc, const char* argv[])
 	cmdl({ "-l", "--log" }, log) >> log;
 
 	std::string dir = GameFileToDir(scriptFile);
-	std::string savePath = SavePath(dir, "saves");
-	std::string logPath = LogPath();
+	std::filesystem::path savePath = SavePath(dir, "saves");
+	std::filesystem::path logPath = LogPath();
 
 	plog::Severity logLevel = plog::warning;
 	if (log == "error")
@@ -467,11 +467,11 @@ int main(int argc, const char* argv[])
 		logLevel = plog::debug;
 
 	static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
-	static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.c_str(), 1'000'000, 3);
+	static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.string().c_str(), 1'000'000, 3);
 	plog::init(logLevel, &consoleAppender).addAppender(&fileAppender);
 
 	PLOG(plog::info) << "Logging started.";
-	PLOG(plog::info) << "Save path: " << savePath;
+	PLOG(plog::info) << "Save path: " << savePath.string();
 
 #if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.

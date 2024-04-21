@@ -28,23 +28,27 @@ std::string GameFileToDir(const std::string& scriptFile)
     return p.stem().string();
 }
 
-std::ofstream OpenSaveStream(const std::string& path)
+std::ofstream OpenSaveStream(const std::filesystem::path& path)
 {
     std::ofstream stream;
     stream.open(path, std::ios::out);
     if (!stream.is_open()) {
-        std::string msg = fmt::format("Stream '{}' is not open", path);
+        std::string msg = fmt::format("Stream '{}' is not open in OpenSaveStream", path.string());
         FatalError(msg);
         assert(stream.is_open());
     }
     return stream;
 }
 
-std::ifstream OpenLoadStream(const std::string& path)
+std::ifstream OpenLoadStream(const std::filesystem::path& path)
 {
     std::ifstream stream;
     stream.open(path, std::ios::in);
-    assert(stream.is_open());
+    if (!stream.is_open()) {
+        std::string msg = fmt::format("Stream '{}' is not open in OpenLoadStream", path.string());
+        FatalError(msg);
+        assert(stream.is_open());
+    }
     return stream;
 }
 
@@ -87,11 +91,11 @@ std::vector<std::filesystem::path> ScanGameFiles()
     return gameFiles;
 }
 
-std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
+std::filesystem::path SavePath(const std::string& dir, const std::string& stem, bool createDirs)
 {
-    std::string savePath = OSSavePath();
+    std::filesystem::path savePath = OSSavePath();
 
-    std::filesystem::path p = std::filesystem::path(savePath) / dir / (stem + ".lua");
+    std::filesystem::path p = savePath / dir / (stem + ".lua");
     if (createDirs) {
         std::filesystem::create_directories(p.parent_path());
         if (!std::filesystem::exists(p.parent_path())) {
@@ -100,7 +104,13 @@ std::string SavePath(const std::string& dir, const std::string& stem, bool creat
         }
     }
     fmt::print("Save path '{}' created\n", p.string());
-    return savePath;
+    return p;
+}
+
+std::filesystem::path LogPath()
+{
+    std::filesystem::path logPath = OSSavePath();
+    return logPath / "lurp.txt";
 }
 
 #ifdef _WIN32
@@ -128,14 +138,6 @@ std::string OSSavePath()
     exit(-1);
 }
 
-std::string LogPath()
-{
-    std::string logPath = OSSavePath();
-    logPath += "\\";
-    logPath += "lurp.txt";
-    return logPath;
-}
-
 #elif __APPLE__
 
 std::string OSSavePath()
@@ -143,28 +145,11 @@ std::string OSSavePath()
     return "~/Library/Application Support/LuRP";
 }
 
-std::string LogPath()
-{
-    std::string logPath = OSSavePath();
-    logPath += "/";
-    logPath += "lurp.txt";
-    return logPath;
-}
-
-
 #else
 
 std::string OSSavePath()
 {
     return "~/.local/share/LuRP";
-}
-
-std::string LogPath()
-{
-    std::string logPath = OSSavePath();
-    logPath += "/";
-    logPath += "lurp.txt";
-    return logPath;
 }
 
 #endif

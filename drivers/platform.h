@@ -10,14 +10,14 @@ namespace lurp {
 
 // --- Platform-specific functions ---
 // Given dir="default" and stem="auto" return "c:/user/thedude/Saved Games/default/auto.lua"
-std::string SavePath(const std::string& dir, const std::string& stem, bool createDirectories = true);
-std::string LogPath();
+std::filesystem::path SavePath(const std::string& dir, const std::string& stem, bool createDirectories = true);
+std::filesystem::path LogPath();
 
 // --- General functions ---
 // Gets the 'stem' for saving from the path to the game file.
 std::string GameFileToDir(const std::string& gameFile);
-std::ofstream OpenSaveStream(const std::string& path);
-std::ifstream OpenLoadStream(const std::string& path);
+std::ofstream OpenSaveStream(const std::filesystem::path& path);
+std::ifstream OpenLoadStream(const std::filesystem::path& path);
 
 bool CheckPath(const std::string& path, std::string& cwd);
 
