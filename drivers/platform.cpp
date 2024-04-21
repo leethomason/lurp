@@ -32,7 +32,11 @@ std::ofstream OpenSaveStream(const std::string& path)
 {
     std::ofstream stream;
     stream.open(path, std::ios::out);
-    assert(stream.is_open());
+    if (!stream.is_open()) {
+        std::string msg = fmt::format("Stream '{}' is not open", path);
+        FatalError(msg);
+        assert(stream.is_open());
+    }
     return stream;
 }
 
@@ -87,7 +91,7 @@ std::string SavePath(const std::string& dir, const std::string& stem, bool creat
 {
     std::string savePath = OSSavePath();
 
-    std::filesystem::path p = std::filesystem::path(savePath) / dir / stem / ".lua";
+    std::filesystem::path p = std::filesystem::path(savePath) / dir / (stem + ".lua");
     if (createDirs) {
         std::filesystem::create_directories(p.parent_path());
         if (!std::filesystem::exists(p.parent_path())) {
@@ -95,6 +99,7 @@ std::string SavePath(const std::string& dir, const std::string& stem, bool creat
             FatalError(msg);
         }
     }
+    fmt::print("Save path '{}' created\n", p.string());
     return savePath;
 }
 
