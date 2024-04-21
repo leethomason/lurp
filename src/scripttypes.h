@@ -92,7 +92,7 @@ struct Text : Entity {
 		std::string test;
 		std::string text;
 	};
-	static std::vector<SubLine> subParse(const std::string& str, const EntityID& id);
+	static std::vector<SubLine> subParse(const std::string& str);
 
 private:
 	static size_t findSubLine(size_t start, const std::string& str);

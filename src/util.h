@@ -20,6 +20,8 @@ inline std::string toLower(const std::string& str) {
 	return s;
 }
 
+size_t region(const std::string& str, size_t start, char open, char close);
+
 struct Globals
 {
 	static bool debugSave;
