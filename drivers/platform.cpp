@@ -1,4 +1,5 @@
 #include "platform.h"
+#include "debug.h"
 
 #include <string>
 #include <fmt/core.h>
@@ -13,6 +14,8 @@
 #endif
 
 namespace lurp {
+
+std::string OSSavePath();
 
 std::string GameFileToDir(const std::string& scriptFile)
 {
@@ -80,6 +83,21 @@ std::vector<std::filesystem::path> ScanGameFiles()
     return gameFiles;
 }
 
+std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
+{
+    std::string savePath = OSSavePath();
+
+    std::filesystem::path p = std::filesystem::path(savePath) / dir / stem / ".lua";
+    if (createDirs) {
+        std::filesystem::create_directories(p.parent_path());
+        if (!std::filesystem::exists(p.parent_path())) {
+            std::string msg = fmt::format("Could not create save path '{}'", p.parent_path().string());
+            FatalError(msg);
+        }
+    }
+    return savePath;
+}
+
 #ifdef _WIN32
 
 std::string OSSavePath()
@@ -105,25 +123,6 @@ std::string OSSavePath()
     exit(-1);
 }
 
-std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
-{
-    std::string savePath = OSSavePath();
-    savePath += "\\";
-    savePath += dir;
-    savePath += "\\";
-    savePath += stem;
-    savePath += ".lua";
-
-    std::filesystem::path p(savePath);
-    if (createDirs) {
-        std::filesystem::create_directories(p.parent_path());
-        if (!std::filesystem::exists(p.parent_path())) {
-            FatalError(fmt::print()"Could not create save path '{}", p.parent_path()));
-        }
-    }
-    return savePath;
-}
-
 std::string LogPath()
 {
     std::string logPath = OSSavePath();
@@ -137,22 +136,6 @@ std::string LogPath()
 std::string OSSavePath()
 {
     return "~/Library/Application Support/LuRP";
-}
-
-std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
-{
-    std::string savePath = OSSavePath();
-    savePath += "/";
-    savePath += dir;
-    savePath += "/";
-    savePath += stem;
-    savePath += ".lua";
-
-    std::filesystem::path p(savePath);
-    if (createDirs) {
-        std::filesystem::create_directories(p.parent_path());
-    }
-    return savePath;
 }
 
 std::string LogPath()
@@ -169,22 +152,6 @@ std::string LogPath()
 std::string OSSavePath()
 {
     return "~/.local/share/LuRP";
-}
-
-std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
-{
-    std::string savePath = OSSavePath();
-    savePath += "/";
-    savePath += dir;
-    savePath += "/";
-    savePath += stem;
-    savePath += ".lua";
-
-    std::filesystem::path p(savePath);
-    if (createDirs) {
-        std::filesystem::create_directories(p.parent_path());
-    }
-    return savePath;
 }
 
 std::string LogPath()
