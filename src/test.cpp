@@ -218,8 +218,8 @@ static void TestLoad()
 	ZoneDriver map(assets, bridge, "testplayer");
 
 	ScriptBridge loader;
-	std::string path = SavePath("test", "testsave");
-	loader.loadLUA(path);
+	std::filesystem::path path = SavePath("test", "testsave");
+	loader.loadLUA(path.string());
 	EntityID scriptID = map.load(loader);
 
 	TEST(!scriptID.empty());
@@ -264,7 +264,7 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	map.advance();
 	TEST(map.mode() == ZoneDriver::Mode::kChoices);
 
-	std::string path = SavePath("test", "testsave");
+	std::filesystem::path path = SavePath("test", "testsave");
 	std::ofstream stream = OpenSaveStream(path);
 
 	map.save(stream);
@@ -754,7 +754,7 @@ static void TestLuaCore()
 	TEST(binder.get("player.name").str == "Test Player");
 
 	// Save to a file for debugging
-	std::string path = SavePath("test", "testluacore");
+	std::filesystem::path path = SavePath("test", "testluacore");
 	std::ofstream stream = OpenSaveStream(path);
 	zoneDriver.save(stream);
 	stream.close();

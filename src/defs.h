@@ -21,7 +21,7 @@ struct ScriptEnv {
 	}
 };
 
-static const char* _SCRIPTENV = "_ScriptEnv";
+static constexpr char _SCRIPTENV[] = "_ScriptEnv";
 
 static constexpr char NO_ENTITY[1] = {0};
 
