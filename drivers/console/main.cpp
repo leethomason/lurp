@@ -357,7 +357,7 @@ static std::string SelectGame(const std::vector<std::filesystem::path>& paths)
 	fmt::print("> ");
 
 	Value v = Value::ParseValue(ReadString());
-	int option = v.intVal - 1;
+	size_t option = v.intVal - 1;
 	if (option >= 0 && option < paths.size())
 		return paths[option].string();
 	return "";
@@ -394,13 +394,18 @@ static void RunOutputTests()
 	PrintNews(queue);
 	printf("******\n");
 
-	Choices choices;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
+    Choices choices;
 	choices.choices.push_back({ "Go this way" });
 	choices.choices.push_back({ "Go that way..." });
 	choices.choices.push_back({ "Ponder." });
 	PrintChoices(choices);
 	printf("******\n");
 
+#pragma GCC diagnostic pop
+    
 	Zone zone;
 	zone.name = "The Zone";
 	Room room;

@@ -60,6 +60,26 @@ bool CheckPath(const std::string& path, std::string& cwd)
     return true;
 }
 
+std::vector<std::filesystem::path> ScanGameFiles()
+{
+    std::vector<std::filesystem::path> gameFiles;
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator("game")) {
+            if (entry.is_directory()) {
+                std::string dirName = entry.path().filename().string();
+                std::filesystem::path pathStem = dirName + ".lua";
+                std::filesystem::path gamePath = entry / pathStem;
+                if (std::filesystem::exists(gamePath))
+                    gameFiles.push_back(gamePath);
+            }
+        }
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        PLOG(plog::error) << fmt::format("Error scanning game files: {}", e.what());
+    }
+    return gameFiles;
+}
+
 #ifdef _WIN32
 
 std::string OSSavePath()
@@ -107,25 +127,6 @@ std::string LogPath()
     logPath += "\\";
     logPath += "lurp.txt";
     return logPath;
-}
-
-std::vector<std::filesystem::path> ScanGameFiles()
-{
-    std::vector<std::filesystem::path> gameFiles;
-    try {
-        for (const auto& entry : std::filesystem::directory_iterator("game")) {
-            if (entry.is_directory()) {
-                std::string dirName = entry.path().filename().string();
-                std::filesystem::path gamePath = entry / (dirName + ".lua");
-                if (std::filesystem::exists(gamePath))
-                    gameFiles.push_back(gamePath);
-            }
-        }
-    }
-    catch (const std::filesystem::filesystem_error& e) {
-        PLOG(plog::error) << fmt::format("Error scanning game files: {}", e.what());
-    }
-    return gameFiles;
 }
 
 #elif __APPLE__

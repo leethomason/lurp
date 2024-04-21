@@ -385,8 +385,6 @@ SWPower SWPower::convert(const lurp::Power& p)
 
 SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& assets)
 {
-	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
-
 	SWCombatant r;
 	r.link = c.entityID;
 	r.name = c.name;
@@ -424,8 +422,6 @@ SWCombatant SWCombatant::convert(const lurp::Combatant& c, const ScriptAssets& a
 
 SWCombatant SWCombatant::convert(const lurp::Actor& c, const ScriptAssets& assets, const VarBinder& bind)
 {
-	auto mean = [](int a, int b, int c) { return (a + b + c + 2) / 3; };
-
 	SWCombatant r;
 	r.link = c.entityID;
 	r.name = c.name;
