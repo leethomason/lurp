@@ -103,7 +103,6 @@ std::filesystem::path SavePath(const std::string& dir, const std::string& stem, 
             FatalError(msg);
         }
     }
-    fmt::print("Save path '{}' created\n", p.string());
     return p;
 }
 

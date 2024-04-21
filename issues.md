@@ -2,14 +2,15 @@
 
 ## Open Issues
 
-* Test example-xyz (to some simple level)
 * Release!
 
 ## Open / Next
 
+* Show status effects during combat
 * Auto-save before battle
-* OSX 
-* Linux
+* OSX - testing
+* OSX - deploy
+* Linux - deploy
 * Actors move between rooms
 
 ## Ideas / Icebox
@@ -19,6 +20,7 @@
 
 ## Done
 
+* Test example-xyz (to some simple level)
 * Delete: Simple: minimal but complete
 * simplest zone (done)
 * simplest script (done)

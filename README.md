@@ -39,29 +39,6 @@ certainly still errors. The API will evolve as the ideas evolve. How much LuRP d
 is realistically dependent on how much interest there is in it, of course. Features and PRs
 drive priorities.
 
-## Feedback
-
-Is most welcome. Please open an issue for any problems, questions, or suggestions. If needed
-and desired, I may open a "discussion" or "wiki" pages.
-
-### Games (Chullu, example-xyz)
-
-Happy to take improvements to the writing. The `example` games should remain small and focused,
-so I don't want too many words there. `chullu` would be fun to improve and expand into a proper
-game. (The new location should be in separate files, so there's some work to do there.)
-
-All content should remain appropriate for general audiences.
-
-### Engine
-
-Pull requests for the C++ / Lua code appreciated as PRs. Changes to the API surface will be
-required but require some thought and balancing concerns. (Usability, limitations of the
-C++/Lua interface, etc.)
-
-### Console / 2D Driver
-
-Always looking to make that look better and be more usable.
-
 ## Installation: Give it a Try
 
 ### Windows
@@ -116,6 +93,29 @@ straight into LuRP items, which gives a good reference for consistent definition
 
 The Savage World Adventure Edition Core Rules cover everything. LuRP is not affiliated
 with SWADE or Pinnacle in any way. (Except being a fan of the rule set.)
+
+## Feedback
+
+Is most welcome. Please open an issue for any problems, questions, or suggestions. If needed
+and desired, I may open a "discussion" or "wiki" pages.
+
+### Games (Chullu, example-xyz)
+
+Happy to take improvements to the writing. The `example` games should remain small and focused,
+so I don't want too many words there. `chullu` would be fun to improve and expand into a proper
+game. (The new location should be in separate files, so there's some work to do there.)
+
+All content should remain appropriate for general audiences.
+
+### Engine
+
+Pull requests for the C++ / Lua code appreciated as PRs. Changes to the API surface will be
+required but require some thought and balancing concerns. (Usability, limitations of the
+C++/Lua interface, etc.)
+
+### Console / 2D Driver
+
+Always looking to make that look better and be more usable.
 
 ## Future Work
 

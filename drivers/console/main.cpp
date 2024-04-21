@@ -38,6 +38,8 @@ using namespace lurp;
 static constexpr ionic::Color configTextColor = ionic::Color::yellow;
 static constexpr ionic::Color configChoiceColor = ionic::Color::cyan;
 
+bool gWinAllBattles = false;
+
 static void PrintText(std::string speaker, const std::string& text)
 {
 	ionic::TableOptions options;
@@ -314,7 +316,9 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			const Battle& battle = driver.battle();
 			VarBinder binder = driver.battleVarBinder();
 #if 1
-			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
+			bool victory = true;
+			if (!gWinAllBattles)
+				victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
 #else
 			bool victory = false;
 #endif
@@ -443,11 +447,14 @@ int main(int argc, const char* argv[])
 		fmt::print("  --seed            Random number seed\n");
 		fmt::print("  --outputTests     Run output tests\n");
 		fmt::print("  --noScan          Do not scan for games or display menu\n");
+		fmt::print("  --win             Automatically win all battles\n");
 	}
 
 	bool debugSave = cmdl[{ "-s", "--debugSave" }];
 	bool outputTests = cmdl[{ "--outputTests" }];
 	bool doScan = !cmdl[{ "--noScan" }];
+	if (cmdl[{ "--win" }])
+		gWinAllBattles = true;
 
 	uint32_t seed = Random::getTime();
 	cmdl({ "--seed" }, seed) >> seed;

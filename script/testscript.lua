@@ -198,6 +198,19 @@ Script {
     }
 }
 
+Script {
+    entityID = "ALT_TEXT_1",
+    Text {
+[[
+{s="Talker"}
+I'm going to tell a story.
+{s="Listener"}
+Yay!
+{s="Another" test="{script.more}"}
+]]
+    }
+}
+
 local scripted = {}
 scripted.openChest =
 Script {

@@ -14,12 +14,6 @@
 
 namespace lurp {
 
-// FIXME: revisit this on a big file
-// In the (small) test these don't do much. 79k -> 66k or so.
-// May be more important for big files.
-#define NIL_TEXT_STRINGS() 0
-#define RUN_GC() 0
-
 template<typename T>
 void FatalReadError(const std::string& msg, const T& t)
 {
@@ -747,21 +741,12 @@ Text ScriptBridge::readText() const
 					code = getFuncField(L, "code");
 				}
 
-				//int last = 0;
 				for (TableIt inner(L, -1); !inner.done(); inner.next()) {
 					if (inner.kType() != LUA_TNUMBER) continue;
 					Variant v = inner.value();
 					if (v.type != LUA_TSTRING) continue;
-
-					//last = (int) inner.key().num;
 					t.lines.push_back({ speaker, v.str, eval, test, code });
 				}
-#if NIL_TEXT_STRINGS()
-				for (int i = 1; i <= last; i++) {
-					lua_pushnil(L);
-					lua_seti(L, -2, i);
-				}
-#endif
 			}
 		}
 		else {
@@ -790,12 +775,6 @@ Text ScriptBridge::readText() const
 				//last = (int)it.key().num;
 				t.lines.push_back({ speaker, v.str, -1, "", -1 });
 			}
-#if NIL_TEXT_STRINGS()
-			for (int i = 1; i <= last; i++) {
-				lua_pushnil(L);
-				lua_seti(L, -2, i);
-			}
-#endif
 		}
 	}
 	catch (std::exception& e) {
@@ -1157,9 +1136,6 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	for (const auto& i : assets.callScripts) i.dump(0);
 	*/
 
-#if RUN_GC()
-	lua_gc(L, LUA_GCCOLLECT);
-#endif
 	//int kbytes = lua_gc(L, LUA_GCCOUNT);
 	//fmt::print("LUA memory usage: {} KB\n", kbytes);
 	return csa;
