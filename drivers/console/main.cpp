@@ -358,7 +358,7 @@ static std::string SelectGame(const std::vector<std::filesystem::path>& paths)
 
 	Value v = Value::ParseValue(ReadString());
 	size_t option = v.intVal - 1;
-	if (option >= 0 && option < paths.size())
+	if (option < paths.size())
 		return paths[option].string();
 	return "";
 }

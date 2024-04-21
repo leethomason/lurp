@@ -117,6 +117,9 @@ std::string SavePath(const std::string& dir, const std::string& stem, bool creat
     std::filesystem::path p(savePath);
     if (createDirs) {
         std::filesystem::create_directories(p.parent_path());
+        if (!std::filesystem::exists(p.parent_path())) {
+            FatalError(fmt::print()"Could not create save path '{}", p.parent_path()));
+        }
     }
     return savePath;
 }
@@ -163,7 +166,34 @@ std::string LogPath()
 
 #else
 
-#error Platform not defined.
+std::string OSSavePath()
+{
+    return "~/.local/share/LuRP";
+}
+
+std::string SavePath(const std::string& dir, const std::string& stem, bool createDirs)
+{
+    std::string savePath = OSSavePath();
+    savePath += "/";
+    savePath += dir;
+    savePath += "/";
+    savePath += stem;
+    savePath += ".lua";
+
+    std::filesystem::path p(savePath);
+    if (createDirs) {
+        std::filesystem::create_directories(p.parent_path());
+    }
+    return savePath;
+}
+
+std::string LogPath()
+{
+    std::string logPath = OSSavePath();
+    logPath += "/";
+    logPath += "lurp.txt";
+    return logPath;
+}
 
 #endif
 
