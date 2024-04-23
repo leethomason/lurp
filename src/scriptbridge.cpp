@@ -222,7 +222,6 @@ void ScriptBridge::doFile(const std::string& filename)
 
 }
 
-
 void ScriptBridge::pushNewGlobalTable(const std::string& name)
 {
 	LuaStackCheck check(L, 1);

@@ -58,7 +58,7 @@ uint64_t Hash(const std::string& a, const std::string& b, const std::string& c, 
     return hash;
 }
 
-size_t region(const std::string& str, size_t start, char open, char close)
+size_t parseRegion(const std::string& str, size_t start, char open, char close)
 {
     assert(str[start] == open);
     int count = 1;
@@ -80,5 +80,45 @@ size_t region(const std::string& str, size_t start, char open, char close)
     return end;
 }
 
+std::pair<std::string, std::string> parseKV(const std::string& str, char* sepOut)
+{
+    size_t sep = str.find('=');
+    if (sep == std::string::npos) {
+		std::string msg = fmt::format("Invalid key-value pair: '{}'", str);
+		FatalError(msg);
+	}
+    std::string key = trim(str.substr(0, sep));
+    std::string value = trim(str.substr(sep + 1));
+
+    if (key.empty() || value.empty()) {
+        std::string msg = fmt::format("Invalid key-value pair: '{}'", str);
+        FatalError(msg);
+    }
+    if (value[0] == '{' || value[0] == '\'' || value[0] == '"') {
+		char open = value[0];
+		char close = (open == '{') ? '}' : open;
+		size_t end = parseRegion(value, 0, open, close);
+		value = value.substr(1, end - 2);
+        if (sepOut)
+			*sepOut = open;
+	}    
+	return std::make_pair(key, value);
+}
+
+std::vector<std::string> parseKVPairs(const std::string& str)
+{
+    std::vector<std::string> result;
+	size_t pos = 0;
+    while (pos < str.size()) {
+		size_t next = str.find(',', pos);
+		if (next == std::string::npos)
+			next = str.size();
+        std::string subStr = str.substr(pos, next - pos);
+        if (!subStr.empty())
+			result.push_back(trim(subStr));
+		pos = next + 1;
+	}
+	return result;
+}
 
 } // namespace lurp

@@ -15,6 +15,7 @@ namespace lurp {
 }
 
 
+#if 0
 /*static*/ size_t Text::parseSubLine(size_t start, const std::string& str, std::string& speaoker, std::string& test)
 {
 	size_t end = start + 1;
@@ -40,7 +41,7 @@ namespace lurp {
 	// Currently uses very particular parsing. This could be made more robust
 	// by using RegEx.
 	std::vector<SubLine> lines;
-	
+
 	std::string speaker;
 	std::string test;
 
@@ -61,4 +62,6 @@ namespace lurp {
 			next = parseSubLine(start, str, speaker, test);
 		}
 	}
+}
+#endif
 } // namespace lurp

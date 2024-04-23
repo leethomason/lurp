@@ -1119,7 +1119,7 @@ void BattleTest::TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(battle.combatants().size() == 4);
 }
 
-void TestExampleZone()
+static void TestExampleZone()
 {
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("game/example-zone/example-zone.lua");
@@ -1135,6 +1135,53 @@ void TestExampleZone()
 	TEST(inv.emtpy());
 
 	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);	
+}
+
+static void TestTextParsing()
+{
+	{
+		TEST(trimRight("aa") == "aa");
+		TEST(trimRight("aa ") == "aa");
+		TEST(trimRight("  ").empty());
+		TEST(trimRight(" aa") == " aa");
+
+		TEST(trimLeft("aa") == "aa");
+		TEST(trimLeft(" aa") == "aa");
+		TEST(trimLeft("  ").empty());
+		TEST(trimLeft("aa ") == "aa ");
+
+		TEST(trim("aa") == "aa");
+		TEST(trim(" aa ") == "aa");
+		TEST(trim("  ").empty());
+	}
+
+	{
+		//                  0    5    0
+		std::string test = "aaa{B=c, {D=e}}";
+		size_t end = parseRegion(test, 3, '{', '}');
+		TEST(end == test.size());
+	}
+	{
+		std::string test = "aaa{B=c, {D=e}}  ";
+		size_t end = parseRegion(test, 3, '{', '}');
+		TEST(end == 15);
+	}
+	{
+		std::string test = "A=1, B = {22},C=3 , D= \"4 4\", E='55 55' ";
+		std::vector<std::string> kv = parseKVPairs(test);
+		TEST(kv.size() == 5);
+		TEST(kv[0] == "A=1");
+		TEST(kv[1] == "B = {22}");
+		TEST(kv[2] == "C=3");
+		TEST(kv[3] == "D= \"4 4\"");
+		TEST(kv[4] == "E='55 55'");
+	}
+	{
+		TEST(parseKV("A=1") == std::make_pair("A", "1"));
+		TEST(parseKV("B= {22}") == std::make_pair("B", "22"));
+		TEST(parseKV("D = \"4 4\"") == std::make_pair("D", "4 4"));
+		TEST(parseKV("E='55 55'") == std::make_pair("E", "55 55"));
+	}
 }
 
 int RunTests()
@@ -1175,6 +1222,7 @@ int RunTests()
 	RUN_TEST(BattleTest::TestRegionSpells());
 	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
 	TestExampleZone();
+	TestTextParsing();
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);
