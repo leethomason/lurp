@@ -1191,6 +1191,22 @@ static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_1");
 
 	TEST(driver.type() == ScriptType::kText);
+
+	std::string speaker = driver.line().speaker;
+	std::string text = driver.line().text;
+	TEST(speaker == "Talker");
+	TEST(text == "I'm going to tell a story.");
+
+	driver.advance();
+	TEST(driver.line().speaker == "Listener");
+	TEST(driver.line().text == "Yay!");
+
+	driver.advance();
+	TEST(driver.line().speaker == "Another");
+	TEST(driver.line().text == "I want to hear too!");
+
+	driver.advance();
+	TEST(driver.done());
 }
 
 int RunTests()

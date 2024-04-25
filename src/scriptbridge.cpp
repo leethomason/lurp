@@ -719,8 +719,8 @@ Text ScriptBridge::readText() const
 				}
 			*/
 
-			Text::Line line;
 			for (TableIt it(L, -1); !it.done(); it.next()) {
+				Text::Line line;
 				if (it.kType() != LUA_TNUMBER) continue;
 
 				if (hasField("s")) {
@@ -743,16 +743,18 @@ Text ScriptBridge::readText() const
 					if (inner.kType() != LUA_TNUMBER) continue;
 					Variant v = inner.value();
 					if (v.type != LUA_TSTRING) continue;
+					line.text = v.str;
+					text.lines.push_back(line);
 
+#if 0
 					// But the rabbit hole goes deeper! If there are sublines,
 					// we may generate even more text. 
 					std::vector<Text::SubLine> sublines = Text::subParse(v.str);
 					for (const Text::SubLine& sub : sublines) {
-						Text::Line line2 = line;
-						line2.text = sub.text;
-						text.lines.push_back(line2);
+						text.lines.push_back(sub.toLine(line));
 						line.code = -1; // Reset! The 'code' should only be called once.
 					}
+#endif
 				}
 			}
 		}
@@ -779,13 +781,14 @@ Text ScriptBridge::readText() const
 				Variant v = it.value();
 				if (v.type != LUA_TSTRING) continue;
 				line.text = v.str;
+				text.lines.push_back(line);
 
+#if 0
 				std::vector<Text::SubLine> sublines = Text::subParse(v.str);
 				for (const Text::SubLine& sub : sublines) {
-					Text::Line line2 = line;
-					line2.text = sub.text;
-					text.lines.push_back(line2);
+					text.lines.push_back(sub.toLine(line));
 				}
+#endif
 			}
 		}
 	}

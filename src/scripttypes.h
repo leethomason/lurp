@@ -91,6 +91,14 @@ struct Text : Entity {
 		std::string speaker;
 		std::string test;
 		std::string text;
+
+		Line toLine(const Line& parent) const {
+			Line line2;
+			line2.speaker = speaker.empty() ? parent.speaker : speaker;
+			line2.test = test.empty() ? parent.test : test;
+			line2.text = text;
+			return line2;
+		}
 	};
 	static std::vector<SubLine> subParse(const std::string& str);
 

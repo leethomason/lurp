@@ -31,10 +31,12 @@ namespace lurp {
 			break;
 
 		// Flush the current subline
-		SubLine subLine{ speaker, test, str.substr(start, next - start)};
-		lines.push_back(subLine);
-		speaker.clear();
-		test.clear();
+		if (next > start) {
+			SubLine subLine{ speaker, test, str.substr(start, next - start) };
+			lines.push_back(subLine);
+			speaker.clear();
+			test.clear();
+		}
 
 		size_t end = parseRegion(str, next, '{', '}');
 		std::string region = str.substr(next + 1, end - next - 2);
