@@ -96,7 +96,6 @@ struct Text : Entity {
 
 private:
 	static size_t findSubLine(size_t start, const std::string& str);
-	static size_t parseSubLine(size_t start, const std::string& str, std::string& speaoker, std::string& test);
 };
 
 struct Choices : Entity {

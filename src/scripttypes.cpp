@@ -14,28 +14,6 @@ namespace lurp {
 	return t;
 }
 
-
-#if 0
-/*static*/ size_t Text::parseSubLine(size_t start, const std::string& str, std::string& speaoker, std::string& test)
-{
-	size_t end = start + 1;
-	int count = 0;
-
-	while (end < str.size()) {
-		if (str[end] == '{')
-			count++;
-		else if (str[end] == '}')
-			count--;
-		end++;
-	}
-	if (end == str.size()) {
-		std::string msg = fmt::format("Unmatched curly braces in Text '{}'", str.substr(0, 20));
-		FatalError(msg);
-	}
-	std::string sub = str.substr(start, end - start);
-}
-
-
 /*static*/ std::vector<Text::SubLine> Text::subParse(const std::string& str)
 {
 	// Currently uses very particular parsing. This could be made more robust
@@ -46,22 +24,36 @@ namespace lurp {
 	std::string test;
 
 	size_t start = 0;
+	size_t next = 0;
 	while (start < str.size()) {
-		size_t next = findSubLine(start, str);
-		if (next > start) {
-			SubLine subLine;
-			subLine.speaker = speaker;
-			subLine.test = test;
-			subLine.text = str.substr(start, next - start);
-			lines.push_back(subLine);
-			speaker.clear();
-			test.clear();
+		next = findSubLine(start, str);
+		if (next == std::string::npos)
+			break;
+
+		// Flush the current subline
+		SubLine subLine{ speaker, test, str.substr(start, next - start)};
+		lines.push_back(subLine);
+		speaker.clear();
+		test.clear();
+
+		size_t end = parseRegion(str, next, '{', '}');
+		std::string region = str.substr(next + 1, end - next - 2);
+		std::vector<std::string> pairs = parseKVPairs(region);
+		for (const std::string& pair : pairs) {
+			std::pair<std::string, std::string> kv = parseKV(pair);
+			if (kv.first == "s")
+				speaker = kv.second;
+			else if (kv.first == "test")
+				test = kv.second;
 		}
-		start = next;
-		if (start < str.size()) {
-			next = parseSubLine(start, str, speaker, test);
-		}
+		start = end;
 	}
+	// final flush
+	if (next > start) {
+		SubLine subLine{ speaker, test, str.substr(start, next - start) };
+		lines.push_back(subLine);
+	}
+	return lines;
 }
-#endif
+
 } // namespace lurp

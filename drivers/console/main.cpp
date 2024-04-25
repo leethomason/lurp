@@ -398,8 +398,10 @@ static void RunOutputTests()
 	PrintNews(queue);
 	printf("******\n");
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
     Choices choices;
 	choices.choices.push_back({ "Go this way" });
@@ -408,7 +410,9 @@ static void RunOutputTests()
 	PrintChoices(choices);
 	printf("******\n");
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
     
 	Zone zone;
 	zone.name = "The Zone";

@@ -691,14 +691,14 @@ Power ScriptBridge::readPower() const
 
 Text ScriptBridge::readText() const
 {
-	Text t;
+	Text text;
 	LuaStackCheck check(L);
 	try {
 
-		t.entityID = readEntityID("entityID", {});
-		t.eval = getFuncField(L, "eval");
-		t.test = getStrField("test", { "" });
-		t.code = getFuncField(L, "code");
+		text.entityID = readEntityID("entityID", {});
+		text.eval = getFuncField(L, "eval");
+		text.test = getStrField("test", { "" });
+		text.code = getFuncField(L, "code");
 
 		// Table form?
 		lua_geti(L, -1, 1);
@@ -719,32 +719,40 @@ Text ScriptBridge::readText() const
 				}
 			*/
 
+			Text::Line line;
 			for (TableIt it(L, -1); !it.done(); it.next()) {
 				if (it.kType() != LUA_TNUMBER) continue;
 
-				std::string speaker;
-				std::string test;
-				int eval = -1;
-				int code = -1;
-
 				if (hasField("s")) {
-					speaker = getStrField("s", {});
+					line.speaker = getStrField("s", {});
 				}
 				if (hasField("test")) {
-					test = getStrField("test", {});
+					line.test = getStrField("test", {});
 				}
 				if (hasField("eval")) {
-					eval = getFuncField(L, "eval");
+					line.eval = getFuncField(L, "eval");
 				}
 				if (hasField("code")) {
-					code = getFuncField(L, "code");
+					line.code = getFuncField(L, "code");
 				}
 
+				// This inner loop goes through each of the strings,
+				// which are the actual text lines, assigned to the same
+				// speaker with the same eval() and code().
 				for (TableIt inner(L, -1); !inner.done(); inner.next()) {
 					if (inner.kType() != LUA_TNUMBER) continue;
 					Variant v = inner.value();
 					if (v.type != LUA_TSTRING) continue;
-					t.lines.push_back({ speaker, v.str, eval, test, code });
+
+					// But the rabbit hole goes deeper! If there are sublines,
+					// we may generate even more text. 
+					std::vector<Text::SubLine> sublines = Text::subParse(v.str);
+					for (const Text::SubLine& sub : sublines) {
+						Text::Line line2 = line;
+						line2.text = sub.text;
+						text.lines.push_back(line2);
+						line.code = -1; // Reset! The 'code' should only be called once.
+					}
 				}
 			}
 		}
@@ -761,25 +769,30 @@ Text ScriptBridge::readText() const
 					"The birds are singing",
 				}
 			*/
-			std::string speaker;
+			Text::Line line;
 			if (hasField("s")) {
-				speaker = getStrField("s", {});
+				line.speaker = getStrField("s", {});
 			}
-			//int last = 0;
 			for (TableIt it(L, -1); !it.done(); it.next()) {
 				if (it.kType() != LUA_TNUMBER) continue;
 
 				Variant v = it.value();
 				if (v.type != LUA_TSTRING) continue;
-				//last = (int)it.key().num;
-				t.lines.push_back({ speaker, v.str, -1, "", -1 });
+				line.text = v.str;
+
+				std::vector<Text::SubLine> sublines = Text::subParse(v.str);
+				for (const Text::SubLine& sub : sublines) {
+					Text::Line line2 = line;
+					line2.text = sub.text;
+					text.lines.push_back(line2);
+				}
 			}
 		}
 	}
 	catch (std::exception& e) {
-		FatalReadError(e.what(), t);
+		FatalReadError(e.what(), text);
 	}
-	return t;
+	return text;
 }
 
 ScriptType ScriptBridge::toScriptType(const std::string& type) const

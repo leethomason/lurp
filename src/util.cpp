@@ -65,10 +65,10 @@ size_t parseRegion(const std::string& str, size_t start, char open, char close)
     size_t end = start + 1;
 
     while (count && end < str.size()) {
-        if (str[end] == open)
-            count++;
-        else if (str[end] == close)
+        if (str[end] == close)
             count--;
+        else if (str[end] == open)
+            count++;
         end++;
     }
     assert(end > 0);
