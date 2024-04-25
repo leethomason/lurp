@@ -694,35 +694,34 @@ Text ScriptBridge::readText() const
 	Text text;
 	LuaStackCheck check(L);
 	try {
+		/*
+			Text {
+				entityID = "T1",
+				eval = function() return true end,
+				test = "{player.alive}",
+				code = function() player:set("sun", true) end,
+				s = "narrator",
+
+				{ eval = function() return true end, s = "narrator", "It is a beautiful day", "The birds are singing" },
+				{ test = "{player.energetic}",	s = "player", "I should go outside" },
+				{ code = function() zone:set("outside", true) end, s = "narrator", "You go outside" }
+
+				"This is also text",
+				"That the narrator says.",
+			}
+		*/
 
 		text.entityID = readEntityID("entityID", {});
 		text.eval = getFuncField(L, "eval");
 		text.test = getStrField("test", { "" });
 		text.code = getFuncField(L, "code");
+		std::string speaoker = getStrField("s", { "" });
 
-		// Table form?
-		lua_geti(L, -1, 1);
-		int form = lua_type(L, -1);
-		lua_pop(L, 1);
-
-		if (form == LUA_TTABLE) {
-			/*
-				Text {
-					entityID = "T1",
-					eval = function() return true end,
-					test = "{player.alive}",
-					code = function() player:set("sun", true) end,
-
-					{ eval = function() return true end, s = "narrator", "It is a beautiful day", "The birds are singing" },
-					{ test = "{player.energetic}",	s = "player", "I should go outside" },
-					{ code = function() zone:set("outside", true) end, s = "narrator", "You go outside" }
-				}
-			*/
-
-			for (TableIt it(L, -1); !it.done(); it.next()) {
+		for (TableIt it(L, -1); !it.done(); it.next()) {
+			if (it.kType() != LUA_TNUMBER)
+				continue;
+			if (it.vType() == LUA_TTABLE) {
 				Text::Line line;
-				if (it.kType() != LUA_TNUMBER) continue;
-
 				if (hasField("s")) {
 					line.speaker = getStrField("s", {});
 				}
@@ -757,29 +756,13 @@ Text ScriptBridge::readText() const
 #endif
 				}
 			}
-		}
-		else {
-			/*
-				Text {
-					entityID = "T1",
-					eval = function() return true end,
-					test = "{player.alive}",
-					code = function() player:set("sun", true) end,
-
-					s = "narrator",
-					"It is a beautiful day",
-					"The birds are singing",
-				}
-			*/
-			Text::Line line;
-			if (hasField("s")) {
-				line.speaker = getStrField("s", {});
-			}
-			for (TableIt it(L, -1); !it.done(); it.next()) {
-				if (it.kType() != LUA_TNUMBER) continue;
+			else if (it.vType() == LUA_TSTRING) {
 
 				Variant v = it.value();
-				if (v.type != LUA_TSTRING) continue;
+				if (v.type != LUA_TSTRING)
+					continue;
+				Text::Line line;
+				line.speaker = speaoker;
 				line.text = v.str;
 				text.lines.push_back(line);
 

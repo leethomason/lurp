@@ -213,7 +213,7 @@ Yay!
 I want to hear too!
 
 {s="YetAnother" test={~script.more}}
-I want to hear too!
+I'm not interested.
 ]]
     }
 }
