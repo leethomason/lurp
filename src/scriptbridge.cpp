@@ -32,7 +32,7 @@ struct MarkDownHandler
 	}
 
 	std::vector<MD_BLOCKTYPE> blockStack;
-	std::vector<Text::SubLine> sublines;
+	std::vector<Text::Line> lines;
 
 	std::string text;
 	std::string speaker;
@@ -40,8 +40,12 @@ struct MarkDownHandler
 
 	void flush() {
 		if (!text.empty()) {
-			Text::SubLine subline{speaker, test, text};
-			sublines.push_back(subline);
+			Text::Line line;
+			line.speaker = speaker;
+			line.test = test;
+			line.text = text;
+
+			lines.push_back(line);
 			text.clear();
 			speaker.clear();
 			test.clear();
@@ -97,7 +101,7 @@ struct MarkDownHandler
 	}
 };
 
-std::string parseMarkdown(const std::string& md)
+std::vector<Text::Line> parseMarkdown(const std::string& md)
 {
 	MD_PARSER parser;
 	memset(&parser, 0, sizeof(parser));
@@ -117,7 +121,7 @@ std::string parseMarkdown(const std::string& md)
 		fmt::print("{}: t='{}' '{}'\n", sub.speaker, sub.test, sub.text);
 	}
 	*/
-	return "";
+	return handler.lines;
 }
 
 
@@ -819,15 +823,10 @@ Text ScriptBridge::readText() const
 
 		if (hasField("md")) {
 			std::string md = getStrField("md", {});
-			//std::string t = ionic::Table::normalizeMD(md, 2);
-			std::string t = parseMarkdown(md);
+			std::vector<Text::Line> lines = parseMarkdown(md);
 
-			Text::Line line;
-			line.speaker = speaker;
-
-			std::vector<Text::SubLine> sublines = Text::subParse(t);
-			for (const Text::SubLine& sub : sublines) {
-				text.lines.push_back(sub.toLine(line));
+			for (const Text::Line& line : lines) {
+				text.lines.push_back(line);
 			}
 		}
 
