@@ -1178,7 +1178,7 @@ static void TestTextParsing()
 	}
 	{
 		TEST(parseKV("A=1") == std::make_pair("A", "1"));
-		TEST(parseKV("B= {22}") == std::make_pair("B", "22"));
+		TEST(parseKV("B= {22}") == std::make_pair("B", "{22}"));
 		TEST(parseKV("D = \"4 4\"") == std::make_pair("D", "4 4"));
 		TEST(parseKV("E='55 55'") == std::make_pair("E", "55 55"));
 	}

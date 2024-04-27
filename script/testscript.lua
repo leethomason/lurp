@@ -201,21 +201,37 @@ Script {
 Script {
     entityID = "ALT_TEXT_1",
     Text {
-        code = function() script.more = true end,
+        code = function() script.more = true end, md =
 [[
-{s="Talker"}
+[s = "Talker"]
 I'm going to tell a story.
+It will be fun.
 
-{s="Listener"}
+Listen closely!
+
+[s="Listener"]
 Yay!
 
-{s="Another" test={script.more}}
+[s="Another", test = {script.more}]
 I want to hear too!
 
-{s="YetAnother" test={~script.more}}
+[s="YetAnother", test={~script.more}]
 I'm not interested.
 ]]
     }
+}
+
+-- future idea: not thought through or tested yet
+Script {
+    entityID = "ALT_TEXT_2",
+    md = 
+[[
+[s = {player.name}]
+I'm the player! Should I go:
+
+* To the left [next = "LEFT"]
+* To the right [next="RIGHT"]
+]]
 }
 
 local scripted = {}

@@ -94,9 +94,9 @@ std::pair<std::string, std::string> parseKV(const std::string& str, char* sepOut
         std::string msg = fmt::format("Invalid key-value pair: '{}'", str);
         FatalError(msg);
     }
-    if (value[0] == '{' || value[0] == '\'' || value[0] == '"') {
+    if (value[0] == '[' || value[0] == '\'' || value[0] == '"') {
 		char open = value[0];
-		char close = (open == '{') ? '}' : open;
+		char close = (open == '[') ? ']' : open;
 		size_t end = parseRegion(value, 0, open, close);
 		value = value.substr(1, end - 2);
         if (sepOut)

@@ -101,9 +101,11 @@ struct Text : Entity {
 		}
 	};
 	static std::vector<SubLine> subParse(const std::string& str);
+	static bool isMDTag(const std::string& str);
+	static size_t findMDTag(size_t start, const std::string& str);
+	static void parseMDTag(const std::string& str, std::string& speaker, std::string& test);
 
 private:
-	static size_t findSubLine(size_t start, const std::string& str);
 };
 
 struct Choices : Entity {

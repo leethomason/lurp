@@ -40,7 +40,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(lua fmt argh ionic plog)
 
 file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
 file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
 file(GLOB IONIC_SOURCES ${ionic_SOURCE_DIR}/src/*.cpp ${ionic_SOURCE_DIR}/src/*.h)
