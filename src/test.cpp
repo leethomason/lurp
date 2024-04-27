@@ -1217,11 +1217,97 @@ static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
 
 static void TestFormatting(const ConstScriptAssets& ca, ScriptBridge& bridge)
 {
+	// fixme: More to be done here; mostly now just testing it loads.
 	ScriptAssets assets(ca);
 	ZoneDriver zoneDriver(assets, bridge, "testplayer");
 	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_2");
 
 	TEST(driver.type() == ScriptType::kText);
+}
+
+static void FlushText(ZoneDriver& driver)
+{
+	while (driver.mode() == ZoneDriver::Mode::kText) {
+		driver.text();		// this call sets the text read
+		driver.advance();
+	}
+}
+
+static void TestChullu()
+{
+	ScriptBridge bridge;
+	ConstScriptAssets csassets = bridge.readCSA("game/chullu/chullu.lua");
+	ScriptAssets assets(csassets);
+	ZoneDriver driver(assets, bridge, NO_ENTITY, "player");
+
+	TEST(driver.mode() == ZoneDriver::Mode::kText);
+	TEST(driver.currentRoom().name == "Your Apartment");
+	FlushText(driver);
+
+	ZoneDriver::MoveResult mr = driver.move("SF_CAFE");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	TEST(driver.currentRoom().name == "The Black Soul Cafe");
+	FlushText(driver);
+
+	mr = driver.move("SF_LIBRARY");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	TEST(driver.currentRoom().name == "The SF City Library");
+	FlushText(driver);
+	{
+		const Inventory& inv = driver.getInventory(driver.getPlayer());
+		TEST(inv.numItems(assets.getItem("HAIRPIN")) == 1);
+	}
+
+	InteractionVec interactions = driver.getInteractions();
+	TEST(interactions.size() == 1);
+	driver.startInteraction(interactions[0]);
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);
+	FlushText(driver);
+
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);
+	driver.choose(1);	// shoot the lock off!
+	FlushText(driver);
+	mr = driver.move("SF_LIBRARY_RESTRICTED");
+	TEST(mr == ZoneDriver::MoveResult::kLocked);
+
+	driver.startInteraction(interactions[0]);
+	FlushText(driver);
+	driver.choose(0);	// pick the lock
+	FlushText(driver);
+
+	mr = driver.move("SF_LIBRARY_RESTRICTED");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	FlushText(driver);
+	ContainerVec containers = driver.getContainers();
+	TEST(containers.size() == 1);
+	driver.transferAll(containers[0]->entityID, driver.getPlayer().entityID);
+
+	mr = driver.move("SF_LIBRARY");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	FlushText(driver);
+	{
+		const Inventory& inv = driver.getInventory(driver.getPlayer());
+		TEST(inv.numItems(assets.getItem("HAIRPIN")) == 0);
+	}
+	mr = driver.move("SF_LIBRARY_RESTRICTED");
+	TEST(mr == ZoneDriver::MoveResult::kLocked);
+	FlushText(driver);
+
+	mr = driver.move("SF_CAFE");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 3);
+	driver.choose(0);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 3);
+	driver.choose(1);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 3);
+	driver.choose(2);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 4);
+	driver.choose(3);
+	FlushText(driver);	// adventure awaits!
 }
 
 int RunTests()
@@ -1265,6 +1351,7 @@ int RunTests()
 	RUN_TEST(TestTextParsing());
 	RUN_TEST(TestInlineText(csassets, bridge));
 	RUN_TEST(TestFormatting(csassets, bridge));
+	RUN_TEST(TestChullu());
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

@@ -100,10 +100,6 @@ std::vector<Text::Line> Text::parseMarkdown(const std::string& md)
 	parser.leave_span = MarkDownHandler::leaveSpan;
 	parser.text = MarkDownHandler::textHandler;
 
-	if (md.find("back. -G") != std::string::npos) {
-		fmt::print("found it\n");
-	}
-
 	md_parse(md.c_str(), (MD_SIZE)md.size(), &parser, &handler);
 
 #if DEBUG_MD
