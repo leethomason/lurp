@@ -5,7 +5,6 @@
 #include "scriptasset.h"
 #include "util.h"
 #include "../drivers/platform.h"
-#include "md4c.h"
 
 #include <ionic/ionic.h>
 
@@ -23,107 +22,6 @@ void FatalReadError(const std::string& msg, const T& t)
 	fmt::print("[ERROR] reading {}: '{}' {}\n", scriptTypeName(T::type), msg, t.description());
 	exit(1);
 }
-
-struct MarkDownHandler
-{
-	MarkDownHandler() {}
-	~MarkDownHandler() {
-		CHECK(blockStack.empty());
-	}
-
-	std::vector<MD_BLOCKTYPE> blockStack;
-	std::vector<Text::Line> lines;
-
-	std::string text;
-	std::string speaker;
-	std::string test;
-
-	void flush() {
-		if (!text.empty()) {
-			Text::Line line;
-			line.speaker = speaker;
-			line.test = test;
-			line.text = text;
-
-			lines.push_back(line);
-			text.clear();
-			speaker.clear();
-			test.clear();
-		}
-	}
-
-	static int enterBlock(MD_BLOCKTYPE block, void*, void* user) {
-		MarkDownHandler* self = (MarkDownHandler*)user;
-		//fmt::print("Enter block: {}\n", (int)block);
-		self->blockStack.push_back(block);
-		return 0;
-	}
-	static int leaveBlock(MD_BLOCKTYPE block, void*, void* user) {
-		MarkDownHandler* self = (MarkDownHandler*)user;
-		//fmt::print("Leave block: {}\n", (int)block);
-		assert(self->blockStack.back() == block);
-		self->blockStack.pop_back();
-
-		if (self->blockStack.size() == 0) {
-			self->flush();
-		}
-		return 0;
-	}
-	static int enterSpan(MD_SPANTYPE span, void*, void* user) {
-		(void)span;
-		(void)user;
-		//fmt::print("Enter spane: {}\n", (int)span);
-		return 0;
-	}
-	static int leaveSpan(MD_SPANTYPE span, void*, void* user) {
-		(void)span;
-		(void)user;
-		//fmt::print("Leave spane: {}\n", (int)span);
-		return 0;
-	}
-	static int textHandler(MD_TEXTTYPE type, const MD_CHAR* p, MD_SIZE size, void* user) {
-		MarkDownHandler* self = (MarkDownHandler*)user;
-		std::string str(p, size);
-
-		if (type == MD_TEXT_NORMAL && self->blockStack.back() == MD_BLOCK_P) {
-			if (Text::isMDTag(str)) {
-				self->flush();
-				Text::parseMDTag(trim(str), self->speaker, self->test);
-			}
-			else {
-				if (!self->text.empty()) 
-					self->text += " ";
-				self->text += str;
-			}
-			//fmt::print("Normal text: '{}'\n", str);
-		}
-		return 0;
-	}
-};
-
-std::vector<Text::Line> parseMarkdown(const std::string& md)
-{
-	MD_PARSER parser;
-	memset(&parser, 0, sizeof(parser));
-
-	MarkDownHandler handler;
-	parser.enter_block = MarkDownHandler::enterBlock;
-	parser.leave_block = MarkDownHandler::leaveBlock;
-	parser.enter_span = MarkDownHandler::enterSpan;
-	parser.leave_span = MarkDownHandler::leaveSpan;
-	parser.text = MarkDownHandler::textHandler;
-
-	md_parse(md.c_str(), (MD_SIZE) md.size(), &parser, &handler);
-
-	/*
-	fmt::print("sublines:\n");
-	for (const auto& sub : handler.sublines) {
-		fmt::print("{}: t='{}' '{}'\n", sub.speaker, sub.test, sub.text);
-	}
-	*/
-	return handler.lines;
-}
-
 
 TableIt::TableIt(lua_State* L, int index) : _L(L) {
 	assert(lua_type(_L, index) == LUA_TTABLE);
@@ -823,7 +721,7 @@ Text ScriptBridge::readText() const
 
 		if (hasField("md")) {
 			std::string md = getStrField("md", {});
-			std::vector<Text::Line> lines = parseMarkdown(md);
+			std::vector<Text::Line> lines = Text::parseMarkdown(md);
 
 			for (const Text::Line& line : lines) {
 				text.lines.push_back(line);

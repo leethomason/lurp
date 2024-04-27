@@ -1195,7 +1195,13 @@ static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	std::string speaker = driver.line().speaker;
 	std::string text = driver.line().text;
 	TEST(speaker == "Talker");
-	TEST(text == "I'm going to tell a story.");
+	TEST(text == "I'm going to tell a story. It will be fun.");
+	
+	driver.advance();
+	speaker = driver.line().speaker;
+	text = driver.line().text;
+	TEST(speaker == "Talker");
+	TEST(text == "Listen closely!");
 
 	driver.advance();
 	TEST(driver.line().speaker == "Listener");
@@ -1248,7 +1254,7 @@ int RunTests()
 	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
 	RUN_TEST(TestExampleZone());
 	RUN_TEST(TestTextParsing());
-	//RUN_TEST(TestInlineText(csassets, bridge));
+	RUN_TEST(TestInlineText(csassets, bridge));
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

@@ -87,11 +87,11 @@ struct Text : Entity {
 		return type;
 	}
 
+	static std::vector<Text::Line> parseMarkdown(const std::string& md);
+		
 	static bool isMDTag(const std::string& str);
 	static size_t findMDTag(size_t start, const std::string& str);
 	static void parseMDTag(const std::string& str, std::string& speaker, std::string& test);
-
-private:
 };
 
 struct Choices : Entity {
