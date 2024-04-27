@@ -49,7 +49,7 @@ file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
 file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
 file(GLOB IONIC_SOURCES ${ionic_SOURCE_DIR}/src/*.cpp ${ionic_SOURCE_DIR}/src/*.h)
-file(MD4C_SOURCES ${md4c_SOURCE_DIR}/md4c.c ${md4c_SOURCE_DIR}/md4c.h)
+set(MD4C_SOURCES ${md4c_SOURCE_DIR}/src/md4c.c ${md4c_SOURCE_DIR}/src/md4c.h)
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/lua.c")
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
 source_group("lua" FILES ${LUA_SOURCES})
@@ -72,7 +72,7 @@ target_include_directories(lurp PUBLIC src
   ${ionic_SOURCE_DIR}/include 
   ${lua_SOURCE_DIR}/src 
   ${plog_SOURCE_DIR}/include
-  ${md4c_SOURCE_DIR}
+  ${md4c_SOURCE_DIR}/src
 )
 set_target_properties(lurp PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 

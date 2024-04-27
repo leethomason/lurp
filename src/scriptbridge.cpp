@@ -66,10 +66,14 @@ struct MarkDownHandler
 		return 0;
 	}
 	static int enterSpan(MD_SPANTYPE span, void*, void* user) {
+		(void)span;
+		(void)user;
 		//fmt::print("Enter spane: {}\n", (int)span);
 		return 0;
 	}
 	static int leaveSpan(MD_SPANTYPE span, void*, void* user) {
+		(void)span;
+		(void)user;
 		//fmt::print("Leave spane: {}\n", (int)span);
 		return 0;
 	}
