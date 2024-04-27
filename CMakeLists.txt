@@ -30,7 +30,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   ionic
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
-  GIT_TAG        462ea2b699e00c3acebc75b24394100761da9884
+  GIT_TAG        397b7d9623179b481c46b10eb7174f903ca67187
 )
 FetchContent_Declare(
   plog
@@ -87,11 +87,3 @@ if (MSVC)
   add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
   target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
 endif()
-
-#install(TARGETS lurp
-#        EXPORT lurp
-#        #LIBRARY DESTINATION lib
-#        #ARCHIVE DESTINATION lib
-#        RUNTIME DESTINATION bin
-#        #INCLUDES DESTINATION include
-#        )

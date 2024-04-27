@@ -221,17 +221,18 @@ I'm not interested.
     }
 }
 
--- future idea: not thought through or tested yet
 Script {
     entityID = "ALT_TEXT_2",
-    md = 
-[[
-[s = {player.name}]
-I'm the player! Should I go:
+    Text {
+        md = [[
+This is the
+first paragraph.
 
-* To the left [next = "LEFT"]
-* To the right [next="RIGHT"]
+> "A block quote."
+
+The end.
 ]]
+    }
 }
 
 local scripted = {}

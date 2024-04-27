@@ -1215,6 +1215,15 @@ static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
+static void TestFormatting(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	ScriptAssets assets(ca);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_2");
+
+	TEST(driver.type() == ScriptType::kText);
+}
+
 int RunTests()
 {
 	ScriptBridge bridge;
@@ -1255,6 +1264,7 @@ int RunTests()
 	RUN_TEST(TestExampleZone());
 	RUN_TEST(TestTextParsing());
 	RUN_TEST(TestInlineText(csassets, bridge));
+	RUN_TEST(TestFormatting(csassets, bridge));
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

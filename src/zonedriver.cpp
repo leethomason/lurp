@@ -242,8 +242,8 @@ void ZoneDriver::markRequiredInteractionComplete(const Interaction* iact)
 	if (iact) {
 		ScriptRef ref = _assets.getScriptRef(iact->entityID);
 		assert(ref.type == ScriptType::kInteraction);
-		//_assets.interactions[ref.index].done = true;
-		mapData.coreData.coreSet(iact->entityID, "done", true, false);
+		if (iact->required)
+			mapData.coreData.coreSet(iact->entityID, "done", true, false);
 	}
 }
 
@@ -382,6 +382,9 @@ bool ZoneDriver::tryUnlock(const Entity& e)
 	else if (container)
 		keyName = container->key;
 	else
+		return false;
+
+	if (keyName.empty())
 		return false;
 
 	const Item& key = _assets.getItem(keyName);
