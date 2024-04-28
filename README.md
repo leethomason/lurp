@@ -2,14 +2,14 @@
 
 ![Build](https://github.com/leethomason/lurp/actions/workflows/c-cpp.yml/badge.svg)
 
-A story engine for Windows. (Mac and Linux support is planned. Currently testing and tweaking for 
+A story engine for Windows. (Mac and Linux support is planned. Currently testing and tweaking for
 initial release on Windows.)
 
 LuRP is a story engine. It provides more services than a scripting engine, but less than a game
 engine. It strives to "play well with others" so you can integrate LuRP into your engine or
 framework of choice.
 
-So much of what an adventure or role playing game is - whether it is a modern RPG or a
+Much of what an adventure or role playing game is - whether it is a modern RPG or a
 classic Infocom text game - is a story telling engine. There are actors, dialog, objects,
 locations, and events. LuRP extracts those elements and is a framework for creating role
 playing, adventure, and visual novel games.
@@ -26,9 +26,9 @@ it's mostly about describing the story and what can happen. The core engine in C
 tracks all the state and runs the story.
 
 What presents that story to the user (or the developer) is a "driver". The driver could be
-a console driver (text), a 2D driver, a 3D driver, or even a web driver. The driver is responsible
-for showing the story and getting input. The interface from the driver to LuRP is a simple
-one.
+a command line driver (text), a 2D driver, a 3D driver, or even a web driver. The driver is
+responsible for showing the story and getting input. The interface from the driver to LuRP
+is a simple one.
 
 A command line (console) driver is provided. A 2D visual driver is in the works.
 
