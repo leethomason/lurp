@@ -4,6 +4,8 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+#include <plog/Log.h>
+
 namespace lurp {
 
 ScriptAssets::ScriptAssets(const ConstScriptAssets& csa) :
@@ -26,6 +28,16 @@ std::string ScriptAssets::desc(const EntityID& entityID) const
 	return e->description();
 }
 
+void ScriptAssets::log() const
+{
+	PLOG(plog::debug) << "ScriptAssets:";
+	for (auto it = entityIDToIndex.begin(); it != entityIDToIndex.end(); it++) {
+		//const std::string& entityID = it->first;
+		ScriptRef ref = it->second;
+		PLOG(plog::debug) << fmt::format("  {}", ref.entity->description());
+	}
+	PLOG(plog::debug) << "ScriptAssets complete.";
+}
 
 void ScriptAssets::save(std::ostream& stream)
 {

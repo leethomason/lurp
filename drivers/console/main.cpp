@@ -450,12 +450,15 @@ int main(int argc, const char* argv[])
 		fmt::print("  --seed            Random number seed\n");
 		fmt::print("  --outputTests     Run output tests\n");
 		fmt::print("  --noScan          Do not scan for games or display menu\n");
+		fmt::print("  --noTest          Do not run tests\n");
 		fmt::print("  --win             Automatically win all battles\n");
 	}
 
 	bool debugSave = cmdl[{ "-s", "--debugSave" }];
 	bool outputTests = cmdl[{ "--outputTests" }];
 	bool doScan = !cmdl[{ "--noScan" }];
+	bool runTests = !cmdl[{ "--noTest" }];
+
 	if (cmdl[{ "--win" }])
 		gWinAllBattles = true;
 
@@ -490,7 +493,7 @@ int main(int argc, const char* argv[])
 #endif
 	{
 		std::string gameFile = scriptFile; // prevents a false positive in the leak check.
-		if (true) {
+		if (runTests) {
 			RunTests();
 			RunConsoleTests();
 			rc = TestReturnCode();
@@ -517,6 +520,8 @@ int main(int argc, const char* argv[])
 			ScriptBridge bridge;
 			ConstScriptAssets csassets = bridge.readCSA(gameFile);
 			ScriptAssets assets(csassets);
+
+			assets.log();
 
 			ConsoleZoneDriver(assets, bridge, startingZone, dir, seed);
 		}

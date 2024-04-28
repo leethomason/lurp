@@ -29,7 +29,7 @@ struct Script : Entity
 	static constexpr ScriptType type{ ScriptType::kScript };
 
 	virtual std::string description() const override {
-		return fmt::format("Script entityID: {}\n", entityID);
+		return fmt::format("Script entityID: {} nEvents={}", entityID, events.size());
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -76,7 +76,7 @@ struct Text : Entity {
 	static constexpr ScriptType type{ ScriptType::kText };
 
 	virtual std::string description() const override {
-		return fmt::format("Text entityID: {}\n", entityID);
+		return fmt::format("Text entityID: {} nLines={}", entityID, lines.size());
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string&) const override {
@@ -124,7 +124,7 @@ struct Choices : Entity {
 	static constexpr ScriptType type{ ScriptType::kChoices };
 
 	virtual std::string description() const override {
-		return fmt::format("Choice entityID: {}\n", entityID);
+		return fmt::format("Choice entityID: {}", entityID);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string&) const override {
@@ -152,7 +152,7 @@ struct Actor : Entity {
 	}
 
 	virtual std::string description() const override {
-		return fmt::format("Actor entityID: {}\n", entityID);
+		return fmt::format("Actor entityID: {}", entityID);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -185,7 +185,7 @@ struct Combatant : Entity {
 	static constexpr ScriptType type{ ScriptType::kCombatant };
 
 	virtual std::string description() const override {
-		return fmt::format("Combatant entityID: {}\n", entityID);
+		return fmt::format("Combatant entityID: {}", entityID);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -216,7 +216,7 @@ struct Battle : Entity {
 	static constexpr ScriptType type{ ScriptType::kBattle };
 
 	virtual std::string description() const override {
-		return fmt::format("Battle entityID: {}\n", entityID);
+		return fmt::format("Battle entityID: {}", entityID);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {

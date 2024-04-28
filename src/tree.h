@@ -39,6 +39,8 @@ public:
 	ScriptRef get(int index) const { assert(index >= 0 && index < size()); return _tree[index].ref; }
 	NodeRef getNode(int index) const { assert(index >= 0 && index < size());  return _tree[index]; }
 
+	void log() const;
+
 private:
 	int cDepth(int index) const { return _tree[index].depth; }
 	TreeVec _tree;

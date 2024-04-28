@@ -49,6 +49,7 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const E
 	_helper->pushScriptContext();
 	_helper->call(func, 0);
 
+	_tree.log();
 	processTree(false);
 }
 
@@ -66,6 +67,7 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const S
 	_helper->pushScriptContext();
 	_helper->call(func, 0);
 
+	_tree.log();
 	processTree(false);
 }
 
