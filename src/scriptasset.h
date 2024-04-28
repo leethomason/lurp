@@ -85,6 +85,7 @@ struct ScriptAssets : public IAssetHandler
 
 	// Debugging: return the description of the entity
 	std::string desc(const EntityID& entityID) const;
+	void log() const;
 
 	const ConstScriptAssets& _csa;
 

@@ -86,6 +86,14 @@ Tree::Tree(const ScriptAssets& assets, const EntityID& entityID)
 	_tree = createTree(assets, entityID);
 }
 
+void Tree::log() const
+{
+	for (const NodeRef& ref : _tree) {
+		std::string msg = fmt::format("{: >{}} {} {}", "", 2 + ref.depth * 2, ref.leading ? "L" : "T", ref.ref.entity->description());
+		PLOG(plog::debug) << msg;
+	}
+}
+
 ScriptRef TreeIt::next()
 {
 	_index++;

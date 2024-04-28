@@ -30,7 +30,7 @@ struct Item : public Entity {
 	static constexpr ScriptType type{ ScriptType::kItem };
 
 	virtual std::string description() const override {
-		return fmt::format("Item entityID: {} '{}'\n", entityID, name);
+		return fmt::format("Item entityID: {} '{}'", entityID, name);
 	}
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
 		if (k == "name") return { true, Variant(name) };
@@ -58,7 +58,7 @@ struct Power : Entity {
 	static constexpr ScriptType type{ ScriptType::kPower };
 	
 	virtual std::string description() const override {
-		return fmt::format("Power entityID: {} '{}' {} cost={} range={} strength={}\n", entityID, name, effect, cost, range, strength);
+		return fmt::format("Power entityID: {} '{}' {} cost={} range={} strength={}", entityID, name, effect, cost, range, strength);
 	}
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
 		if (k == "name") return { true, Variant(name) };

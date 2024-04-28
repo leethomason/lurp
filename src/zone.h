@@ -27,7 +27,7 @@ struct Container : Entity {
 	static constexpr ScriptType type{ ScriptType::kContainer };
 	
 	virtual std::string description() const override {
-		return fmt::format("Container {} {}\n", entityID, name);
+		return fmt::format("Container {} {}", entityID, name);
 	};
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -64,7 +64,7 @@ struct Edge : Entity {
 	static constexpr ScriptType type{ ScriptType::kEdge };
 	
 	virtual std::string description() const override {
-		return fmt::format("Edge {}   {} <-> {}\n", name, room1, room2);
+		return fmt::format("Edge {}   {} <-> {}", name, room1, room2);
 	};
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -105,7 +105,7 @@ struct Room : Entity {
 	static constexpr ScriptType type{ ScriptType::kRoom };
 
 	std::string description() const override {
-		return fmt::format("Room {} {}\n", entityID, name);
+		return fmt::format("Room {} {}", entityID, name);
 	};
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -129,7 +129,7 @@ struct Zone : Entity {
 	static constexpr ScriptType type{ ScriptType::kZone };
 
 	virtual std::string description() const override {
-		return fmt::format("Zone name: {}\n", entityID);
+		return fmt::format("Zone name: {}", entityID);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string&) const override {
@@ -154,7 +154,7 @@ struct Interaction : Entity {
 	static constexpr ScriptType type{ ScriptType::kInteraction };
 
 	virtual std::string description() const override {
-		return fmt::format("Interaction entityID: {} '{}'\n", entityID, name);
+		return fmt::format("Interaction entityID: {} '{}'", entityID, name);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
@@ -185,7 +185,7 @@ struct CallScript : Entity {
 	}
 
 	virtual std::string description() const override {
-		return fmt::format("CallScript entityID: {} npc={} scriptID={}\n", entityID, npc, scriptID);
+		return fmt::format("CallScript entityID: {} npc={} scriptID={}", entityID, npc, scriptID);
 	}
 
 	virtual std::pair<bool, Variant> getVar(const std::string& k) const override {
