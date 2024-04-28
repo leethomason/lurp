@@ -32,6 +32,8 @@ is a simple one.
 
 A command line (console) driver is provided. A 2D visual driver is in the works.
 
+![Console Driver](screen0.png)
+
 ## Status
 
 LuRP is in development. It is quite usable for writing games and playing them on the console.
