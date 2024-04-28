@@ -6,6 +6,8 @@
 #include "util.h"
 #include "../drivers/platform.h"
 
+#include <ionic/ionic.h>
+
 #include <fmt/core.h>
 #include <vector>
 #include <assert.h>
@@ -13,12 +15,6 @@
 #include <array>
 
 namespace lurp {
-
-// FIXME: revisit this on a big file
-// In the (small) test these don't do much. 79k -> 66k or so.
-// May be more important for big files.
-#define NIL_TEXT_STRINGS() 0
-#define RUN_GC() 0
 
 template<typename T>
 void FatalReadError(const std::string& msg, const T& t)
@@ -227,7 +223,6 @@ void ScriptBridge::doFile(const std::string& filename)
 	}
 
 }
-
 
 void ScriptBridge::pushNewGlobalTable(const std::string& name)
 {
@@ -698,110 +693,84 @@ Power ScriptBridge::readPower() const
 
 Text ScriptBridge::readText() const
 {
-	Text t;
+	Text text;
 	LuaStackCheck check(L);
 	try {
+		/*
+			Text {
+				entityID = "T1",
+				eval = function() return true end,
+				test = "{player.alive}",
+				code = function() player:set("sun", true) end,
+				s = "narrator",
 
-		t.entityID = readEntityID("entityID", {});
-		t.eval = getFuncField(L, "eval");
-		t.test = getStrField("test", { "" });
-		t.code = getFuncField(L, "code");
+				{ eval = function() return true end, s = "narrator", "It is a beautiful day", "The birds are singing" },
+				{ test = "{player.energetic}",	s = "player", "I should go outside" },
+				{ code = function() zone:set("outside", true) end, s = "narrator", "You go outside" }
 
-		// Table form?
-		lua_geti(L, -1, 1);
-		int form = lua_type(L, -1);
-		lua_pop(L, 1);
+				"This is also text",
+				"That the narrator says.",
+			}
+		*/
 
-		if (form == LUA_TTABLE) {
-			/*
-				Text {
-					entityID = "T1",
-					eval = function() return true end,
-					test = "{player.alive}",
-					code = function() player:set("sun", true) end,
+		text.entityID = readEntityID("entityID", {});
+		text.eval = getFuncField(L, "eval");
+		text.test = getStrField("test", { "" });
+		text.code = getFuncField(L, "code");
+		std::string speaker = getStrField("s", { "" });
 
-					{ eval = function() return true end, s = "narrator", "It is a beautiful day", "The birds are singing" },
-					{ test = "{player.energetic}",	s = "player", "I should go outside" },
-					{ code = function() zone:set("outside", true) end, s = "narrator", "You go outside" }
-				}
-			*/
+		if (hasField("md")) {
+			std::string md = getStrField("md", {});
+			std::vector<Text::Line> lines = Text::parseMarkdown(md);
 
-			for (TableIt it(L, -1); !it.done(); it.next()) {
-				if (it.kType() != LUA_TNUMBER) continue;
+			for (const Text::Line& line : lines) {
+				text.lines.push_back(line);
+			}
+		}
 
-				std::string speaker;
-				std::string test;
-				int eval = -1;
-				int code = -1;
-
+		for (TableIt it(L, -1); !it.done(); it.next()) {
+			if (it.kType() != LUA_TNUMBER)
+				continue;
+			if (it.vType() == LUA_TTABLE) {
+				Text::Line line;
 				if (hasField("s")) {
-					speaker = getStrField("s", {});
+					line.speaker = getStrField("s", {});
 				}
 				if (hasField("test")) {
-					test = getStrField("test", {});
+					line.test = getStrField("test", {});
 				}
 				if (hasField("eval")) {
-					eval = getFuncField(L, "eval");
+					line.eval = getFuncField(L, "eval");
 				}
 				if (hasField("code")) {
-					code = getFuncField(L, "code");
+					line.code = getFuncField(L, "code");
 				}
 
-				//int last = 0;
+				// This inner loop goes through each of the strings,
+				// which are the actual text lines, assigned to the same
+				// speaker with the same eval() and code().
 				for (TableIt inner(L, -1); !inner.done(); inner.next()) {
 					if (inner.kType() != LUA_TNUMBER) continue;
 					Variant v = inner.value();
 					if (v.type != LUA_TSTRING) continue;
-
-					//last = (int) inner.key().num;
-					t.lines.push_back({ speaker, v.str, eval, test, code });
+					line.text = v.str;
+					text.lines.push_back(line);
 				}
-#if NIL_TEXT_STRINGS()
-				for (int i = 1; i <= last; i++) {
-					lua_pushnil(L);
-					lua_seti(L, -2, i);
-				}
-#endif
 			}
-		}
-		else {
-			/*
-				Text {
-					entityID = "T1",
-					eval = function() return true end,
-					test = "{player.alive}",
-					code = function() player:set("sun", true) end,
-
-					s = "narrator",
-					"It is a beautiful day",
-					"The birds are singing",
-				}
-			*/
-			std::string speaker;
-			if (hasField("s")) {
-				speaker = getStrField("s", {});
-			}
-			//int last = 0;
-			for (TableIt it(L, -1); !it.done(); it.next()) {
-				if (it.kType() != LUA_TNUMBER) continue;
+			else if (it.vType() == LUA_TSTRING) {
 
 				Variant v = it.value();
-				if (v.type != LUA_TSTRING) continue;
-				//last = (int)it.key().num;
-				t.lines.push_back({ speaker, v.str, -1, "", -1 });
+				Text::Line line;
+				line.speaker = speaker;
+				line.text = v.str;
+				text.lines.push_back(line);
 			}
-#if NIL_TEXT_STRINGS()
-			for (int i = 1; i <= last; i++) {
-				lua_pushnil(L);
-				lua_seti(L, -2, i);
-			}
-#endif
 		}
 	}
 	catch (std::exception& e) {
-		FatalReadError(e.what(), t);
+		FatalReadError(e.what(), text);
 	}
-	return t;
+	return text;
 }
 
 ScriptType ScriptBridge::toScriptType(const std::string& type) const
@@ -1157,9 +1126,6 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	for (const auto& i : assets.callScripts) i.dump(0);
 	*/
 
-#if RUN_GC()
-	lua_gc(L, LUA_GCCOLLECT);
-#endif
 	//int kbytes = lua_gc(L, LUA_GCCOUNT);
 	//fmt::print("LUA memory usage: {} KB\n", kbytes);
 	return csa;

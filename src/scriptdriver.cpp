@@ -216,6 +216,7 @@ TextLine ScriptDriver::line()
 	assert(!done());
 	assert(type() == ScriptType::kText);
 	assert(_textSubIndex < int(_mappedText.lines.size()));
+
 	Text::Line& line = _mappedText.lines[_textSubIndex];
 	TextLine textLine;
 	textLine.speaker = line.speaker;

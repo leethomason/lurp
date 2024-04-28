@@ -20,6 +20,34 @@ inline std::string toLower(const std::string& str) {
 	return s;
 }
 
+// Given: "aaa{B=c, {D=e}}"
+// start=3, returns length of string (one past the closing brace)
+size_t parseRegion(const std::string& str, size_t start, char open, char close);
+
+// Given: A=1, B = {22},C=3, D= \"4 4\", E='55 55' 
+// Returns: [A=1, B=22, C=3, D="4 4", E="55 55"]
+std::vector<std::string> parseKVPairs(const std::string& str);
+
+// Given: E='55 55'
+// Returns: E="55 55"
+std::pair<std::string, std::string> parseKV(const std::string& str, char* sepOut = nullptr);
+
+static constexpr char kWhitespace[] = " \t\n\r";
+
+inline std::string trimRight(const std::string& s) {
+	size_t p = s.find_last_not_of(kWhitespace);
+	return s.substr(0, p + 1);
+}
+
+inline std::string trimLeft(const std::string& s) {
+	size_t p = s.find_first_not_of(kWhitespace);
+	return p == std::string::npos ? "" : s.substr(p);
+}
+
+inline std::string trim(const std::string& s) {
+	return trimRight(trimLeft(s));
+}
+
 struct Globals
 {
 	static bool debugSave;

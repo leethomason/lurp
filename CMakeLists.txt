@@ -30,20 +30,26 @@ FetchContent_Declare(
 FetchContent_Declare(
   ionic
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
-  GIT_TAG        462ea2b699e00c3acebc75b24394100761da9884
+  GIT_TAG        397b7d9623179b481c46b10eb7174f903ca67187
 )
 FetchContent_Declare(
   plog
   GIT_REPOSITORY https://github.com/SergiusTheBest/plog.git
   GIT_TAG        199734337bec45e72956c4e82f848a716cbf7ac3
 )
-FetchContent_MakeAvailable(lua fmt argh ionic plog)
+FetchContent_Declare(
+  md4c
+  GIT_REPOSITORY https://github.com/mity/md4c.git
+  GIT_TAG        481fbfbdf72daab2912380d62bb5f2187d438408
+)
+FetchContent_MakeAvailable(lua fmt argh ionic plog md4c)
 
 file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
 file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
 file(GLOB IONIC_SOURCES ${ionic_SOURCE_DIR}/src/*.cpp ${ionic_SOURCE_DIR}/src/*.h)
+set(MD4C_SOURCES ${md4c_SOURCE_DIR}/src/md4c.c ${md4c_SOURCE_DIR}/src/md4c.h)
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/lua.c")
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
 source_group("lua" FILES ${LUA_SOURCES})
@@ -51,8 +57,23 @@ source_group("console" FILES ${CONSOLE_SRC})
 
 enable_testing()
 
-add_executable(lurp ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${CONSOLE_SRC} ${IONIC_SOURCES})
-target_include_directories(lurp PUBLIC src ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include ${ionic_SOURCE_DIR}/include ${lua_SOURCE_DIR}/src ${plog_SOURCE_DIR}/include)
+add_executable(lurp 
+  ${SOURCES} 
+  ${HEADERS} 
+  ${fmt_SOURCE_DIR}/src/format.cc 
+  ${LUA_SOURCES} 
+  ${CONSOLE_SRC} 
+  ${IONIC_SOURCES}
+  ${MD4C_SOURCES}
+)
+
+target_include_directories(lurp PUBLIC src 
+  ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include 
+  ${ionic_SOURCE_DIR}/include 
+  ${lua_SOURCE_DIR}/src 
+  ${plog_SOURCE_DIR}/include
+  ${md4c_SOURCE_DIR}/src
+)
 set_target_properties(lurp PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 
 add_test(
@@ -66,11 +87,3 @@ if (MSVC)
   add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
   target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
 endif()
-
-#install(TARGETS lurp
-#        EXPORT lurp
-#        #LIBRARY DESTINATION lib
-#        #ARCHIVE DESTINATION lib
-#        RUNTIME DESTINATION bin
-#        #INCLUDES DESTINATION include
-#        )

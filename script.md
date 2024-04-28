@@ -328,8 +328,7 @@ plot, and are the building block of the game.
 
 ### Text
 
-Many games contain lots of text, and Text is a very
-flexible object. Start simple if you are learning.
+Many games contain lots of text, and Text is a very flexible object. Start simple if you are learning.
 
 * entityID
 * `eval()` - determines if the text is available. If not, will be hidden.
@@ -410,6 +409,35 @@ less than `eval()`, but it's sometimes a nice shortcut.
 
 If `isDruid` is true or "truthy" on the player object, then the first line will be shown. If it is
 false, nil, or "falsy", then the second line will be shown.
+
+Text also supports very basic markdown. In fact, so basic, that just the only thing that is supported
+is basic paragraphs. (Hope to improve in the future.) But it can be very handy. Note that you add
+markdown with a `md` key.
+
+```lua
+    Text {
+        code = function() script.more = true end, md =
+[[
+[s = "Talker"]
+I'm going to tell a story.
+It will be fun.
+
+Listen closely!
+
+[s="Listener"]
+Yay!
+
+[s="Another", test = {script.more}]
+I want to hear too!
+
+[s="YetAnother", test={~script.more}]
+I'm not interested.
+]]
+    }
+```
+
+The paragraph text is parsed according to markdown rules. The special `[s="Speaker"]` tag is
+used to set the speaker, and likewise '[test={script.more}]' is used as a test.
 
 ### Choices
 

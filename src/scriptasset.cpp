@@ -70,6 +70,7 @@ void ScriptAssets::load(ScriptBridge& loader)
 
 		EntityID id = loader.getStrField("entityID", {});
 		Inventory inv = loader.readInventory();
+		inv.convert(_csa);
 		inventories[id] = inv;
 	}
 	lua_pop(L, 1);

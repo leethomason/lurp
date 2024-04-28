@@ -31,15 +31,15 @@ Actor {
     name = "Giselle",
 }
 
-local startScript = Text {
-    name = "STARTING_TEXT",
-[[
-You dream of stormy waves on a vast gray sea. As you fly over the whitecaps whipped by the 
-wind, you feel the cold spray one your face. In the distance, the surface is boiled by something 
+Text {
+    entityID = "STARTING_TEXT",
+    md = [[
+You dream of stormy waves on a vast gray sea. As you fly over the whitecaps whipped by the
+wind, you feel the cold spray one your face. In the distance, the surface is boiled by something
 vast rising from the deep.
 
 Your feet touch the stone tile of a small ancient temple rising just above the sea. The waves break
-and splash across the temple floor. Inlaid in the floor is a symbol you recognize. The Octal Eye. 
+and splash across the temple floor. Inlaid in the floor is a symbol you recognize. The Octal Eye.
 
 You awake.
 
@@ -49,9 +49,9 @@ You need some coffee and fresh air.
 ]],
 }
 
-local morningCoffee = Text {
-    name = "MORNING_COFFEE_SF",
-[[
+Text {
+    entityID = "MORNING_COFFEE_SF",
+    md = [[
 You enter your local coffee shop. The barista sees you come in. "Morning {player.name}. Good to see
 you. A woman was looking for you a few minutes ago. Left you a note." She hands you a folded piece
 of paper.
@@ -59,7 +59,7 @@ of paper.
 You order your usual coffee and sit at a table outside the cafe. The morning sun warms you
 even though the San Francisco air is cool. The note reads:
 
-    "Cairo. Meet me at the library. Research section in back. -G"
+"Cairo. Meet me at the library. Research section in back. -G"
 
 Giselle was with you on the mission to Cairo. A good researcher, a good shot, and a good friend.
 You both hoped to never see the Octal Eye again after that cursed tomb and its visions. But here
@@ -70,13 +70,13 @@ You finish the coffee. You suspect you'll need it.
     code = function() zone.hadMorningCoffee = true end
 }
 
-local meetGiselleAtLibrary = Text {
-    name = "MEET_GISELLE_AT_LIBRARY",
-[[
-You make your way through the doors of the old, regal Library. You find Giselle in 
+Text {
+    entityID = "MEET_GISELLE_AT_LIBRARY",
+    md = [[
+You make your way through the doors of the old, regal Library. You find Giselle in
 the back research rooms.
 
-"{player.name} it's good to see you!" she says with a warm hug. She's easy on the eyes in a 
+"{player.name} it's good to see you!" she says with a warm hug. She's easy on the eyes in a
 wearing a dress suitable for academia and at home in the library. "You had the vision as well?"
 
 "I did. Wish I hadn't. But I did. Can't shake it. It means...?"
@@ -104,28 +104,28 @@ Dr. Deweyish? I have some questions about finding books in sub-section 3."
     code = function() player:addItem("HAIRPIN", 1) end
 }
 
-local coffeeWithGiselle = Script {
-    name = "COFFEE_WITH_GISELLE",
-    Text { 
+Script {
+    entityID = "COFFEE_WITH_GISELLE",
+    Text {
         code = function() player:removeItem("SHAHIR_JOURNAL") end,
-[[
-{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table. 
+        md = [[
+{npc.name} is sipping tea at the cafe. She smiles when you arrive and put the journal on the table.
 "Nice work {player.name}. Although I'll give "myself some credit for talking to that bore Deweyish.
 Grab yourself a sip and a pastry. I want a look at this thing."
 
-{npc.name} starts reading through the journal while you order tea and samosas. You make notes in your 
+{npc.name} starts reading through the journal while you order tea and samosas. You make notes in your
 own journal, collecting your thoughts on the turn of events.
 
-"A compass and a key." She says. You look up from your musings. She has notes scribbled on papers 
+"A compass and a key." She says. You look up from your musings. She has notes scribbled on papers
 and bookmarks in the journal.
 ]],
     },
     Choices {
-        name = "COFFEE_CHOICES_IN_SF",
+        entityID = "COFFEE_CHOICES_IN_SF",
         action = "repeat",
         {
             text = "A compass?",
-            next = Text { [[
+            next = Text { md = [[
 "A compass that always points to the Unknown Temple. The only way to find it. Last seen
 in the hands of the Mad Pirate."
 
@@ -139,16 +139,16 @@ You smile. "Worse places to chase ancient artifacts."
         },
         {
             text = "The key?",
-            next = Text { [[
+            next = Text { md = [[
 "The key to the Unknown Temple. Shahir didn't know if it summoned or blocked the Old One. Or
-what it did at all, really. But given what we've seen, let's hope it stops the Old One at the 
+what it did at all, really. But given what we've seen, let's hope it stops the Old One at the
 temple." Giselle pauses. "A mausoleum under Paris. Shahir even gave us a helpful map."
 ]]
             }
         },
         {
             text = "The temple?",
-            next = Text { [[
+            next = Text { md = [[
 "I'm not sure yet." You see a look of concern flash across Giselle's face. "We seem to have
 a lead on finding it and the key is obviously critical. But what do we do when we get there?
 I need some more time with the journal. And I need to talk to Dr. Zeyad."
@@ -165,7 +165,7 @@ to Cairo. I'll send a telegraph when I have information."
             text = "Adventure awaits"
         },
     },
-    Text {[[
+    Text {md = [[
 You stand up. "I'll get by bags and get going. I'll see you in Cairo."
 
 "Thanks {player.name}. I think you'll need to pack your trusty six gun for this.
@@ -183,7 +183,7 @@ Zone {
         entityID = "APARTMENT",
         name = "Your Apartment",
         desc = "A small one bedroom in the Mission district. A bit run down but with a beautiful view.",
-        Interaction { required = true, next = startScript },
+        Interaction { required = true, next = "STARTING_TEXT" },
         Container {
             eval = function() return zone.needRevolver end,
             name = "Closet",
@@ -197,7 +197,7 @@ Zone {
         Interaction {
             eval = function () return zone.hadMorningCoffee end,
             required = true,
-            next = meetGiselleAtLibrary
+            next = "MEET_GISELLE_AT_LIBRARY"
         },
         Interaction {
             entityID = "SF_LIBRARY_RESTRICTED_INTERACTION",
@@ -256,14 +256,14 @@ Zone {
         Interaction {
             required = true,
             eval = function() return not zone.hadMorningCoffee end,
-            next = morningCoffee
+            next = "MORNING_COFFEE_SF"
         },
         Interaction {
             required = true,
             eval = function() return player:hasItem("SHAHIR_JOURNAL") end,
             name = "Giselle is sipping coffee.",
             npc = "Giselle",
-            next = coffeeWithGiselle
+            next = "COFFEE_WITH_GISELLE"
         }
     },
     Room {
@@ -274,9 +274,8 @@ Zone {
             required = true,
             eval = function() return player:hasItem("REVOLVER") end,
             next = Script {
-                Text { "You board the plane...or would, if this demo was complete. Thanks for playing!" ,
-                       code = function() EndGame("Game Over", 0) end, "",
-                },
+                Text { "You board the plane...or would, if this demo was complete. Thanks for playing!" },
+                Text { code = function() EndGame("Game Over", 0) end, ""}
             }
         }
     },

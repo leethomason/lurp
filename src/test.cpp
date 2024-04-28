@@ -1119,7 +1119,7 @@ void BattleTest::TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(battle.combatants().size() == 4);
 }
 
-void TestExampleZone()
+static void TestExampleZone()
 {
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("game/example-zone/example-zone.lua");
@@ -1135,6 +1135,183 @@ void TestExampleZone()
 	TEST(inv.emtpy());
 
 	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);	
+}
+
+std::pair<std::string, std::string> makeStrPair(const std::string& a, const std::string& b) {
+	return std::make_pair(a, b);
+}
+
+static void TestTextParsing()
+{
+	{
+		TEST(trimRight("aa") == "aa");
+		TEST(trimRight("aa ") == "aa");
+		TEST(trimRight("  ").empty());
+		TEST(trimRight(" aa") == " aa");
+
+		TEST(trimLeft("aa") == "aa");
+		TEST(trimLeft(" aa") == "aa");
+		TEST(trimLeft("  ").empty());
+		TEST(trimLeft("aa ") == "aa ");
+
+		TEST(trim("aa") == "aa");
+		TEST(trim(" aa ") == "aa");
+		TEST(trim("  ").empty());
+	}
+
+	{
+		//                  0    5    0
+		std::string test = "aaa{B=c, {D=e}}";
+		size_t end = parseRegion(test, 3, '{', '}');
+		TEST(end == test.size());
+	}
+	{
+		std::string test = "aaa{B=c, {D=e}}  ";
+		size_t end = parseRegion(test, 3, '{', '}');
+		TEST(end == 15);
+	}
+	{
+		std::string test = "A=1, B = {22},C=3 , D= \"4 4\", E='55 55' ";
+		std::vector<std::string> kv = parseKVPairs(test);
+		TEST(kv.size() == 5);
+		TEST(kv[0] == "A=1");
+		TEST(kv[1] == "B = {22}");
+		TEST(kv[2] == "C=3");
+		TEST(kv[3] == "D= \"4 4\"");
+		TEST(kv[4] == "E='55 55'");
+	}
+	{
+		TEST(parseKV("A=1") == makeStrPair("A", "1"));
+		TEST(parseKV("B= {22}") == makeStrPair("B", "{22}"));
+		TEST(parseKV("D = \"4 4\"") == makeStrPair("D", "4 4"));
+		TEST(parseKV("E='55 55'") == makeStrPair("E", "55 55"));
+	}
+}
+
+static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	ScriptAssets assets(ca);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_1");
+
+	TEST(driver.type() == ScriptType::kText);
+
+	std::string speaker = driver.line().speaker;
+	std::string text = driver.line().text;
+	TEST(speaker == "Talker");
+	TEST(text == "I'm going to tell a story. It will be fun.");
+	
+	driver.advance();
+	speaker = driver.line().speaker;
+	text = driver.line().text;
+	TEST(speaker == "Talker");
+	TEST(text == "Listen closely!");
+
+	driver.advance();
+	TEST(driver.line().speaker == "Listener");
+	TEST(driver.line().text == "Yay!");
+
+	driver.advance();
+	TEST(driver.line().speaker == "Another");
+	TEST(driver.line().text == "I want to hear too!");
+
+	driver.advance();
+	TEST(driver.done());
+}
+
+static void TestFormatting(const ConstScriptAssets& ca, ScriptBridge& bridge)
+{
+	// fixme: More to be done here; mostly now just testing it loads.
+	ScriptAssets assets(ca);
+	ZoneDriver zoneDriver(assets, bridge, "testplayer");
+	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_2");
+
+	TEST(driver.type() == ScriptType::kText);
+}
+
+static void FlushText(ZoneDriver& driver)
+{
+	while (driver.mode() == ZoneDriver::Mode::kText) {
+		driver.text();		// this call sets the text read
+		driver.advance();
+	}
+}
+
+static void TestChullu()
+{
+	ScriptBridge bridge;
+	ConstScriptAssets csassets = bridge.readCSA("game/chullu/chullu.lua");
+	ScriptAssets assets(csassets);
+	ZoneDriver driver(assets, bridge, NO_ENTITY, "player");
+
+	TEST(driver.mode() == ZoneDriver::Mode::kText);
+	TEST(driver.currentRoom().name == "Your Apartment");
+	FlushText(driver);
+
+	ZoneDriver::MoveResult mr = driver.move("SF_CAFE");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	TEST(driver.currentRoom().name == "The Black Soul Cafe");
+	FlushText(driver);
+
+	mr = driver.move("SF_LIBRARY");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	TEST(driver.currentRoom().name == "The SF City Library");
+	FlushText(driver);
+	{
+		const Inventory& inv = driver.getInventory(driver.getPlayer());
+		TEST(inv.numItems(assets.getItem("HAIRPIN")) == 1);
+	}
+
+	InteractionVec interactions = driver.getInteractions();
+	TEST(interactions.size() == 1);
+	driver.startInteraction(interactions[0]);
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);
+	FlushText(driver);
+
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);
+	driver.choose(1);	// shoot the lock off!
+	FlushText(driver);
+	mr = driver.move("SF_LIBRARY_RESTRICTED");
+	TEST(mr == ZoneDriver::MoveResult::kLocked);
+
+	driver.startInteraction(interactions[0]);
+	FlushText(driver);
+	driver.choose(0);	// pick the lock
+	FlushText(driver);
+
+	mr = driver.move("SF_LIBRARY_RESTRICTED");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	FlushText(driver);
+	ContainerVec containers = driver.getContainers();
+	TEST(containers.size() == 1);
+	driver.transferAll(containers[0]->entityID, driver.getPlayer().entityID);
+
+	mr = driver.move("SF_LIBRARY");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	FlushText(driver);
+	{
+		const Inventory& inv = driver.getInventory(driver.getPlayer());
+		TEST(inv.numItems(assets.getItem("HAIRPIN")) == 0);
+	}
+	mr = driver.move("SF_LIBRARY_RESTRICTED");
+	TEST(mr == ZoneDriver::MoveResult::kLocked);
+	FlushText(driver);
+
+	mr = driver.move("SF_CAFE");
+	TEST(mr == ZoneDriver::MoveResult::kSuccess);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 3);
+	driver.choose(0);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 3);
+	driver.choose(1);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 3);
+	driver.choose(2);
+	FlushText(driver);
+	TEST(driver.choices().choices.size() == 4);
+	driver.choose(3);
+	FlushText(driver);	// adventure awaits!
 }
 
 int RunTests()
@@ -1174,7 +1351,11 @@ int RunTests()
 	RUN_TEST(BattleTest::TestExample());
 	RUN_TEST(BattleTest::TestRegionSpells());
 	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
-	TestExampleZone();
+	RUN_TEST(TestExampleZone());
+	RUN_TEST(TestTextParsing());
+	RUN_TEST(TestInlineText(csassets, bridge));
+	RUN_TEST(TestFormatting(csassets, bridge));
+	RUN_TEST(TestChullu());
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

@@ -38,6 +38,8 @@ using namespace lurp;
 static constexpr ionic::Color configTextColor = ionic::Color::yellow;
 static constexpr ionic::Color configChoiceColor = ionic::Color::cyan;
 
+bool gWinAllBattles = false;
+
 static void PrintText(std::string speaker, const std::string& text)
 {
 	ionic::TableOptions options;
@@ -47,16 +49,15 @@ static void PrintText(std::string speaker, const std::string& text)
 	options.textColor = configTextColor;
 	ionic::Table table(options);
 
-	static const int MDNL = 2;
-
 	if (speaker.empty()) {
-		table.addRow({ ionic::Table::normalizeMD(text, MDNL) });
+		table.addRow({ text });
 	}
 	else {
 		table.setColumnFormat({ {ionic::ColType::fixed, 12}, {ionic::ColType::flex} });
-		table.addRow({ speaker, ionic::Table::normalizeMD(text, MDNL) });
+		table.addRow({ speaker, text });
 	}
 	table.print();
+	fmt::print("\n");
 }
 
 static void PrintChoices(const Choices& choices)
@@ -70,7 +71,7 @@ static void PrintChoices(const Choices& choices)
 
 	int i = 0;
 	for (const Choices::Choice& c : choices.choices) {
-		table.addRow({ std::to_string(i), ionic::Table::normalizeMD(c.text, 2) });
+		table.addRow({ std::to_string(i), c.text });
 		i++;
 	}
 	table.print();
@@ -224,7 +225,7 @@ static void PrintRoomDesc(const Zone& zone, const Room& room)
 	table.addRow({ room.name });
 	table.addRow({ zone.name });
 	if (!room.desc.empty())
-		table.addRow({ ionic::Table::normalizeMD(room.desc, 2) });
+		table.addRow({ room.desc });
 
 	table.setCell(0, 0, { ionic::Color::white }, {});
 	table.print();
@@ -293,7 +294,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				ZoneDriver::TransferResult tr = driver.transferAll(c->entityID, player.entityID);
 				if (tr == ZoneDriver::TransferResult::kLocked)
 					fmt::print("{}",
-						ionic::Table::colorize(ionic::Color::red, "The container is locked."));
+						ionic::Table::colorize(ionic::Color::red, "The container is locked.\n"));
 			}
 			else if (v.charIntInRange('i', (int)interactionVec.size())) {
 				driver.startInteraction(interactionVec[v.intVal]);
@@ -303,7 +304,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 				if (dirIdx >= 0) {
 					if (driver.move(edges[dirIdx].dstRoom) == ZoneDriver::MoveResult::kLocked)
 						fmt::print("{}",
-							ionic::Table::colorize(ionic::Color::red, "That way is locked."));
+							ionic::Table::colorize(ionic::Color::red, "That way is locked.\n"));
 				}
 			}
 			if (driver.mode() == ZoneDriver::Mode::kNavigation) {
@@ -314,7 +315,9 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			const Battle& battle = driver.battle();
 			VarBinder binder = driver.battleVarBinder();
 #if 1
-			bool victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
+			bool victory = true;
+			if (!gWinAllBattles)
+				victory = ConsoleBattleDriver(assets, binder, battle, driver.getPlayer().entityID, driver.mapData.random);
 #else
 			bool victory = false;
 #endif
@@ -394,8 +397,10 @@ static void RunOutputTests()
 	PrintNews(queue);
 	printf("******\n");
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
     Choices choices;
 	choices.choices.push_back({ "Go this way" });
@@ -404,7 +409,9 @@ static void RunOutputTests()
 	PrintChoices(choices);
 	printf("******\n");
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
     
 	Zone zone;
 	zone.name = "The Zone";
@@ -443,11 +450,14 @@ int main(int argc, const char* argv[])
 		fmt::print("  --seed            Random number seed\n");
 		fmt::print("  --outputTests     Run output tests\n");
 		fmt::print("  --noScan          Do not scan for games or display menu\n");
+		fmt::print("  --win             Automatically win all battles\n");
 	}
 
 	bool debugSave = cmdl[{ "-s", "--debugSave" }];
 	bool outputTests = cmdl[{ "--outputTests" }];
 	bool doScan = !cmdl[{ "--noScan" }];
+	if (cmdl[{ "--win" }])
+		gWinAllBattles = true;
 
 	uint32_t seed = Random::getTime();
 	cmdl({ "--seed" }, seed) >> seed;
