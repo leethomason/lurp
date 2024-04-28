@@ -1137,6 +1137,10 @@ static void TestExampleZone()
 	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);	
 }
 
+std::pair<std::string, std::string> makeStrPair(const std::string& a, const std::string& b) {
+	return std::make_pair(a, b);
+}
+
 static void TestTextParsing()
 {
 	{
@@ -1177,10 +1181,10 @@ static void TestTextParsing()
 		TEST(kv[4] == "E='55 55'");
 	}
 	{
-		TEST(parseKV("A=1") == std::make_pair("A", "1"));
-		TEST(parseKV("B= {22}") == std::make_pair("B", "{22}"));
-		TEST(parseKV("D = \"4 4\"") == std::make_pair("D", "4 4"));
-		TEST(parseKV("E='55 55'") == std::make_pair("E", "55 55"));
+		TEST(parseKV("A=1") == makeStrPair("A", "1"));
+		TEST(parseKV("B= {22}") == makeStrPair("B", "{22}"));
+		TEST(parseKV("D = \"4 4\"") == makeStrPair("D", "4 4"));
+		TEST(parseKV("E='55 55'") == makeStrPair("E", "55 55"));
 	}
 }
 
