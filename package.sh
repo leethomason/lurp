@@ -1,7 +1,7 @@
 #!/bin/bash
 # writes the binaries and script files to a zippable folder
 # Useage, in the root of the project:
-# ./deploy.sh lurp_0.5.0
+# ./package.sh lurp_0.5.0
 
 # exit on errors
 set -e

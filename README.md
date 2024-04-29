@@ -1,5 +1,7 @@
 # LuRP
 
+https://github.com/leethomason/lurp
+
 ![Build](https://github.com/leethomason/lurp/actions/workflows/c-cpp.yml/badge.svg)
 
 A story engine for Windows. (Mac and Linux support is planned. Currently testing and tweaking for
