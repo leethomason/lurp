@@ -21,6 +21,8 @@ cd %1
 lurp.exe --noScan
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
-echo %1 is ready for zipping
+
+git status
+echo %1 is ready for zipping if git status is clean
 
 
