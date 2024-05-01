@@ -150,8 +150,8 @@ static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dia
 static void TestInventory1()
 {
 	Inventory inv;
-	Item book = { "ITEM_BOOK", "book" };
-	Item potion = { "ITEM_POTION", "potion" };
+	Item book("ITEM_BOOK", "book");
+	Item potion("ITEM_POTION", "potion");
 
 	TEST(inv.findItem(book) == 0);
 	TEST(inv.hasItem(book) == false);
@@ -169,7 +169,7 @@ static void TestInventory1()
 static void TestInventory2()
 {
 	Inventory inv;
-	Item potion = { "ITEM_POTION", "potion" };
+	Item potion("ITEM_POTION", "potion");
 
 	TEST(inv.hasItem(potion) == false);
 	TEST(inv.findItem(potion) == 0);

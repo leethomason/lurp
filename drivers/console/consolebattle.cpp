@@ -89,6 +89,17 @@ static void PrintTurnOrder(const std::vector<SWCombatant>& combatants, const std
 	table.print();
 }
 
+static std::string EffectList(const std::vector<ActivePower> aps)
+{
+	std::string s;
+	for(const ActivePower& ap : aps) {
+		if (!s.empty())
+			s += ", ";
+		s += fmt::format("{} ({})", ap.power->name, ap.caster);
+	}
+	return s;
+}
+
 static void PrintCombatantsInRegion(int region, const std::vector<SWCombatant>& combatants)
 {
 	ionic::TableOptions options;
@@ -97,7 +108,7 @@ static void PrintCombatantsInRegion(int region, const std::vector<SWCombatant>& 
 	options.indent = 4;
 
 	ionic::Table table(options);
-	table.addRow({ "", "Name", "Fight", "Shoot", "Arcane", "Melee", "Range", "Armor", "Tough", "Shaken", "Wnds" });
+	table.addRow({ "", "Name", "Fight", "Shoot", "Arcane", "Melee", "Range", "Armor", "Tough", "Shaken", "Wnds", "Effects"});
 
 	int nRow = 0;
 	for (size_t i = 0; i < combatants.size(); i++) {
@@ -123,7 +134,8 @@ static void PrintCombatantsInRegion(int region, const std::vector<SWCombatant>& 
 			c.hasArmor() ? c.armor.name : "",
 			fmt::format("{} ({})", c.toughness() + c.armor.armor, c.armor.armor),
 			std::to_string(c.shaken),
-			std::to_string(c.wounds)
+			std::to_string(c.wounds),
+			EffectList(c.activePowers)
 			});
 
 		ionic::Color color = (c.team == 0) ? ionic::Color::green : ionic::Color::brightRed;
@@ -423,7 +435,7 @@ void BattleOutputTests()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
-    
+
 	SWCombatant a = { "PLAYER", "Player" };
 	SWCombatant b = { "ENEMY B", "Enemy B" };
 	SWCombatant c = { "ENEMY C", "Enemy C" };
@@ -432,6 +444,11 @@ void BattleOutputTests()
 #pragma GCC diagnostic pop
 #endif
 
+	SWPower superBoost = { ModType::kCombatBuff, "Super Boost", 3, 1, 2 };
+	ActivePower apSuperBoost = { 1, &superBoost };
+	SWPower fuzzyMind = { ModType::kRangeBuff, "Fuzzy Mind", 2, 1, -1 };
+	ActivePower apFuzzyMind = { 0, &fuzzyMind };
+
 	a.region = 0;
 	a.meleeWeapon = { "sword", Die(1, 8, 0) };
 	a.armor = { "chain", 3 };
@@ -439,6 +456,8 @@ void BattleOutputTests()
 	b.region = 2;
 	b.rangedWeapon = { "bow", Die(1, 6, 0), 0, 24 };
 	b.team = 1;
+	b.activePowers.push_back(apSuperBoost);
+	b.activePowers.push_back(apFuzzyMind);
 
 	c.region = 2;
 	c.meleeWeapon = { "knife", Die(1, 4, 0) };
@@ -452,17 +471,7 @@ void BattleOutputTests()
 	std::vector<int> order = { 2, 1, 0 };
 	std::vector<Region> regions = { r0, r1, r2 };
 
-	{
-		PrintTurnOrder(combatants, order);
-	}
-	{
-		PrintCombatants(combatants, regions);
-	}
-	//static void PrintDamageReport(const SWCombatant & defender,
-//		bool melee,
-//		const DamageReport & damage,
-//		const std::vector<ModInfo>&damageMods)
-	//static void PrintActions(BattleSystem & system)
-
+	PrintTurnOrder(combatants, order);
+	PrintCombatants(combatants, regions);
 }
 

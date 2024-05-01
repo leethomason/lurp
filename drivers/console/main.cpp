@@ -387,10 +387,10 @@ static void RunOutputTests()
 	printf("******\n");
 
 	NewsQueue queue;
-	Item gold = { "GOLD", "gold" };
-	Item silver = { "SILVER", "silver" };
-	Item sword = { "SWORD", "sword" };
-	Item armor = { "ARMOR", "armor" };
+	const Item gold("GOLD", "gold");
+	const Item silver("SILVER", "silver" );
+	const Item sword ("SWORD", "sword" );
+	const Item armor ("ARMOR", "armor" );
 
 	queue.push(NewsItem::itemDelta(gold, -10, 5));
 	queue.push(NewsItem::itemDelta(gold, 10, 15));
