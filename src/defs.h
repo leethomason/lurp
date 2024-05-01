@@ -96,6 +96,8 @@ struct Variant {
 };
 
 struct Entity {
+	Entity() = default;
+	Entity(const EntityID& id) : entityID(id) {}
 	virtual ~Entity() = default;
 
 	EntityID entityID;

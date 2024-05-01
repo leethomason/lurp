@@ -6,12 +6,35 @@
 
 ## Open / Next
 
+### General
+
 * Show status effects during combat
-* Auto-save before battle
-* OSX - testing
-* OSX - deploy
-* Linux - deploy
+* save / load
+  * Auto-save before battle
+  * manage multiple save files
+  * select default load
+* OSX
+  * OSX - deploy
+* Linux
+  * Linux - deploy
 * Actors move between rooms
+* Inventory
+  * management
+  * select active melee / ranged / armor
+* Parties
+
+### 2D Driver
+
+* Basic setup
+  * SDL2
+  * output regions
+  * image display
+  * text loading
+  * text display
+* Audio
+  * audio driver
+  * music player
+  * event sounds
 
 ## Ideas / Icebox
 
@@ -20,6 +43,7 @@
 
 ## Done
 
+* OSX - testing
 * Test example-xyz (to some simple level)
 * Delete: Simple: minimal but complete
 * simplest zone (done)

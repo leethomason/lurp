@@ -21,7 +21,10 @@ struct Item : public Entity {
 	Die damage = { 0, 0, 0 };
 
 	Item() = default;
-	Item(const std::string& name, const std::string& desc) : name(name), desc(desc) {}
+	Item(const EntityID& entityID, const std::string& name, const std::string& desc = "") :
+		Entity(entityID),
+		name(name), desc(desc) 
+	{}
 
 	bool isMeleeWeapon() const { return range == 0 && damage.d > 0 && armor == 0; }
 	bool isRangedWeapon() const { return range > 0 && damage.d > 0 && armor == 0; }
@@ -124,6 +127,7 @@ public:
 
 private:
 	auto findIt(const Item& item) {
+		assert(!item.entityID.empty());
 		return std::find_if(_items.begin(), _items.end(), [&](const ItemRef& it) {
 			if (it.pItem->entityID == item.entityID) {
 				assert(it.pItem == &item);	// should be unique
@@ -133,6 +137,7 @@ private:
 			});
 	}
 	auto findIt(const Item& item) const {
+		assert(!item.entityID.empty());
 		return std::find_if(_items.begin(), _items.end(), [&](const ItemRef& it) {
 			if (it.pItem->entityID == item.entityID) {
 				assert(it.pItem == &item);	// should be unique
