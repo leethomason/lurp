@@ -42,9 +42,15 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/mity/md4c.git
   GIT_TAG        481fbfbdf72daab2912380d62bb5f2187d438408
 )
-FetchContent_MakeAvailable(lua fmt argh ionic plog md4c)
+FetchContent_Declare(
+    SDL2
+    GIT_REPOSITORY  https://github.com/libsdl-org/SDL
+    GIT_TAG         release-2.30.2
+    GIT_PROGRESS    TRUE
+    GIT_SHALLOW     TRUE
+)
+FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2)
 
-file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
 file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
 file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
@@ -52,10 +58,16 @@ file(GLOB IONIC_SOURCES ${ionic_SOURCE_DIR}/src/*.cpp ${ionic_SOURCE_DIR}/src/*.
 set(MD4C_SOURCES ${md4c_SOURCE_DIR}/src/md4c.c ${md4c_SOURCE_DIR}/src/md4c.h)
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/lua.c")
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
+
 source_group("lua" FILES ${LUA_SOURCES})
-source_group("console" FILES ${CONSOLE_SRC})
+
+set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
 
 enable_testing()
+
+# ------- LuRP ---------------
+file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
+source_group("console" FILES ${CONSOLE_SRC})
 
 add_executable(lurp 
   ${SOURCES} 
@@ -83,7 +95,44 @@ add_test(
 )
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")
 
+# ------- Lua ---------------
+
 if (MSVC)
   add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
   target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
 endif()
+
+# ------- LuRP2D ---------------
+file(GLOB TWOD_SRC "drivers/twod/*.cpp" "drivers/twod/*.h" "drivers/*.cpp" "drivers/*.h")
+source_group("twoD" FILES ${TWOD_SRC})
+
+message(SDL2_SOURCE_DIR=${SDL2_SOURCE_DIR})
+
+list(APPEND CMAKE_PREFIX_PATH ${SDL2_SOURCE_DIR}/cmake)
+#list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
+find_package(SDL2 REQUIRED)
+
+add_executable(lurp2d 
+  ${SOURCES} 
+  ${HEADERS} 
+  ${fmt_SOURCE_DIR}/src/format.cc 
+  ${LUA_SOURCES} 
+  ${MD4C_SOURCES}
+  ${TWOD_SRC}
+)
+
+target_include_directories(lurp2d PUBLIC src 
+  ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include 
+  ${ionic_SOURCE_DIR}/include 
+  ${lua_SOURCE_DIR}/src 
+  ${plog_SOURCE_DIR}/include
+  ${md4c_SOURCE_DIR}/src
+  ${SDL2_SOURCE_DIR}/include
+)
+
+#target_link_libraries(
+#  lurp2d
+#  SDL2::SDL2main,
+#  SDL2::SDL2-static
+#)
+
