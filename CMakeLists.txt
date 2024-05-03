@@ -42,12 +42,14 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/mity/md4c.git
   GIT_TAG        481fbfbdf72daab2912380d62bb5f2187d438408
 )
+#FetchContent_Declare(
+#    SDL2
+#    GIT_REPOSITORY  https://github.com/libsdl-org/SDL
+#    GIT_TAG         release-2.30.2
+#)
 FetchContent_Declare(
     SDL2
-    GIT_REPOSITORY  https://github.com/libsdl-org/SDL
-    GIT_TAG         release-2.30.2
-    GIT_PROGRESS    TRUE
-    GIT_SHALLOW     TRUE
+    URL      https://github.com/libsdl-org/SDL/releases/download/release-2.30.3/SDL2-devel-2.30.3-VC.zip
 )
 FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2)
 
@@ -61,7 +63,7 @@ list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
 
 source_group("lua" FILES ${LUA_SOURCES})
 
-set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
+#set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
 
 enable_testing()
 
@@ -105,11 +107,15 @@ endif()
 # ------- LuRP2D ---------------
 file(GLOB TWOD_SRC "drivers/twod/*.cpp" "drivers/twod/*.h" "drivers/*.cpp" "drivers/*.h")
 source_group("twoD" FILES ${TWOD_SRC})
+message(sdl2_SOURCE_DIR=${sdl2_SOURCE_DIR})
 
-message(SDL2_SOURCE_DIR=${SDL2_SOURCE_DIR})
+#get_cmake_property(_variableNames VARIABLES)
+#list (SORT _variableNames)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
 
-list(APPEND CMAKE_PREFIX_PATH ${SDL2_SOURCE_DIR}/cmake)
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
+list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake)
 find_package(SDL2 REQUIRED)
 
 add_executable(lurp2d 
@@ -130,9 +136,11 @@ target_include_directories(lurp2d PUBLIC src
   ${SDL2_SOURCE_DIR}/include
 )
 
-#target_link_libraries(
-#  lurp2d
-#  SDL2::SDL2main,
-#  SDL2::SDL2-static
-#)
+target_link_libraries(lurp2d SDL2::SDL2main)
+target_link_libraries(lurp2d SDL2::SDL2)
+
+set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
+
+# copy the dll to the working directory
+file(COPY ${sdl2_SOURCE_DIR}/lib/x64/SDL2.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
 
