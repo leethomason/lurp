@@ -1,8 +1,28 @@
 #include <SDL.h>
 #include <stdio.h>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#include "TaskScheduler.h"
+
+/*
+	Build is working! At least on windows.
+	Test render.
+	- basic event loop
+	- basic window
+		- manage coordinates
+		- manage aspect ratio
+	- draw a texture or two.
+		- get sRGB correct
+		- get thread pool working
+		- get async loading
+	- draw text
+		- font loading
+		- render on a thread 
+		- sync eveything up
+		- manage resources
+*/
+
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
 
 int main(int argc, char* args[]) {
 	SDL_Window* window = NULL;
@@ -12,7 +32,7 @@ int main(int argc, char* args[]) {
 		return 1;
 	}
 	window = SDL_CreateWindow(
-		"hello_sdl2",
+		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		SCREEN_WIDTH, SCREEN_HEIGHT,
 		SDL_WINDOW_SHOWN

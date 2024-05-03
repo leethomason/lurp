@@ -29,6 +29,7 @@ FetchContent_Declare(
 )
 FetchContent_Declare(
   ionic
+  EXCLUDE_FROM_ALL
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
   GIT_TAG        397b7d9623179b481c46b10eb7174f903ca67187
 )
@@ -39,19 +40,21 @@ FetchContent_Declare(
 )
 FetchContent_Declare(
   md4c
+  EXCLUDE_FROM_ALL
   GIT_REPOSITORY https://github.com/mity/md4c.git
   GIT_TAG        481fbfbdf72daab2912380d62bb5f2187d438408
 )
-#FetchContent_Declare(
-#    SDL2
-#    GIT_REPOSITORY  https://github.com/libsdl-org/SDL
-#    GIT_TAG         release-2.30.2
-#)
 FetchContent_Declare(
     SDL2
     URL      https://github.com/libsdl-org/SDL/releases/download/release-2.30.3/SDL2-devel-2.30.3-VC.zip
 )
-FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2)
+FetchContent_Declare(
+    enkiTS
+    EXCLUDE_FROM_ALL
+    GIT_REPOSITORY  https://github.com/dougbinks/enkiTS.git
+    GIT_TAG         6ffccbdb1000253d8d513dd7a5ae9226e5023a5c   
+)
+FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2 enkiTS)
 
 file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
@@ -60,10 +63,9 @@ file(GLOB IONIC_SOURCES ${ionic_SOURCE_DIR}/src/*.cpp ${ionic_SOURCE_DIR}/src/*.
 set(MD4C_SOURCES ${md4c_SOURCE_DIR}/src/md4c.c ${md4c_SOURCE_DIR}/src/md4c.h)
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/lua.c")
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
+set(ENKITS_SOURCES ${enkiTS_SOURCE_DIR}/src/TaskScheduler.cpp ${enkiTS_SOURCE_DIR}/src/TaskScheduler.h)
 
 source_group("lua" FILES ${LUA_SOURCES})
-
-#set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
 
 enable_testing()
 
@@ -125,6 +127,7 @@ add_executable(lurp2d
   ${LUA_SOURCES} 
   ${MD4C_SOURCES}
   ${TWOD_SRC}
+  ${ENKITS_SOURCES}
 )
 
 target_include_directories(lurp2d PUBLIC src 
@@ -134,6 +137,7 @@ target_include_directories(lurp2d PUBLIC src
   ${plog_SOURCE_DIR}/include
   ${md4c_SOURCE_DIR}/src
   ${SDL2_SOURCE_DIR}/include
+  ${enkiTS_SOURCE_DIR}/src
 )
 
 target_link_libraries(lurp2d SDL2::SDL2main)
