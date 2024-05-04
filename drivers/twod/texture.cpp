@@ -2,26 +2,40 @@
 
 #include <SDL_image.h>
 
+struct PreserveColor {
+	PreserveColor(SDL_Renderer* renderer) : _renderer(renderer) {
+		SDL_GetRenderDrawColor(_renderer, &r, &g, &b, &a);
+	}
+
+	~PreserveColor() {
+		SDL_SetRenderDrawColor(_renderer, r, g, b, a);
+	}
+
+	SDL_Renderer* _renderer;
+	Uint8 r, g, b, a;
+};
+
 Texture::~Texture()
 {
 	assert(ready());
-	assert(sdlSurface == nullptr);
-	assert(sdlTexture);
-	SDL_DestroyTexture(sdlTexture);	
+	assert(_sdlSurface == nullptr);
+	assert(_sdlTexture);
+	SDL_DestroyTexture(_sdlTexture);	
 }
 
 
 void Texture::ExecuteRange(enki::TaskSetPartition, uint32_t)
 {
-	sdlSurface = IMG_Load(path.c_str());
-	assert(sdlSurface);
-	assert(queue);
-	this->w = sdlSurface->w;
-	this->h = sdlSurface->h;
-	this->bytes = sdlSurface->format->BytesPerPixel;
-	assert(this->bytes == 3 || this->bytes == 4);	
+	assert(!_sdlSurface);
+	_sdlSurface = IMG_Load(_path.c_str());
+	assert(_sdlSurface);
+	assert(_queue);
+	this->_w = _sdlSurface->w;
+	this->_h = _sdlSurface->h;
+	this->_bytes = _sdlSurface->format->BytesPerPixel;
+	assert(this->_bytes == 3 || this->_bytes == 4);	
 
-	queue->push(this);
+	_queue->push(this);
 }
 
 TextureManager::~TextureManager()
@@ -32,17 +46,23 @@ TextureManager::~TextureManager()
 const Texture* TextureManager::loadTexture(const std::string& name, const std::string& path)
 {
 	Texture* texture = new Texture();
-	texture->queue = &_loadQueue;
-	texture->name = name;
-	texture->path = path;
+	texture->_queue = &_loadQueue;
+	texture->_name = name;
+	texture->_path = path;
 	_pool.AddTaskSetToPipe(texture);
+	_textures.push_back(texture);
 	return texture;
+}
+
+TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer)
+	: _pool(pool), _sdlRenderer(renderer)
+{
 }
 
 const Texture* TextureManager::getTexture(const std::string& name) const
 {
 	for (Texture* t : _textures) {
-		if (t->name == name) {
+		if (t->_name == name) {
 			return t;
 		}
 	}
@@ -54,9 +74,9 @@ void TextureManager::update()
 	Texture* texture = nullptr;
 	while(_loadQueue.tryPop(texture))
 	{
-		texture->sdlTexture = SDL_CreateTextureFromSurface(_sdlRenderer, texture->sdlSurface);
-		SDL_FreeSurface(texture->sdlSurface);
-		texture->sdlSurface = nullptr;
+		texture->_sdlTexture = SDL_CreateTextureFromSurface(_sdlRenderer, texture->_sdlSurface);
+		SDL_FreeSurface(texture->_sdlSurface);
+		texture->_sdlSurface = nullptr;
 	}
 }
 
@@ -69,4 +89,20 @@ void TextureManager::freeAll()
 		delete t;
 	}
 	_textures.clear();
+}
+
+void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2)
+{
+	PreserveColor pc(renderer);
+
+	int ni = w / size;
+	int nj = h / size;
+	for (int j = 0; j < nj; j++) {
+		for(int i=0; i<ni; i++) {
+			Color c = (i+j) % 2 == 0 ? c1 : c2;
+			SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+			SDL_Rect rect = {i*size, j*size, size, size};
+			SDL_RenderFillRect(renderer, &rect);
+		}
+	}
 }

@@ -198,4 +198,28 @@ private:
 	std::mutex mutex;
 };
 
+template<typename T, size_t N>
+class RollingAverage {
+public:
+	RollingAverage() {
+		for (size_t i = 0; i < N; ++i)
+			values[i] = 0;
+	}
+
+	void add(T value) {
+		sum -= values[index];
+		values[index] = value;
+		sum += value;
+		index = (index + 1) % N;
+	}
+
+	T average() const {
+		return sum / N;
+	}
+private:
+	T values[N];
+	T sum = 0;
+	size_t index = 0;
+};
+
 } // namespace lurp
