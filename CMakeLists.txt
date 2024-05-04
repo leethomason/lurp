@@ -44,9 +44,15 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/mity/md4c.git
   GIT_TAG        481fbfbdf72daab2912380d62bb5f2187d438408
 )
+# FIXME: windws & MSVC only
 FetchContent_Declare(
     SDL2
     URL      https://github.com/libsdl-org/SDL/releases/download/release-2.30.3/SDL2-devel-2.30.3-VC.zip
+)
+# FIXME: windws & MSVC only
+FetchContent_Declare(
+    SDL2_IMAGE
+    URL      https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.2/SDL2_image-devel-2.8.2-VC.zip
 )
 FetchContent_Declare(
     enkiTS
@@ -54,7 +60,7 @@ FetchContent_Declare(
     GIT_REPOSITORY  https://github.com/dougbinks/enkiTS.git
     GIT_TAG         6ffccbdb1000253d8d513dd7a5ae9226e5023a5c   
 )
-FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2 enkiTS)
+FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2 SDL2_image enkiTS)
 
 file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
@@ -109,7 +115,6 @@ endif()
 # ------- LuRP2D ---------------
 file(GLOB TWOD_SRC "drivers/twod/*.cpp" "drivers/twod/*.h" "drivers/*.cpp" "drivers/*.h")
 source_group("twoD" FILES ${TWOD_SRC})
-message(sdl2_SOURCE_DIR=${sdl2_SOURCE_DIR})
 
 #get_cmake_property(_variableNames VARIABLES)
 #list (SORT _variableNames)
@@ -117,8 +122,9 @@ message(sdl2_SOURCE_DIR=${sdl2_SOURCE_DIR})
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
 
-list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake ${sdl2_image_SOURCE_DIR}/cmake)
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
 
 add_executable(lurp2d 
   ${SOURCES} 
@@ -137,14 +143,18 @@ target_include_directories(lurp2d PUBLIC src
   ${plog_SOURCE_DIR}/include
   ${md4c_SOURCE_DIR}/src
   ${SDL2_SOURCE_DIR}/include
+  ${SDL2_image_SOURCE_DIR}/include
   ${enkiTS_SOURCE_DIR}/src
 )
 
 target_link_libraries(lurp2d SDL2::SDL2main)
 target_link_libraries(lurp2d SDL2::SDL2)
+target_link_libraries(lurp2d SDL2_image::SDL2_image)
 
 set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 
+# FIXME: windws & MSVC only
 # copy the dll to the working directory
 file(COPY ${sdl2_SOURCE_DIR}/lib/x64/SDL2.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
+file(COPY ${sdl2_image_SOURCE_DIR}/lib/x64/SDL2_image.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
 

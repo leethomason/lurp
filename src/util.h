@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <queue>
+#include <mutex>
 
 namespace lurp {
 
@@ -175,5 +176,26 @@ struct Queue {
 	std::queue<T> queue;
 };
 
+template<typename T>
+struct QueueMT {
+
+	void push(const T& t) {
+		std::lock_guard<std::mutex> lock(mutex);
+		queue.push(t);
+	}
+
+	bool tryPop(T& t) {
+		std::lock_guard<std::mutex> lock(mutex);
+		if (queue.empty())
+			return false;
+		t = queue.front();
+		queue.pop();
+		return true;
+	}
+
+private:
+	std::queue<T> queue;
+	std::mutex mutex;
+};
 
 } // namespace lurp
