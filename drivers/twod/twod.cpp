@@ -99,7 +99,7 @@ int main(int argc, char* args[])
 				}
 			}
 
-			SDL_SetRenderDrawColor(sdlRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(sdlRenderer, 0, 179, 228, 255);
 			SDL_RenderClear(sdlRenderer);
 			DrawTestPattern(sdlRenderer, 380, SCREEN_HEIGHT, 16, Color{ 192, 192, 192, 255 }, Color{ 128, 128, 128, 255 });
 
