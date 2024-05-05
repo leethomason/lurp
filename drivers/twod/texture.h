@@ -2,6 +2,7 @@
 
 #include "TaskScheduler.h"
 #include "util.h"
+#include "textureupdate.h"
 
 #include <SDL.h>
 
@@ -19,8 +20,10 @@ struct Color {
 	}
 };
 
-class Texture : enki::ITaskSet {
+class Texture {
 	friend class TextureManager;
+	friend class FontManager;
+	friend class TextureLoadTask;
 public:
 	Texture() {}
 	~Texture();
@@ -34,28 +37,28 @@ public:
 		return std::all_of(textures.begin(), textures.end(), [](const Texture* t) { return t->ready(); });
 	}
 
-	void ExecuteRange(enki::TaskSetPartition range_, uint32_t threadnum_) override;
-
 private:
 	SDL_Texture* _sdlTexture = nullptr;
-	SDL_Surface* _sdlSurface = nullptr;
-	lurp::QueueMT<Texture*>* _queue = nullptr;
-
 	std::string _name;
 	std::string _path;
+	int _generation = 0;
 	int _w = 0;
 	int _h = 0;
 	int _bytes = 0;	// 3 or 4
+	bool _textField = false;
 };
 
 class TextureManager
 {
+	friend class FontManager;
 public:
 	TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer);
 	~TextureManager();
 
 	const Texture* loadTexture(const std::string& name, const std::string& path);
 	const Texture* getTexture(const std::string& name) const;
+	Texture* createTextField(const std::string& name, int w, int h);
+
 	void update();
 	void freeAll();
 
@@ -65,11 +68,24 @@ public:
 	}
 
 private:
-	enki::TaskScheduler& _pool;
+	int _generation = 0;
 	SDL_Renderer* _sdlRenderer;
-	lurp::QueueMT<Texture*> _loadQueue;
+	enki::TaskScheduler& _pool;
+	TextureLoadQueue _loadQueue;
 	std::vector<Texture*> _textures;
 };
 
 void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2);
 
+struct PreserveColor {
+	PreserveColor(SDL_Renderer* renderer) : _renderer(renderer) {
+		SDL_GetRenderDrawColor(_renderer, &r, &g, &b, &a);
+	}
+
+	~PreserveColor() {
+		SDL_SetRenderDrawColor(_renderer, r, g, b, a);
+	}
+
+	SDL_Renderer* _renderer;
+	Uint8 r, g, b, a;
+};

@@ -54,13 +54,18 @@ FetchContent_Declare(
     SDL2_IMAGE
     URL      https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.2/SDL2_image-devel-2.8.2-VC.zip
 )
+# FIXME: windws & MSVC only
+FetchContent_Declare(
+    SDL2_TTF
+    URL      https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-devel-2.22.0-VC.zip
+)
 FetchContent_Declare(
     enkiTS
     EXCLUDE_FROM_ALL
     GIT_REPOSITORY  https://github.com/dougbinks/enkiTS.git
     GIT_TAG         6ffccbdb1000253d8d513dd7a5ae9226e5023a5c   
 )
-FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2 SDL2_image enkiTS)
+FetchContent_MakeAvailable(lua fmt argh ionic plog md4c SDL2 SDL2_image SDL2_ttf enkiTS)
 
 file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
@@ -122,9 +127,10 @@ source_group("twoD" FILES ${TWOD_SRC})
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
 
-list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake ${sdl2_image_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake ${sdl2_image_SOURCE_DIR}/cmake ${sdl2_ttf_SOURCE_DIR}/cmake)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 
 add_executable(lurp2d 
   ${SOURCES} 
@@ -144,12 +150,14 @@ target_include_directories(lurp2d PUBLIC src
   ${md4c_SOURCE_DIR}/src
   ${SDL2_SOURCE_DIR}/include
   ${SDL2_image_SOURCE_DIR}/include
+  ${SDL2_ttf_SOURCE_DIR}/include
   ${enkiTS_SOURCE_DIR}/src
 )
 
 target_link_libraries(lurp2d SDL2::SDL2main)
 target_link_libraries(lurp2d SDL2::SDL2)
 target_link_libraries(lurp2d SDL2_image::SDL2_image)
+target_link_libraries(lurp2d SDL2_ttf::SDL2_ttf)
 
 set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 
@@ -157,4 +165,5 @@ set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
 # copy the dll to the working directory
 file(COPY ${sdl2_SOURCE_DIR}/lib/x64/SDL2.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
 file(COPY ${sdl2_image_SOURCE_DIR}/lib/x64/SDL2_image.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
+file(COPY ${sdl2_ttf_SOURCE_DIR}/lib/x64/SDL2_ttf.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
 

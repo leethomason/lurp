@@ -1,5 +1,6 @@
 #include "texture.h"
 #include "text.h"
+#include "debug.h"
 
 #include <SDL.h>
 #include <stdio.h>
@@ -42,24 +43,43 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-int main(int argc, char* args[]) 
+int main(int argc, char* args[])
 {
+	(void)argc;
+	(void)args;
+
 	// SDL init - not included by memory tracker
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
 		fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
 		return 1;
 	}
+	if (TTF_Init()) {
+		fprintf(stderr, "could not initialize sdl2_ttf: %s\n", TTF_GetError());
+		return 1;
+	}
+
+	// SDL_RenderSetLogicalSize: maybe?
+	// SDL_RenderSetViewport: maybe?
+
 	SDL_Window* window = SDL_CreateWindow(
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		SCREEN_WIDTH, SCREEN_HEIGHT,
-		SDL_WINDOW_SHOWN
+		SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
 	);
-	if (window == NULL) {
-		fprintf(stderr, "could not create window: %s\n", SDL_GetError());
-		return 1;
+	if (!window) {
+		PLOG(plog::error) << "Could not create window (SDL_CreateWindow failed): " << SDL_GetError();
+		FATAL_INTERNAL_ERROR();
 	}
 	SDL_Renderer* sdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (!sdlRenderer) {
+		PLOG(plog::error) << "Could not create window (SDL_CreateRenderer failed): " << SDL_GetError();
+		FATAL_INTERNAL_ERROR();
+	}
+
+	//SDL_Rect view = { 0, 100, 800, 500 };
+	//SDL_RenderSetViewport(sdlRenderer, &view);
+	// or clip rect. Hmm.
 
 #if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.
@@ -80,6 +100,10 @@ int main(int argc, char* args[])
 		const Texture* ps4 = textureManager.loadTexture("ps-layer4", "assets/layer4_100.png");
 		const Texture* ps5 = textureManager.loadTexture("ps-layer5", "assets/layer5_100.png");
 		const Texture* tree = textureManager.loadTexture("tree", "assets/tree.png");
+		Texture* tf0 = textureManager.createTextField("textField0", 300, 600);
+
+		FontManager fontManager(textureManager);
+		fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 22);
 
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
@@ -87,6 +111,9 @@ int main(int argc, char* args[])
 		bool done = false;
 		SDL_Event e;
 		uint64_t last = SDL_GetPerformanceCounter();
+
+		std::string textField = "Hello, world! This is some text that will need to be wrapped to fit in the box.";
+		fontManager.drawText("roboto16", tf0, textField, SDL_Color{ 255, 255, 255, 255 });
 
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
@@ -132,6 +159,11 @@ int main(int argc, char* args[])
 					SDL_Rect r = { i * 100, 400, 50 + 50 * i, 50 + 50 * i };
 					SDL_RenderCopy(sdlRenderer, tree->sdlTexture(), nullptr, &r);
 				}
+			}
+			if (tf0->ready()) {
+				SDL_Rect dest = { 400, 300, tf0->width(), tf0->height() };
+				SDL_SetTextureBlendMode(tf0->sdlTexture(), SDL_BLENDMODE_BLEND);
+				SDL_RenderCopy(sdlRenderer, tf0->sdlTexture(), nullptr, &dest);
 			}
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
@@ -182,6 +214,7 @@ int main(int argc, char* args[])
 	assert(s3.lSizes[1] <= knownLeakSize);
 #endif
 
+	TTF_Quit();
 	SDL_DestroyRenderer(sdlRenderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
