@@ -57,10 +57,13 @@ public:
 
 	int renderW() const { return _renderSize.w; }
 	int renderH() const { return _renderSize.h; }
+
 	int s(int x) const { return (int)roundf(x * _scale); }
 	float s(float x) const { return x * _scale; }
+	Point s(const Point& p) const { return Point(s(p.x), s(p.y)); }	
 
 	Point t(const Point& p) const;
+	Point t(int x, int y) const { return t(Point(x, y)); }
 	SDL_Rect t(const SDL_Rect& r) const;
 
 private:

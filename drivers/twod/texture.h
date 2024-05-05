@@ -11,17 +11,11 @@
 #include <numeric>
 
 class XFormer;
+class TextureManager;
 
-struct Color {
-	uint8_t r = 0;
-	uint8_t g = 0;
-	uint8_t b = 0;
-	uint8_t a = 0;
-
-	uint32_t u32() const {
-		return *((uint32_t*)this);
-	}
-};
+inline bool ColorEqual(const SDL_Color& c1, const SDL_Color& c2) {
+	return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a;
+}
 
 class Texture {
 	friend class TextureManager;
@@ -35,6 +29,7 @@ public:
 	SDL_Texture* sdlTexture() const { return _sdlTexture; }
 	int width() const { return _w; }
 	int height() const { return _h; }
+	const std::string& name() const { return _name; }
 
 	static bool ready(std::vector<const Texture*> textures) {
 		return std::all_of(textures.begin(), textures.end(), [](const Texture* t) { return t->ready(); });
@@ -49,6 +44,7 @@ private:
 	int _h = 0;
 	int _bytes = 0;	// 3 or 4
 	bool _textField = false;
+	TextureManager* _manager = nullptr;
 };
 
 class TextureManager
@@ -61,6 +57,8 @@ public:
 	const Texture* loadTexture(const std::string& name, const std::string& path);
 	const Texture* getTexture(const std::string& name) const;
 	Texture* createTextField(const std::string& name, int w, int h);
+
+	void unlinkTexture(const Texture* t);
 
 	void update();
 	void freeAll();
@@ -82,6 +80,15 @@ public:
 	}
 
 private:
+	Texture* getMutTexture(const std::string& name) {
+		for(Texture* t : _textures) {
+			if(t->_name == name) {
+				return t;
+			}
+		}
+		return nullptr;
+	}
+
 	int _generation = 0;
 	SDL_Renderer* _sdlRenderer;
 	enki::TaskScheduler& _pool;
@@ -89,7 +96,7 @@ private:
 	std::vector<Texture*> _textures;
 };
 
-void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2, const XFormer& xf);
+void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, SDL_Color c1, SDL_Color c2, const XFormer& xf);
 
 struct PreserveColor {
 	PreserveColor(SDL_Renderer* renderer) : _renderer(renderer) {

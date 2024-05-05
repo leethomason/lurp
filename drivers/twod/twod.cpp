@@ -119,10 +119,11 @@ int main(int argc, char* args[])
 		const Texture* ps4 = textureManager.loadTexture("ps-layer4", "assets/layer4_100.png");
 		const Texture* ps5 = textureManager.loadTexture("ps-layer5", "assets/layer5_100.png");
 		const Texture* tree = textureManager.loadTexture("tree", "assets/tree.png");
-		Texture* tf0 = textureManager.createTextField("textField0", 300, 600);
+		//Texture* tf0 = textureManager.createTextField("textField0", 300, 600);
 
-		FontManager fontManager(textureManager);
+		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 		fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 22);
+		TextField* tf0 = fontManager.createTextField("textField0", "roboto16", 300, 600);
 
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
@@ -131,22 +132,23 @@ int main(int argc, char* args[])
 		SDL_Event e;
 		uint64_t last = SDL_GetPerformanceCounter();
 
-		std::string textField = "Hello, world! This is some text that will need to be wrapped to fit in the box.";
-		fontManager.drawText("roboto16", tf0, textField, SDL_Color{ 255, 255, 255, 255 });
+		//fontManager.drawText("roboto16", tf0, textField, SDL_Color{ 255, 255, 255, 255 });
 
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
 
+			SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
+			xFormer.setRenderSize(renderW, renderH);
+			
 			textureManager.update();
+			fontManager.update(xFormer);
 
 			while (SDL_PollEvent(&e) != 0) {
 				if (e.type == SDL_QUIT) {
 					done = true;
 				}
 				else if (e.type == SDL_WINDOWEVENT) {
-					SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
 					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
-					xFormer.setRenderSize(renderW, renderH);
 					SDL_Rect clip = xFormer.sdlClipRect();
 					SDL_RenderSetClipRect(sdlRenderer, &clip);
 				}
@@ -156,7 +158,7 @@ int main(int argc, char* args[])
 			SDL_RenderClear(sdlRenderer);
 			DrawTestPattern(sdlRenderer, 
 				380, SCREEN_HEIGHT, 16, 
-				Color{192, 192, 192, 255}, Color{128, 128, 128, 255},
+				SDL_Color{192, 192, 192, 255}, SDL_Color{128, 128, 128, 255},
 				xFormer);
 
 			// Draw a texture. Confirm sRGB is working.
@@ -189,11 +191,15 @@ int main(int argc, char* args[])
 					SDL_RenderCopy(sdlRenderer, tree->sdlTexture(), nullptr, &r);
 				}
 			}
-			if (tf0->ready()) {
-				SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, tf0->width(), tf0->height()});
-				SDL_SetTextureBlendMode(tf0->sdlTexture(), SDL_BLENDMODE_BLEND);
-				SDL_RenderCopy(sdlRenderer, tf0->sdlTexture(), nullptr, &dest);
+			{
+				std::string text = "Hello, world! This is some text that will need to be wrapped to fit in the box.";
+				tf0->Render(text, 400, 300, SDL_Color{255, 255, 255, 255});
 			}
+			//if (tf0->ready()) {
+			//	SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, tf0->width(), tf0->height()});
+			//	SDL_SetTextureBlendMode(tf0->sdlTexture(), SDL_BLENDMODE_BLEND);
+			//	SDL_RenderCopy(sdlRenderer, tf0->sdlTexture(), nullptr, &dest);
+			//}
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();

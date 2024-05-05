@@ -2,6 +2,8 @@
 
 void XFormer::setRenderSize(int rw, int rh)
 {
+	if (_renderSize.w == rw && _renderSize.h == rh) 
+		return;
 	_renderSize = Rect{0, 0, rw, rh};
 
 	// Test for unity
