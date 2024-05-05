@@ -122,6 +122,7 @@ void TextureManager::update()
 			int err = SDL_LockTextureToSurface(texture->_sdlTexture, nullptr, &target);
 			assert(err == 0);
 			assert(target);
+			memset(target->pixels, 0, target->pitch * target->h);
 			SDL_BlitSurface(surface, nullptr, target, nullptr);
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}

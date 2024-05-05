@@ -124,6 +124,7 @@ int main(int argc, char* args[])
 		bool done = false;
 		SDL_Event e;
 		uint64_t last = SDL_GetPerformanceCounter();
+		uint64_t frame = 0;
 
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
@@ -184,7 +185,7 @@ int main(int argc, char* args[])
 				}
 			}
 			{
-				std::string text = "Hello, world! This is some text that will need to be wrapped to fit in the box.";
+				std::string text = fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", frame/60);
 				tf0->Render(text, 400, 300, SDL_Color{255, 255, 255, 255});
 			}
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
@@ -207,6 +208,7 @@ int main(int argc, char* args[])
 
 			// Update screen
 			SDL_RenderPresent(sdlRenderer);
+			++frame;
 
 			// Sample *after* the present to include vsync
 			uint64_t now = SDL_GetPerformanceCounter();
