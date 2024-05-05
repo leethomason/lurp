@@ -11,6 +11,7 @@
 struct SDL_Renderer;
 struct SDL_Texture;
 class Texture;
+class XFormer;
 
 class FontManager {
 public:
@@ -32,4 +33,4 @@ private:
 	std::vector<Font> _fonts;
 };
 
-void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize = 16);
+void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf);

@@ -1,8 +1,11 @@
 #include "text.h"
 #include "texture.h"
+#include "xform.h"
 #include "../task.h"
 
 #include <SDL.h>
+
+#include <fmt/core.h>
 
 class RenderFontTask : public lurp::SelfDeletingTask
 {
@@ -17,6 +20,8 @@ public:
 		// I experimented with converting to an alpha map, but it looks no better than the blended version
 		//SDL_Surface* surface = TTF_RenderUTF8_LCD_Wrapped(_font, _text.c_str(), _color, SDL_Color{0, 0, 0, 0}, _texture->width());
 		assert(surface);
+
+		fmt::print("Rendered text: {} chars at {}x{}\n", _text.size(), surface->w, surface->h);
 
 		TextureUpdate update{ _texture, surface, _generation };
 		_queue->push(update);
@@ -73,7 +78,7 @@ void FontManager::drawText(const std::string& name, Texture* textField, const st
 	_textureManager._pool.AddTaskSetToPipe(task);
 }
 
-void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize)
+void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf)
 {
 	if (!tex->ready())
 		return;
@@ -92,8 +97,10 @@ void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Textur
 
 	constexpr int border = 4;
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_Rect rect = { x - border, y - border, int(text.size()) * xStep + border * 2, yStep + border * 2 };
-	SDL_RenderFillRect(renderer, &rect);
+	{
+		SDL_Rect rect = xf.t(SDL_Rect{ x - border, y - border, int(text.size()) * xStep + border * 2, yStep + border * 2 });
+		SDL_RenderFillRect(renderer, &rect);
+	}
 
 	for (size_t i = 0; i < text.size(); i++)
 	{
@@ -110,6 +117,7 @@ void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Textur
 		dst.w = xStep;
 		dst.h = yStep;
 
-		SDL_RenderCopy(renderer, tex->sdlTexture(), &src, &dst);
+		SDL_Rect xDst = xf.t(dst);
+		SDL_RenderCopy(renderer, tex->sdlTexture(), &src, &xDst);
 	};
 }

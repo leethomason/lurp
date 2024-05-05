@@ -1,4 +1,6 @@
 #include "texture.h"
+#include "xform.h"
+
 #include "../task.h"
 
 #include <SDL_image.h>
@@ -130,7 +132,7 @@ void TextureManager::freeAll()
 	_textures.clear();
 }
 
-void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2)
+void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2, const XFormer& xf)
 {
 	PreserveColor pc(renderer);
 
@@ -140,7 +142,7 @@ void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, C
 		for(int i=0; i<ni; i++) {
 			Color c = (i+j) % 2 == 0 ? c1 : c2;
 			SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-			SDL_Rect rect = {i*size, j*size, size, size};
+			SDL_Rect rect = xf.t(SDL_Rect{i*size, j*size, size, size});
 			SDL_RenderFillRect(renderer, &rect);
 		}
 	}

@@ -1,14 +1,12 @@
 #include "texture.h"
 #include "text.h"
 #include "debug.h"
+#include "xform.h"
+#include "test2d.h"
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <SDL_image.h>
-
-#define NK_IMPLEMENTATION
-#include "nuklear.h"
-#include "nuklear_sdl_renderer.h"
 
 #include <fmt/core.h>
 #include <plog/Log.h>
@@ -23,11 +21,6 @@
 	Test render.
 	x basic event loop
 	- basic window
-	    sd:      960 x 540
-		1080p:  1920 x 1080
-		4k: 	3840 x 2160 
-		16:9
-
 		- manage coordinates
 		- manage aspect ratio
 	x draw a texture or two.
@@ -71,7 +64,7 @@ int main(int argc, char* args[])
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		SCREEN_WIDTH, SCREEN_HEIGHT,
-		SDL_WINDOW_SHOWN  //| SDL_WINDOW_ALLOW_HIGHDPI //| SDL_WINDOW_FULLSCREEN_DESKTOP
+		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE //| SDL_WINDOW_ALLOW_HIGHDPI //| SDL_WINDOW_FULLSCREEN_DESKTOP
 	);
 	if (!window) {
 		PLOG(plog::error) << "Could not create window (SDL_CreateWindow failed): " << SDL_GetError();
@@ -91,7 +84,7 @@ int main(int argc, char* args[])
 	//SDL_Rect view = { 0, 100, 800, 500 };
 	//SDL_RenderSetViewport(sdlRenderer, &view);
 	// or clip rect. Hmm.
-
+	
 #if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.
 	_CrtMemState s1, s2, s3;
@@ -100,6 +93,21 @@ int main(int argc, char* args[])
 	{
 		enki::TaskScheduler pool;
 		pool.Initialize();
+
+		RunTests2D();
+		int rc = TestReturnCode();
+		LogTestResults();
+		if (rc == 0)
+			PLOG(plog::info) << "LuRP2D tests run successfully.";
+		else
+			PLOG(plog::error) << "LuRP2D tests failed.";
+
+		XFormer xFormer(SCREEN_WIDTH, SCREEN_HEIGHT);
+		xFormer.setRenderSize(renderW, renderH);
+		{
+			SDL_Rect clip = xFormer.sdlClipRect();
+			SDL_RenderSetClipRect(sdlRenderer, &clip);
+		}
 
 		TextureManager textureManager(pool, sdlRenderer);
 		const Texture* atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
@@ -135,22 +143,32 @@ int main(int argc, char* args[])
 				if (e.type == SDL_QUIT) {
 					done = true;
 				}
+				else if (e.type == SDL_WINDOWEVENT) {
+					SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
+					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
+					xFormer.setRenderSize(renderW, renderH);
+					SDL_Rect clip = xFormer.sdlClipRect();
+					SDL_RenderSetClipRect(sdlRenderer, &clip);
+				}
 			}
 
 			SDL_SetRenderDrawColor(sdlRenderer, 0, 179, 228, 255);
 			SDL_RenderClear(sdlRenderer);
-			DrawTestPattern(sdlRenderer, 380, SCREEN_HEIGHT, 16, Color{ 192, 192, 192, 255 }, Color{ 128, 128, 128, 255 });
+			DrawTestPattern(sdlRenderer, 
+				380, SCREEN_HEIGHT, 16, 
+				Color{192, 192, 192, 255}, Color{128, 128, 128, 255},
+				xFormer);
 
 			// Draw a texture. Confirm sRGB is working.
 			const Texture* t = textureManager.getTexture("portrait11");
 			if (t->ready()) {
-				SDL_Rect dest = { 0, 0, t->width(), t->height() };
+				SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, t->width(), t->height() });
 				SDL_RenderCopy(sdlRenderer, t->sdlTexture(), nullptr, &dest);
 			}
 
 			// Test against Ps
 			if (Texture::ready({ ps0, ps1, ps2, ps3, ps4, ps5 })) {
-				SDL_Rect dest = { 400, 0, 256, 256 };
+				SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 0, 256, 256 });
 				//SDL_RenderBlend
 				SDL_RenderCopy(sdlRenderer, ps0->sdlTexture(), nullptr, &dest);
 				SDL_RenderCopy(sdlRenderer, ps1->sdlTexture(), nullptr, &dest);
@@ -163,16 +181,16 @@ int main(int argc, char* args[])
 				SDL_RenderCopy(sdlRenderer, ps5->sdlTexture(), nullptr, &dest);
 			}
 			if (tree->ready()) {
-				SDL_Rect dest = { 400, 300, 400, 400 };
+				SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, 400, 400 });
 				SDL_RenderCopy(sdlRenderer, tree->sdlTexture(), nullptr, &dest);
 
 				for (int i = 0; i < 3; i++) {
-					SDL_Rect r = { i * 100, 400, 50 + 50 * i, 50 + 50 * i };
+					SDL_Rect r = xFormer.t(SDL_Rect{ i * 100, 400, 50 + 50 * i, 50 + 50 * i });
 					SDL_RenderCopy(sdlRenderer, tree->sdlTexture(), nullptr, &r);
 				}
 			}
 			if (tf0->ready()) {
-				SDL_Rect dest = { 400, 300, tf0->width(), tf0->height() };
+				SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, tf0->width(), tf0->height()});
 				SDL_SetTextureBlendMode(tf0->sdlTexture(), SDL_BLENDMODE_BLEND);
 				SDL_RenderCopy(sdlRenderer, tf0->sdlTexture(), nullptr, &dest);
 			}
@@ -192,7 +210,7 @@ int main(int argc, char* args[])
 					textureManager.numTextures(),
 					textureManager.totalTextureMemory() / 1'000'000,
 					textureManager.readyTextureMemory() / 1'000'000);
-				DrawDebugText(msg, sdlRenderer, atlas, 5, 5, 12);
+				DrawDebugText(msg, sdlRenderer, atlas, 5, 5, 12, xFormer);
 			}
 
 			//Update screen

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <numeric>
 
+class XFormer;
 
 struct Color {
 	uint8_t r = 0;
@@ -88,7 +89,7 @@ private:
 	std::vector<Texture*> _textures;
 };
 
-void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2);
+void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, Color c1, Color c2, const XFormer& xf);
 
 struct PreserveColor {
 	PreserveColor(SDL_Renderer* renderer) : _renderer(renderer) {
