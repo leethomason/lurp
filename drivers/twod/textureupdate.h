@@ -6,7 +6,7 @@ class Texture;
 struct SDL_Surface;
 
 struct TextureUpdate {
-	Texture* texture = nullptr;
+	std::shared_ptr<Texture> texture;
 	SDL_Surface* surface = nullptr;
 	int generation = 0;
 };

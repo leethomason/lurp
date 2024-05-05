@@ -31,7 +31,7 @@ public:
 		_queue->push(update);
 	}
 
-	Texture* _texture = nullptr;
+	std::shared_ptr<Texture> _texture;
 	TextureLoadQueue* _queue = nullptr;
 	int _generation = 0;
 };
@@ -39,9 +39,9 @@ public:
 Texture::~Texture()
 {
 #if DEBUG_TEXTURES
-	fmt::print("~Texture() unlink and delete: {}\n", _name);
+	fmt::print("~Texture() delete: {}\n", _name);
 #endif
-	_manager->unlinkTexture(this);
+	//_manager->unlinkTexture(this);
 	SDL_DestroyTexture(_sdlTexture);
 }
 
@@ -50,7 +50,7 @@ TextureManager::~TextureManager()
 	freeAll();
 }
 
-const Texture* TextureManager::loadTexture(const std::string& name, const std::string& path)
+std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& name, const std::string& path)
 {
 #if DEBUG_TEXTURES
 	fmt::print("loadTexture: {}\n", name);
@@ -58,19 +58,20 @@ const Texture* TextureManager::loadTexture(const std::string& name, const std::s
 	Texture* texture = new Texture();
 	texture->_name = name;
 	texture->_path = path;
-	texture->_manager = this;
+	auto ptr = std::shared_ptr<Texture>(texture);
 
 	TextureLoadTask* task = new TextureLoadTask();
-	task->_texture = texture;
+	task->_texture = ptr;
 	task->_queue = &_loadQueue;
 	task->_generation = ++_generation;
 
 	_pool.AddTaskSetToPipe(task);
-	_textures.push_back(texture);
-	return texture;
+
+	_textures.push_back(ptr);
+	return ptr;
 }
 
-Texture* TextureManager::createTextField(const std::string& name, int w, int h)
+std::shared_ptr<Texture> TextureManager::createTextField(const std::string& name, int w, int h)
 {
 #if DEBUG_TEXTURES
 	fmt::print("createTextField: {}\n", name);
@@ -82,12 +83,14 @@ Texture* TextureManager::createTextField(const std::string& name, int w, int h)
 	texture->_bytes = 4;
 	texture->_textField = true;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
-	texture->_manager = this;
+	//texture->_manager = this;
 
-	_textures.push_back(texture);
-	return texture;
+	auto ptr = std::shared_ptr<Texture>(texture);
+	_textures.push_back(ptr);
+	return ptr;
 }
 
+/*
 void TextureManager::unlinkTexture(const Texture* t)
 {
 #if DEBUG_TEXTURES
@@ -97,15 +100,16 @@ void TextureManager::unlinkTexture(const Texture* t)
 	assert(it != _textures.end());
 	_textures.erase(it);
 }
+*/
 
 TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer)
 	: _pool(pool), _sdlRenderer(renderer)
 {
 }
 
-const Texture* TextureManager::getTexture(const std::string& name) const
+std::shared_ptr<Texture> TextureManager::getTexture(const std::string& name) const
 {
-	for (Texture* t : _textures) {
+	for (auto& t : _textures) {
 		if (t->_name == name) {
 			return t;
 		}
@@ -118,7 +122,7 @@ void TextureManager::update()
 	TextureUpdate update;
 	while(_loadQueue.tryPop(update))
 	{
-		Texture* texture = update.texture;
+		std::shared_ptr<Texture> texture = update.texture;
 		SDL_Surface* surface = update.surface;
 		int generation = update.generation;
 
@@ -160,17 +164,13 @@ void TextureManager::update()
 		texture->_generation = generation;
 		SDL_FreeSurface(surface);
 	}
+	// FIXME: 2nd pass to remove stale texture
 }
 
 void TextureManager::freeAll()
 {
 	_pool.WaitforAll();
 	update();
-
-	for (Texture* t : _textures) {
-		if (!t->_textField)       // texfields get deleted by the FontManager
-			delete t;
-	}
 	_textures.clear();
 }
 

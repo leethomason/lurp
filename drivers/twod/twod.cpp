@@ -110,20 +110,19 @@ int main(int argc, char* args[])
 		}
 
 		TextureManager textureManager(pool, sdlRenderer);
-		const Texture* atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
-		textureManager.loadTexture("portrait11", "assets/portraitTest11.png");
-		const Texture* ps0 = textureManager.loadTexture("ps-back", "assets/back.png");
-		const Texture* ps1 = textureManager.loadTexture("ps-layer1", "assets/layer1_100.png");
-		const Texture* ps2 = textureManager.loadTexture("ps-layer2", "assets/layer2_100.png");
-		const Texture* ps3 = textureManager.loadTexture("ps-layer3", "assets/layer3_100.png");
-		const Texture* ps4 = textureManager.loadTexture("ps-layer4", "assets/layer4_100.png");
-		const Texture* ps5 = textureManager.loadTexture("ps-layer5", "assets/layer5_100.png");
-		const Texture* tree = textureManager.loadTexture("tree", "assets/tree.png");
-		//Texture* tf0 = textureManager.createTextField("textField0", 300, 600);
+		std::shared_ptr<Texture> atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
+		std::shared_ptr<Texture> portrait11 = textureManager.loadTexture("portrait11", "assets/portraitTest11.png");
+		std::shared_ptr<Texture> ps0 = textureManager.loadTexture("ps-back", "assets/back.png");
+		std::shared_ptr<Texture> ps1 = textureManager.loadTexture("ps-layer1", "assets/layer1_100.png");
+		std::shared_ptr<Texture> ps2 = textureManager.loadTexture("ps-layer2", "assets/layer2_100.png");
+		std::shared_ptr<Texture> ps3 = textureManager.loadTexture("ps-layer3", "assets/layer3_100.png");
+		std::shared_ptr<Texture> ps4 = textureManager.loadTexture("ps-layer4", "assets/layer4_100.png");
+		std::shared_ptr<Texture> ps5 = textureManager.loadTexture("ps-layer5", "assets/layer5_100.png");
+		std::shared_ptr<Texture> tree = textureManager.loadTexture("tree", "assets/tree.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 		fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 22);
-		TextField* tf0 = fontManager.createTextField("textField0", "roboto16", 300, 600);
+		std::shared_ptr<TextField> tf0 = fontManager.createTextField("textField0", "roboto16", 300, 600);
 
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
@@ -162,10 +161,9 @@ int main(int argc, char* args[])
 				xFormer);
 
 			// Draw a texture. Confirm sRGB is working.
-			const Texture* t = textureManager.getTexture("portrait11");
-			if (t->ready()) {
-				SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, t->width(), t->height() });
-				SDL_RenderCopy(sdlRenderer, t->sdlTexture(), nullptr, &dest);
+			if (portrait11->ready()) {
+				SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->width(), portrait11->height() });
+				SDL_RenderCopy(sdlRenderer, portrait11->sdlTexture(), nullptr, &dest);
 			}
 
 			// Test against Ps
@@ -216,7 +214,7 @@ int main(int argc, char* args[])
 					textureManager.numTextures(),
 					textureManager.totalTextureMemory() / 1'000'000,
 					textureManager.readyTextureMemory() / 1'000'000);
-				DrawDebugText(msg, sdlRenderer, atlas, 5, 5, 12, xFormer);
+				DrawDebugText(msg, sdlRenderer, atlas.get(), 5, 5, 12, xFormer);
 			}
 
 			//Update screen

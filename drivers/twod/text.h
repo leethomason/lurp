@@ -35,14 +35,16 @@ public:
 
 private:
 	std::string _name;
-	Texture* _texture = nullptr;
+	std::shared_ptr<Texture> _texture;
 	const Font* _font = nullptr;
 	int _width = 0;
 	int _height = 0;
 	FontManager* _fontManager = nullptr;
 
-	std::string _text;
-	SDL_Color _color = SDL_Color{ 0, 0, 0, 0 };
+	// No good solutions here. But this is used as a cache invalid flag.
+	// FIXME: replacing with a hash would make this clearer.
+	mutable std::string _text;
+	mutable SDL_Color _color = SDL_Color{ 0, 0, 0, 0 };
 };
 
 class FontManager {
@@ -53,10 +55,10 @@ public:
 	void loadFont(const std::string& name, const std::string& path, int size);
 	void update(const XFormer& xf);
 
-	TextField* createTextField(const std::string& name, const std::string& font, int width, int height);
-	void unlinkTextField(const TextField* tf);
+	std::shared_ptr<TextField> createTextField(const std::string& name, const std::string& font, int width, int height);
+	//void unlinkTextField(const TextField* tf);
 
-	void renderTextField(TextField*, const std::string& text, int x, int y, SDL_Color color);
+	void renderTextField(const TextField* tf, const std::string& text, int x, int y, SDL_Color color);
 
 private:
 	Font* getFont(const std::string& name);
@@ -65,7 +67,7 @@ private:
 	enki::TaskScheduler& _pool;
 	TextureManager& _textureManager;
 	std::vector<Font*> _fonts;
-	std::vector<TextField*> _textFields;
+	std::vector<std::shared_ptr<TextField>> _textFields;
 	XFormer _xf;
 };
 

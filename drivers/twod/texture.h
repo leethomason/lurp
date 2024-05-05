@@ -34,6 +34,9 @@ public:
 	static bool ready(std::vector<const Texture*> textures) {
 		return std::all_of(textures.begin(), textures.end(), [](const Texture* t) { return t->ready(); });
 	}
+	static bool ready(std::vector<std::shared_ptr<Texture>> textures) {
+		return std::all_of(textures.begin(), textures.end(), [](const auto& t) { return t->ready(); });
+	}
 
 private:
 	SDL_Texture* _sdlTexture = nullptr;
@@ -44,7 +47,7 @@ private:
 	int _h = 0;
 	int _bytes = 0;	// 3 or 4
 	bool _textField = false;
-	TextureManager* _manager = nullptr;
+	//TextureManager* _manager = nullptr;
 };
 
 class TextureManager
@@ -54,46 +57,37 @@ public:
 	TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer);
 	~TextureManager();
 
-	const Texture* loadTexture(const std::string& name, const std::string& path);
-	const Texture* getTexture(const std::string& name) const;
-	Texture* createTextField(const std::string& name, int w, int h);
+	std::shared_ptr<Texture> loadTexture(const std::string& name, const std::string& path);
+	std::shared_ptr<Texture> getTexture(const std::string& name) const;
+	std::shared_ptr<Texture> createTextField(const std::string& name, int w, int h);
 
-	void unlinkTexture(const Texture* t);
+	// void unlinkTexture(const Texture* t);
 
 	void update();
 	void freeAll();
 
 	int numTextures() const { return (int)_textures.size(); }
 	int numTexturesReady() const {
-		return (int)std::count_if(_textures.begin(), _textures.end(), [](const Texture* t) { return t->ready(); });
+		return (int)std::count_if(_textures.begin(), _textures.end(), [](const auto& t) { return t->ready(); });
 	}
 
 	uint64_t totalTextureMemory() const {
-		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const Texture* t) {
+		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const auto& t) {
 			return sum + (t->width() * t->height() * t->_bytes);
 		});
 	}
 	uint64_t readyTextureMemory() const {
-		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const Texture* t) {
+		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const auto& t) {
 			return sum + (t->ready() ? (t->width() * t->height() * t->_bytes) : 0);
 		});
 	}
 
 private:
-	Texture* getMutTexture(const std::string& name) {
-		for(Texture* t : _textures) {
-			if(t->_name == name) {
-				return t;
-			}
-		}
-		return nullptr;
-	}
-
 	int _generation = 0;
 	SDL_Renderer* _sdlRenderer;
 	enki::TaskScheduler& _pool;
 	TextureLoadQueue _loadQueue;
-	std::vector<Texture*> _textures;
+	std::vector<std::shared_ptr<Texture>> _textures;
 };
 
 void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, SDL_Color c1, SDL_Color c2, const XFormer& xf);

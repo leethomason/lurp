@@ -27,7 +27,7 @@ public:
 		_queue->push(update);
 	}
 
-	Texture* _texture = nullptr;
+	std::shared_ptr<Texture> _texture;
 	TextureLoadQueue* _queue = nullptr;
 	int _generation = 0;
 
@@ -38,9 +38,6 @@ public:
 
 FontManager::~FontManager()
 {
-	for (TextField* tf : _textFields) {
-		delete tf;
-	}
 	for (Font* f : _fonts) {
 		TTF_CloseFont(f->font);
 		delete f;
@@ -86,13 +83,12 @@ void FontManager::update(const XFormer& xf)
 	// And new the text fields attached to the fonts. 
 	// Remember we already flushed the open tasks.
 	if (change) {
-		for (TextField* tf : _textFields) {
+		for (auto& tf : _textFields) {
 			tf->_text = "<--cache invalid-->";
 
 			// This is super exciting! The texture size may change as well. (this is so complex!!)
 			Point size = xf.s(Point{ tf->_width, tf->_height });
 			if (size.x != tf->_texture->width() || size.y != tf->_texture->height()) {
-				delete tf->_texture;
 				tf->_texture = _textureManager.createTextField(tf->_name, size.x, size.y);
 			}			
 		}
@@ -110,7 +106,7 @@ Font* FontManager::getFont(const std::string& name)
 }
 
 
-TextField* FontManager::createTextField(const std::string& name, const std::string& font, int width, int height)
+std::shared_ptr<TextField> FontManager::createTextField(const std::string& name, const std::string& font, int width, int height)
 {
 	Font* f = getFont(font);
 	assert(f);
@@ -124,10 +120,12 @@ TextField* FontManager::createTextField(const std::string& name, const std::stri
 	tf->_fontManager = this;
 	tf->_texture = _textureManager.createTextField(name, width, height);
 
-	_textFields.push_back(tf);
-	return tf;	
+	std::shared_ptr<TextField> ptr(tf);
+	_textFields.push_back(ptr);
+	return ptr;	
 }
 
+/*
 void FontManager::unlinkTextField(const TextField* tf)
 {
 	for(auto it = _textFields.begin(); it != _textFields.end(); ++it) {
@@ -138,12 +136,12 @@ void FontManager::unlinkTextField(const TextField* tf)
 	}
 	assert(false);
 }
-
+*/
 
 TextField::~TextField()
 {
-	delete _texture;
-	_fontManager->unlinkTextField(this);
+	//delete _texture;
+	//_fontManager->unlinkTextField(this);
 }
 
 void TextField::Render(const std::string& text, int x, int y, SDL_Color color)
@@ -151,7 +149,7 @@ void TextField::Render(const std::string& text, int x, int y, SDL_Color color)
 	_fontManager->renderTextField(this, text, x, y, color);
 }
 
-void FontManager::renderTextField(TextField* tf, const std::string& text, int vx, int vy, SDL_Color color)
+void FontManager::renderTextField(const TextField* tf, const std::string& text, int vx, int vy, SDL_Color color)
 {
 	assert(tf->_font);	
 	assert(tf->_font->font); // should be kept up to date in update()
