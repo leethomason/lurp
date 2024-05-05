@@ -125,23 +125,8 @@ std::shared_ptr<TextField> FontManager::createTextField(const std::string& name,
 	return ptr;	
 }
 
-/*
-void FontManager::unlinkTextField(const TextField* tf)
-{
-	for(auto it = _textFields.begin(); it != _textFields.end(); ++it) {
-		if (*it == tf) {
-			_textFields.erase(it);
-			return;
-		}
-	}
-	assert(false);
-}
-*/
-
 TextField::~TextField()
 {
-	//delete _texture;
-	//_fontManager->unlinkTextField(this);
 }
 
 void TextField::Render(const std::string& text, int x, int y, SDL_Color color)

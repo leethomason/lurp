@@ -26,7 +26,7 @@ public:
 	~Texture();
 
 	bool ready() const { return _sdlTexture != nullptr; }
-	SDL_Texture* sdlTexture() const { return _sdlTexture; }
+	SDL_Texture* sdlTexture() const { _age = 0; return _sdlTexture; }
 	int width() const { return _w; }
 	int height() const { return _h; }
 	const std::string& name() const { return _name; }
@@ -47,18 +47,22 @@ private:
 	int _h = 0;
 	int _bytes = 0;	// 3 or 4
 	bool _textField = false;
-	//TextureManager* _manager = nullptr;
+	mutable uint32_t _age = 0;
 };
 
 class TextureManager
 {
 	friend class FontManager;
 public:
+	static constexpr uint32_t kMaxAge = 60;
+
 	TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer);
 	~TextureManager();
 
 	std::shared_ptr<Texture> loadTexture(const std::string& name, const std::string& path);
-	std::shared_ptr<Texture> getTexture(const std::string& name) const;
+	// The TextureManager can throw textures away at will, so getTexture() isn't very useful.
+	// Use loadTexture() instead, which can re-load the texture if it's been thrown away.
+	// std::shared_ptr<Texture> getTexture(const std::string& name) const;
 	std::shared_ptr<Texture> createTextField(const std::string& name, int w, int h);
 
 	// void unlinkTexture(const Texture* t);

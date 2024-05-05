@@ -1,4 +1,4 @@
-SDL2.dll
+*.dll
 build
 .vscode
 .gitignore

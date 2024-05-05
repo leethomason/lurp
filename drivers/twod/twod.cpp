@@ -226,6 +226,7 @@ int main(int argc, char* args[])
 				frameAve.add(now - last);
 			last = now;
 		}
+		pool.WaitforAll();	// flush out texture loads in flight
 		textureManager.freeAll();
 	}
 #if defined(_DEBUG) && defined(_WIN32)

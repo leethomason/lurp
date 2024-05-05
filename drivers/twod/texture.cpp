@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_TEXTURES 1
+#define DEBUG_TEXTURES 0
 
 class TextureLoadTask : public lurp::SelfDeletingTask
 {
@@ -41,7 +41,6 @@ Texture::~Texture()
 #if DEBUG_TEXTURES
 	fmt::print("~Texture() delete: {}\n", _name);
 #endif
-	//_manager->unlinkTexture(this);
 	SDL_DestroyTexture(_sdlTexture);
 }
 
@@ -90,31 +89,9 @@ std::shared_ptr<Texture> TextureManager::createTextField(const std::string& name
 	return ptr;
 }
 
-/*
-void TextureManager::unlinkTexture(const Texture* t)
-{
-#if DEBUG_TEXTURES
-	fmt::print("unlinkTexture: {}\n", t->name());
-#endif
-	auto it = std::find(_textures.begin(), _textures.end(), t);
-	assert(it != _textures.end());
-	_textures.erase(it);
-}
-*/
-
 TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer)
 	: _pool(pool), _sdlRenderer(renderer)
 {
-}
-
-std::shared_ptr<Texture> TextureManager::getTexture(const std::string& name) const
-{
-	for (auto& t : _textures) {
-		if (t->_name == name) {
-			return t;
-		}
-	}
-	return nullptr;
 }
 
 void TextureManager::update()
@@ -164,13 +141,20 @@ void TextureManager::update()
 		texture->_generation = generation;
 		SDL_FreeSurface(surface);
 	}
-	// FIXME: 2nd pass to remove stale texture
+	for (auto& t : _textures) {
+		t->_age++;
+	}
+
+	// If only this has a reference, and it's old, free it.
+	_textures.erase(std::remove_if(_textures.begin(), _textures.end(), [](auto& t) 
+		{ 
+			return t->_age > kMaxAge && t.use_count() == 1;
+		}),
+		_textures.end());
 }
 
 void TextureManager::freeAll()
 {
-	_pool.WaitforAll();
-	update();
 	_textures.clear();
 }
 
