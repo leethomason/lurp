@@ -20,9 +20,9 @@
 	Build is working! At least on windows.
 	Test render.
 	x basic event loop
-	- basic window
-		- manage coordinates
-		- manage aspect ratio
+	x basic window
+		x manage coordinates
+		x manage aspect ratio
 	x draw a texture or two.
 		x get sRGB correct
 		x get thread pool working
@@ -34,7 +34,7 @@
 		x font loading
 		x render on a thread 
 		x sync eveything up
-		- manage resources
+		x manage resources
 	x memory tracking
 	- nuklear
 */
@@ -57,9 +57,6 @@ int main(int argc, char* args[])
 		return 1;
 	}
 
-	// SDL_RenderSetLogicalSize: maybe?
-	// SDL_RenderSetViewport: maybe?
-
 	SDL_Window* window = SDL_CreateWindow(
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -81,10 +78,7 @@ int main(int argc, char* args[])
 	SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
 	fmt::print("SDL window = {}x{} renderer= {}x{}\n", windowW, windowH, renderW, renderH);
 
-	//SDL_Rect view = { 0, 100, 800, 500 };
-	//SDL_RenderSetViewport(sdlRenderer, &view);
-	// or clip rect. Hmm.
-	
+
 #if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.
 	_CrtMemState s1, s2, s3;
@@ -131,14 +125,16 @@ int main(int argc, char* args[])
 		SDL_Event e;
 		uint64_t last = SDL_GetPerformanceCounter();
 
-		//fontManager.drawText("roboto16", tf0, textField, SDL_Color{ 255, 255, 255, 255 });
-
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
 
 			SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
 			xFormer.setRenderSize(renderW, renderH);
-			
+			{
+				SDL_Rect clip = xFormer.sdlClipRect();
+				SDL_RenderSetClipRect(sdlRenderer, &clip);
+			}
+
 			textureManager.update();
 			fontManager.update(xFormer);
 
@@ -148,8 +144,6 @@ int main(int argc, char* args[])
 				}
 				else if (e.type == SDL_WINDOWEVENT) {
 					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
-					SDL_Rect clip = xFormer.sdlClipRect();
-					SDL_RenderSetClipRect(sdlRenderer, &clip);
 				}
 			}
 
@@ -193,12 +187,6 @@ int main(int argc, char* args[])
 				std::string text = "Hello, world! This is some text that will need to be wrapped to fit in the box.";
 				tf0->Render(text, 400, 300, SDL_Color{255, 255, 255, 255});
 			}
-			//if (tf0->ready()) {
-			//	SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, tf0->width(), tf0->height()});
-			//	SDL_SetTextureBlendMode(tf0->sdlTexture(), SDL_BLENDMODE_BLEND);
-			//	SDL_RenderCopy(sdlRenderer, tf0->sdlTexture(), nullptr, &dest);
-			//}
-
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();
 			if (end > start) {
@@ -217,7 +205,7 @@ int main(int argc, char* args[])
 				DrawDebugText(msg, sdlRenderer, atlas.get(), 5, 5, 12, xFormer);
 			}
 
-			//Update screen
+			// Update screen
 			SDL_RenderPresent(sdlRenderer);
 
 			// Sample *after* the present to include vsync

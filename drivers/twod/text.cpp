@@ -7,6 +7,8 @@
 
 #include <fmt/core.h>
 
+#define DEBUG_TEXT 0
+
 class RenderFontTask : public lurp::SelfDeletingTask
 {
 public:
@@ -21,7 +23,9 @@ public:
 		//SDL_Surface* surface = TTF_RenderUTF8_LCD_Wrapped(_font, _text.c_str(), _color, SDL_Color{0, 0, 0, 0}, _texture->width());
 		assert(surface);
 
-		fmt::print("Rendered text: {} chars at {}x{}\n", _text.size(), surface->w, surface->h);
+#if DEBUG_TEXT
+		fmt::print("Rendered text: '{}' {} chars at {}x{}\n", _text.substr(0, 20), _text.size(), surface->w, surface->h);
+#endif
 
 		TextureUpdate update{ _texture, surface, _generation };
 		_queue->push(update);
@@ -71,10 +75,17 @@ void FontManager::update(const XFormer& xf)
 			_pool.WaitforAll();
 			change = true;
 
+#if DEBUG_TEXT
+			fmt::print("Loading font {} at size {}...", f->path, realSize);
+#endif
 			// Now it is safe to change the font size
 			if (f->font)
 				TTF_CloseFont(f->font);
 			f->font = TTF_OpenFont(f->path.c_str(), realSize);
+#if DEBUG_TEXT
+			fmt::print("done\n");
+#endif
+
 			assert(f->font);
 			f->realSize = realSize;
 		}
