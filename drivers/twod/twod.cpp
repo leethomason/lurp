@@ -2,9 +2,13 @@
 #include "text.h"
 #include "debug.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <SDL_image.h>
+
+#define NK_IMPLEMENTATION
+#include "nuklear.h"
+#include "nuklear_sdl_renderer.h"
 
 #include <fmt/core.h>
 #include <plog/Log.h>
@@ -19,6 +23,7 @@
 	Test render.
 	x basic event loop
 	- basic window
+	    sd:      960 x 540
 		1080p:  1920 x 1080
 		4k: 	3840 x 2160 
 		16:9
@@ -32,12 +37,13 @@
 	x draw debug text
 	    x time to render
 		x time between frames
-	- draw text
-		- font loading
-		- render on a thread 
-		- sync eveything up
+	x draw text
+		x font loading
+		x render on a thread 
+		x sync eveything up
 		- manage resources
 	x memory tracking
+	- nuklear
 */
 
 #define SCREEN_WIDTH 800
@@ -65,7 +71,7 @@ int main(int argc, char* args[])
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		SCREEN_WIDTH, SCREEN_HEIGHT,
-		SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
+		SDL_WINDOW_SHOWN  //| SDL_WINDOW_ALLOW_HIGHDPI //| SDL_WINDOW_FULLSCREEN_DESKTOP
 	);
 	if (!window) {
 		PLOG(plog::error) << "Could not create window (SDL_CreateWindow failed): " << SDL_GetError();
@@ -76,6 +82,11 @@ int main(int argc, char* args[])
 		PLOG(plog::error) << "Could not create window (SDL_CreateRenderer failed): " << SDL_GetError();
 		FATAL_INTERNAL_ERROR();
 	}
+
+	int windowW, windowH, renderW, renderH;
+	SDL_GetWindowSize(window, &windowW, &windowH);
+	SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
+	fmt::print("SDL window = {}x{} renderer= {}x{}\n", windowW, windowH, renderW, renderH);
 
 	//SDL_Rect view = { 0, 100, 800, 500 };
 	//SDL_RenderSetViewport(sdlRenderer, &view);
@@ -174,11 +185,13 @@ int main(int argc, char* args[])
 			{
 				uint64_t microInner = innerAve.average() * 1'000'000 / SDL_GetPerformanceFrequency();
 				uint64_t microFrame = frameAve.average() * 1'000'000 / SDL_GetPerformanceFrequency();
-				std::string msg = fmt::format("Inner: {:.2f} Frame: {:.2f} ms Textures: {}/{}",
+				std::string msg = fmt::format("Inner: {:.2f} Frame: {:.2f} ms Textures: {}/{} {}/{} MBytes",
 					microInner / 1000.0,
 					microFrame / 1000.0,
 					textureManager.numTexturesReady(),
-					textureManager.numTextures());
+					textureManager.numTextures(),
+					textureManager.totalTextureMemory() / 1'000'000,
+					textureManager.readyTextureMemory() / 1'000'000);
 				DrawDebugText(msg, sdlRenderer, atlas, 5, 5, 12);
 			}
 

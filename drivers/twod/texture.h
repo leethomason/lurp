@@ -7,6 +7,8 @@
 #include <SDL.h>
 
 #include <string>
+#include <algorithm>
+#include <numeric>
 
 
 struct Color {
@@ -65,6 +67,17 @@ public:
 	int numTextures() const { return (int)_textures.size(); }
 	int numTexturesReady() const {
 		return (int)std::count_if(_textures.begin(), _textures.end(), [](const Texture* t) { return t->ready(); });
+	}
+
+	uint64_t totalTextureMemory() const {
+		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const Texture* t) {
+			return sum + (t->width() * t->height() * t->_bytes);
+		});
+	}
+	uint64_t readyTextureMemory() const {
+		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const Texture* t) {
+			return sum + (t->ready() ? (t->width() * t->height() * t->_bytes) : 0);
+		});
 	}
 
 private:
