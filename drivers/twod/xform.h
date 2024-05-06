@@ -81,26 +81,30 @@ public:
 
 	SDL_Rect sdlClipRect() const;
 
-	float scale() const { return _scale; }
+	double scale() const { return _scale; }
 	Point offset() const { return _offset; }
 
 	int renderW() const { return _renderSize.w; }
 	int renderH() const { return _renderSize.h; }
 
-	// fixme: bugs in the test grid. spaces due to rounding.
-	int s(int x) const { return (int)roundf(x * _scale); }
-	float s(float x) const { return x * _scale; }
+	int s(int x) const { return (int)(x * _scale); }
+	float s(float x) const { return float(x * _scale); }
+	double s(double x) const { return x * _scale; }
 	Point s(const Point& p) const { return Point(s(p.x), s(p.y)); }	
 
 	Point t(const Point& p) const;
 	Point t(int x, int y) const { return t(Point(x, y)); }
-	SDL_Rect t(const SDL_Rect& r) const;
+	Rect t(const Rect& r) const;
+	SDL_Rect t(const SDL_Rect& r) const {
+		Rect out = t(Rect{ r.x, r.y, r.w, r.h });
+		return SDL_Rect{ out.x, out.y, out.w, out.h };
+	}
 	PointF t(const PointF& p) const;
 	RectF t(const RectF& r) const;
 
 private:
 	Rect _renderSize;
 	Rect _virtualSize;
-	float _scale = 1.0;
+	double _scale = 1.0;
 	Point _offset;
 };

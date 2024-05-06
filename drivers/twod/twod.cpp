@@ -17,30 +17,6 @@
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Initializers/ConsoleInitializer.h>
 
-
-/*
-	Build is working! At least on windows.
-	Test render.
-	x basic event loop
-	x basic window
-		x manage coordinates
-		x manage aspect ratio
-	x draw a texture or two.
-		x get sRGB correct
-		x get thread pool working
-		x get async loading
-	x draw debug text
-	    x time to render
-		x time between frames
-	x draw text
-		x font loading
-		x render on a thread 
-		x sync eveything up
-		x manage resources
-	x memory tracking
-	- nuklear
-*/
-
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
@@ -105,29 +81,17 @@ int main(int argc, char* args[])
 			SDL_RenderSetClipRect(sdlRenderer, &clip);
 		}
 
-		const SDL_Color drawColor = { 0, 179, 228, 255 };
-
 		TextureManager textureManager(pool, sdlRenderer);
-
 		// fixme: think about asset names
 		std::shared_ptr<Texture> atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
-		std::shared_ptr<Texture> portrait11 = textureManager.loadTexture("portrait11", "assets/portraitTest11.png");
-		std::shared_ptr<Texture> ps0 = textureManager.loadTexture("ps-back", "assets/back.png");
-		std::shared_ptr<Texture> ps1 = textureManager.loadTexture("ps-layer1", "assets/layer1_100.png");
-		std::shared_ptr<Texture> ps2 = textureManager.loadTexture("ps-layer2", "assets/layer2_100.png");
-		std::shared_ptr<Texture> ps3 = textureManager.loadTexture("ps-layer3", "assets/layer3_100.png");
-		std::shared_ptr<Texture> ps4 = textureManager.loadTexture("ps-layer4", "assets/layer4_100.png");
-		std::shared_ptr<Texture> ps5 = textureManager.loadTexture("ps-layer5", "assets/layer5_100.png");
-		std::shared_ptr<Texture> tree = textureManager.loadTexture("tree", "assets/tree.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
-		//fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 16);
-		fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 16);
-		
-		// fixme: path not font name
-		std::shared_ptr<TextField> tf0 = fontManager.createTextField("textField0", "roboto16", 300, 600);
-		std::shared_ptr<TextField> tf1 = fontManager.createTextField("textField1", "roboto16", 300, 300, true, drawColor);
+		fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 16);
+		//fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 16);
 
+		AssetsTest assetsTest(sdlRenderer, textureManager, fontManager);
+		assetsTest.load();
+		
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
 
@@ -171,85 +135,19 @@ int main(int argc, char* args[])
 			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize));
 			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
-			RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
-			if (nk_begin(nukCtx, "Demo", nk_rect(guiRect.x, guiRect.y, guiRect.w, guiRect.h),
-				NK_WINDOW_BORDER | // NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-				NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
-			{
-				enum { EASY, HARD };
-				static int op = EASY;
-				static int property = 20;
-				nk_colorf bg{ 0, 0, 0, 0 };
+			assetsTest.drawGUI(nukCtx, xFormer, frame);
 
-				nk_layout_row_static(nukCtx, xFormer.s(30.f), xFormer.s(80), 1);
-				if (nk_button_label(nukCtx, "button"))
-					fprintf(stdout, "button pressed\n");
-				nk_layout_row_dynamic(nukCtx, 30, 2);
-				if (nk_option_label(nukCtx, "easy", op == EASY)) op = EASY;
-				if (nk_option_label(nukCtx, "hard", op == HARD)) op = HARD;
-				nk_layout_row_dynamic(nukCtx, xFormer.s(25.f), 1);
-				// fixme: doesn't slide with the correct scale
-				nk_property_int(nukCtx, "Compression:", 0, &property, 100, 10, 1.0f);
-
-				nk_layout_row_dynamic(nukCtx, xFormer.s(20.f), 1);
-				nk_label(nukCtx, "background:", NK_TEXT_LEFT);
-				nk_layout_row_dynamic(nukCtx, xFormer.s(25.f), 1);
-				/*if (nk_combo_begin_color(nukCtx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(nukCtx), 400))) {
-					nk_layout_row_dynamic(nukCtx, 120, 1);
-					bg = nk_color_picker(nukCtx, bg, NK_RGBA);
-					nk_layout_row_dynamic(nukCtx, 25, 1);
-					bg.r = nk_propertyf(nukCtx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-					bg.g = nk_propertyf(nukCtx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-					bg.b = nk_propertyf(nukCtx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-					bg.a = nk_propertyf(nukCtx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
-					nk_combo_end(nukCtx);
-				}*/
-			}
-			nk_end(nukCtx);
-
+			const SDL_Color drawColor = { 0, 179, 228, 255 };
 			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
 			SDL_RenderClear(sdlRenderer);
+
 			DrawTestPattern(sdlRenderer, 
 				380, SCREEN_HEIGHT, 16, 
 				SDL_Color{192, 192, 192, 255}, SDL_Color{128, 128, 128, 255},
 				xFormer);
 
-			// Draw a texture. Confirm sRGB is working.
-			if (portrait11->ready()) {
-				SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->width(), portrait11->height() });
-				SDL_RenderCopy(sdlRenderer, portrait11->sdlTexture(), nullptr, &dest);
-			}
+			assetsTest.draw(xFormer, frame);
 
-			// Test against Ps
-			if (Texture::ready({ ps0, ps1, ps2, ps3, ps4, ps5 })) {
-				SDL_Rect dest = xFormer.t(SDL_Rect{ 300, 0, 256, 256 });
-				//SDL_RenderBlend
-				SDL_RenderCopy(sdlRenderer, ps0->sdlTexture(), nullptr, &dest);
-				SDL_RenderCopy(sdlRenderer, ps1->sdlTexture(), nullptr, &dest);
-				SDL_SetTextureAlphaMod(ps2->sdlTexture(), 128);
-				SDL_RenderCopy(sdlRenderer, ps2->sdlTexture(), nullptr, &dest);
-				SDL_RenderCopy(sdlRenderer, ps3->sdlTexture(), nullptr, &dest);
-				SDL_SetTextureAlphaMod(ps4->sdlTexture(), 128);
-				SDL_RenderCopy(sdlRenderer, ps4->sdlTexture(), nullptr, &dest);
-				SDL_SetTextureAlphaMod(ps5->sdlTexture(), 128);
-				SDL_RenderCopy(sdlRenderer, ps5->sdlTexture(), nullptr, &dest);
-			}
-			if (tree->ready()) {
-				SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, 400, 400 });
-				SDL_RenderCopy(sdlRenderer, tree->sdlTexture(), nullptr, &dest);
-
-				for (int i = 0; i < 3; i++) {
-					SDL_Rect r = xFormer.t(SDL_Rect{ i * 100, 400, 50 + 50 * i, 50 + 50 * i });
-					SDL_RenderCopy(sdlRenderer, tree->sdlTexture(), nullptr, &r);
-				}
-			}
-			{
-				std::string text = fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", frame/60);
-				tf0->Render(text, 400, 300, SDL_Color{255, 255, 255, 255});
-
-				std::string text2 = "This is some fancy pants hq text.";
-				tf1->Render(text2, 20, 550, SDL_Color{ 255, 255, 255, 255 });
-			}
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();
 			if (end > start) {

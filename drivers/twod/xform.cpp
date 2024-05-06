@@ -24,7 +24,7 @@ void XFormer::setRenderSize(int rw, int rh)
 	if (_renderSize.w > _virtualSize.w) {
 		int scale = _renderSize.w / _virtualSize.w;
 		if (_renderSize.w == _virtualSize.w * scale && _renderSize.h == _virtualSize.h * scale) {
-			_scale = (float)scale;
+			_scale = (double)scale;
 			_offset = Point{0, 0};
 			return;
 		}
@@ -38,8 +38,8 @@ void XFormer::setRenderSize(int rw, int rh)
 		}
 	}
 
-	float scaleOnWidth = (float)_renderSize.w / (float)_virtualSize.w;
-	float scaleOnHeight = (float)_renderSize.h / (float)_virtualSize.h;
+	double scaleOnWidth = (double)_renderSize.w / (double)_virtualSize.w;
+	double scaleOnHeight = (double)_renderSize.h / (double)_virtualSize.h;
 
 	if (scaleOnWidth < scaleOnHeight) {
 		_scale = scaleOnWidth;
@@ -77,13 +77,25 @@ Point XFormer::t(const Point& in) const
 	return p;
 }
 
-SDL_Rect XFormer::t(const SDL_Rect& r) const
+Rect XFormer::t(const Rect& r) const
 {
 	if (r.x == 0 && r.y == 0 && r.w == _virtualSize.w && r.h == _virtualSize.h) {
-		return sdlClipRect();
+		return Rect{0, 0, _renderSize.w, _renderSize.h};
 	}
-	Point p = t(Point{r.x, r.y});
-	SDL_Rect out = { p.x, p.y, s(r.w), s(r.h) };
+
+	// Be careful on this one - it is used to tile rectangles.
+	// Basically, you can't transform width. (Maybe in float?) But
+	// integer transforms are right out. We need to base the width/height
+	// on the *next* point, and compute back.
+
+	Point p0 = t(Point{r.x, r.y});
+	Point p1 = t(Point{r.x + r.w, r.y + r.h});
+
+	Rect out;
+	out.x = p0.x;
+	out.y = p0.y;
+	out.w = p1.x - p0.x;
+	out.h = p1.y - p0.y;
 	return out;
 }
 
@@ -95,14 +107,17 @@ PointF XFormer::t(const PointF& p) const
 	return out;
 }
 
-
 RectF XFormer::t(const RectF& r) const
 {
+	// Unclear if the same algorithm is needed
+	// for floating point, but err on the side of caution.
+	PointF p0 = t(PointF{ r.x, r.y });
+	PointF p1 = t(PointF{ r.x + r.w, r.y + r.h });
+
 	RectF out;
-	PointF p = t(PointF{r.x, r.y});
-	out.x = p.x;
-	out.y = p.y;
-	out.w = s(r.w);
-	out.h = s(r.h);
+	out.x = p0.x;
+	out.y = p0.y;
+	out.w = p1.x - p0.x;
+	out.h = p1.y - p0.y;
 	return out;
 }
