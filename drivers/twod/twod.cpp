@@ -124,18 +124,9 @@ int main(int argc, char* args[])
 		lurp::RollingAverage<uint64_t, 48> frameAve;
 
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
-		nk_font_atlas* nukAtlas = nullptr;
-		struct nk_font_config nukConfig = nk_font_config(0);
-		float nukFontBaseSize = 16.0f;
-		//float nukFontMult = 0.50f;
-
-		nk_sdl_font_stash_begin(&nukAtlas);
-		//nk_font* nukFontDefault16 = nk_font_atlas_add_default(nukAtlas, 16.0, &nukConfig);
-		nk_font* nukFont12 = nk_font_atlas_add_from_file(nukAtlas, "assets/Roboto-Regular.ttf", 12.0f, &nukConfig);
-		nk_font* nukFont16 = nk_font_atlas_add_from_file(nukAtlas, "assets/Roboto-Regular.ttf", 16.0f, &nukConfig);
-		nk_font* nukFont32 = nk_font_atlas_add_from_file(nukAtlas, "assets/Roboto-Regular.ttf", 32.0f, &nukConfig);
-		nk_sdl_font_stash_end();
-		nk_style_set_font(nukCtx, &nukFont16->handle);
+		const float nukFontBaseSize = 16.0f;
+		NukFontAtlas nukFontAtlas(nukCtx);
+		nukFontAtlas.load("assets/Roboto-Regular.ttf", { 12.f, 16.f, 24.f, 32.f, 48.f, 64.f });
 
 		bool done = false;
 		SDL_Event e;
@@ -169,20 +160,8 @@ int main(int argc, char* args[])
 			nk_input_end(nukCtx);
 
 			/* GUI */
-			// nuklear "endorsed" hack:
-			//nukFont->handle.height = xFormer.s(nukFontBaseSize * nukFontMult);
-
-			float fontSize = xFormer.s(nukFontBaseSize);
-			float fontErr12 = fabs(fontSize - 12.0f);
-			float fontErr16 = fabs(fontSize - 16.0f);
-			float fontErr32 = fabs(fontSize - 32.0f);
-
-			if (fontErr12 < fontErr16 && fontErr12 < fontErr32)
-				nk_style_set_font(nukCtx, &nukFont12->handle);
-			else if (fontErr16 < fontErr12 && fontErr16 < fontErr32)
-				nk_style_set_font(nukCtx, &nukFont16->handle);
-			else
-				nk_style_set_font(nukCtx, &nukFont32->handle);
+			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize));
+			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
 			RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
 			if (nk_begin(nukCtx, "Demo", nk_rect(guiRect.x, guiRect.y, guiRect.w, guiRect.h),

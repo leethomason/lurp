@@ -13,5 +13,23 @@
 #include "nuklear.h"
 #include "nuklear_sdl_renderer.h"
 
+#include <string>
+#include <vector>
 
+class NukFontAtlas {
+public:
+	NukFontAtlas(nk_context* ctx) : _ctx(ctx) {}
+	void load(const std::string& path, const std::vector<float>& sizes);
+	nk_font* select(float size);
+
+private:
+	struct Entry {
+		float size = 0.0f;
+		nk_font* font = nullptr;
+	};
+	nk_context* _ctx;
+	nk_font_atlas* _atlas = nullptr;
+	struct nk_font_config nukConfig;
+	std::vector<Entry> _entries;
+};
 
