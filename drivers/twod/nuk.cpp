@@ -20,7 +20,7 @@ void NukFontAtlas::load(const std::string& path, const std::vector<float>& sizes
 	nk_style_set_font(_ctx, &_entries[0].font->handle);
 }
 
-nk_font* NukFontAtlas::select(float size)
+nk_font* NukFontAtlas::select(float size, float* sizeUsed)
 {
 	nk_font* font = nullptr;
 	float err = FLT_MAX;
@@ -30,6 +30,8 @@ nk_font* NukFontAtlas::select(float size)
 		if (err2 < err) {
 			err = err2;
 			font = e.font;
+			if (sizeUsed)	
+				*sizeUsed = e.size;
 		}
 	}
 	return font;

@@ -18,7 +18,7 @@ public:
 
 	void load();
 	void draw(const XFormer& xformer, uint64_t frame);
-	void drawGUI(nk_context* nukCtx, const XFormer& xformer, uint64_t frame);
+	void drawGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer, uint64_t frame);
 
 private:
 	SDL_Renderer* _renderer;

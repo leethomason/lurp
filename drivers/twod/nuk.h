@@ -20,7 +20,7 @@ class NukFontAtlas {
 public:
 	NukFontAtlas(nk_context* ctx) : _ctx(ctx) {}
 	void load(const std::string& path, const std::vector<float>& sizes);
-	nk_font* select(float size);
+	nk_font* select(float size, float* sizeUsed);
 
 private:
 	struct Entry {

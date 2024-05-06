@@ -204,25 +204,26 @@ void AssetsTest::draw(const XFormer& xFormer, uint64_t frame)
 	}
 }
 
-void AssetsTest::drawGUI(nk_context* nukCtx, const XFormer& xFormer, uint64_t /*frame*/)
+void AssetsTest::drawGUI(nk_context* nukCtx, float fs, const XFormer& xFormer, uint64_t /*frame*/)
 {
 	RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
+	const float height = fs * 1.8f;
+
 	if (nk_begin(nukCtx, "Demo", nk_rect(guiRect.x, guiRect.y, guiRect.w, guiRect.h),
-		NK_WINDOW_BORDER | // NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-		NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+		NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
 	{
 		enum { EASY, HARD };
 		static int op = EASY;
 		static int property = 20;
 		nk_colorf bg{ 0, 0, 0, 0 };
 
-		nk_layout_row_static(nukCtx, xFormer.s(30.f), xFormer.s(80), 1);
+		nk_layout_row_static(nukCtx, height, 80, 1);
 		if (nk_button_label(nukCtx, "button"))
 			fprintf(stdout, "button pressed\n");
-		nk_layout_row_dynamic(nukCtx, 30, 2);
+		nk_layout_row_dynamic(nukCtx, height, 2);
 		if (nk_option_label(nukCtx, "easy", op == EASY)) op = EASY;
 		if (nk_option_label(nukCtx, "hard", op == HARD)) op = HARD;
-		nk_layout_row_dynamic(nukCtx, xFormer.s(25.f), 1);
+		nk_layout_row_dynamic(nukCtx, height, 1);
 		// fixme: doesn't slide with the correct scale
 		nk_property_int(nukCtx, "Compression:", 0, &property, 100, 10, 1.0f);
 	}

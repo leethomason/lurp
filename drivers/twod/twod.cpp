@@ -27,14 +27,13 @@ int main(int argc, char* args[])
 
 	// SDL init - not included by memory tracker
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
-		fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
-		return 1;
+		PLOG(plog::error) << "Could not initialize SDL2: " << SDL_GetError();
+		FATAL_INTERNAL_ERROR();
 	}
 	if (TTF_Init()) {
-		fprintf(stderr, "could not initialize sdl2_ttf: %s\n", TTF_GetError());
-		return 1;
+		PLOG(plog::error) << "Could not initialize SDL TTF: " << SDL_GetError();
+		FATAL_INTERNAL_ERROR();
 	}
-
 	SDL_Window* window = SDL_CreateWindow(
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -102,17 +101,20 @@ int main(int argc, char* args[])
 
 		bool done = false;
 		SDL_Event e;
-		uint64_t last = SDL_GetPerformanceCounter();
-		uint64_t frame = 0;
+		uint64_t lastFrameTime = SDL_GetPerformanceCounter();
+		uint64_t frameCounter = 0;
 
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
 
+			int oldRenderW = renderW, oldRenderH = renderH;
 			SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
 			xFormer.setRenderSize(renderW, renderH);
 			{
 				SDL_Rect clip = xFormer.sdlClipRect();
 				SDL_RenderSetClipRect(sdlRenderer, &clip);
+				if (oldRenderW != renderW || oldRenderH != renderH)
+					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
 			}
 
 			textureManager.update();
@@ -123,19 +125,20 @@ int main(int argc, char* args[])
 				if (e.type == SDL_QUIT) {
 					done = true;
 				}
-				else if (e.type == SDL_WINDOWEVENT) {
-					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
-				}
+				//else if (e.type == SDL_WINDOWEVENT) {
+				//	fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
+				//}
 				nk_sdl_handle_event(&e);
 			}
 			//nk_sdl_handle_grab();	// FIXME: do we want grab? why isn't it defined?
 			nk_input_end(nukCtx);
 
 			/* GUI */
-			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize));
+			float realFontSize = 0;
+			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
 			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
-			assetsTest.drawGUI(nukCtx, xFormer, frame);
+			assetsTest.drawGUI(nukCtx, realFontSize, xFormer, frameCounter);
 
 			const SDL_Color drawColor = { 0, 179, 228, 255 };
 			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
@@ -146,13 +149,11 @@ int main(int argc, char* args[])
 				SDL_Color{192, 192, 192, 255}, SDL_Color{128, 128, 128, 255},
 				xFormer);
 
-			assetsTest.draw(xFormer, frame);
+			assetsTest.draw(xFormer, frameCounter);
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();
-			if (end > start) {
-				innerAve.add(end - start);
-			}
+			innerAve.add(end - start);
 			{
 				uint64_t microInner = innerAve.average() * 1'000'000 / SDL_GetPerformanceFrequency();
 				uint64_t microFrame = frameAve.average() * 1'000'000 / SDL_GetPerformanceFrequency();
@@ -169,13 +170,12 @@ int main(int argc, char* args[])
 			// Update screen
 			nk_sdl_render(NK_ANTI_ALIASING_ON);
 			SDL_RenderPresent(sdlRenderer);
-			++frame;
+			++frameCounter;
 
 			// Sample *after* the present to include vsync
 			uint64_t now = SDL_GetPerformanceCounter();
-			if (now > last)
-				frameAve.add(now - last);
-			last = now;
+			frameAve.add(now - lastFrameTime);
+			lastFrameTime = now;
 		}
 		pool.WaitforAll();	// flush out texture loads in flight
 		textureManager.freeAll();

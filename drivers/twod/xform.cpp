@@ -67,22 +67,11 @@ Point XFormer::t(const Point& in) const
 	Point p;
 	p.x = _offset.x + s(in.x);
 	p.y = _offset.y + s(in.y);
-
-	// patch up for rounding errors
-	if (in.x == 0) p.x = _offset.x;
-	if (in.y == 0) p.y = _offset.y;
-	if (in.x == _virtualSize.w) p.x = _offset.x + _renderSize.w;
-	if (in.y == _virtualSize.h) p.y = _offset.y + _renderSize.h;
-
 	return p;
 }
 
 Rect XFormer::t(const Rect& r) const
 {
-	if (r.x == 0 && r.y == 0 && r.w == _virtualSize.w && r.h == _virtualSize.h) {
-		return Rect{0, 0, _renderSize.w, _renderSize.h};
-	}
-
 	// Be careful on this one - it is used to tile rectangles.
 	// Basically, you can't transform width. (Maybe in float?) But
 	// integer transforms are right out. We need to base the width/height
