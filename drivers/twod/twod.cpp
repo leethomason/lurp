@@ -4,6 +4,8 @@
 #include "xform.h"
 #include "test2d.h"
 
+#include "nuk.h"
+
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <SDL_image.h>
@@ -121,6 +123,20 @@ int main(int argc, char* args[])
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
 
+		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
+		nk_font_atlas* nukAtlas = nullptr;
+		struct nk_font_config nukConfig = nk_font_config(0);
+		float nukFontBaseSize = 16.0f;
+		//float nukFontMult = 0.50f;
+
+		nk_sdl_font_stash_begin(&nukAtlas);
+		//nk_font* nukFontDefault16 = nk_font_atlas_add_default(nukAtlas, 16.0, &nukConfig);
+		nk_font* nukFont12 = nk_font_atlas_add_from_file(nukAtlas, "assets/Roboto-Regular.ttf", 12.0f, &nukConfig);
+		nk_font* nukFont16 = nk_font_atlas_add_from_file(nukAtlas, "assets/Roboto-Regular.ttf", 16.0f, &nukConfig);
+		nk_font* nukFont32 = nk_font_atlas_add_from_file(nukAtlas, "assets/Roboto-Regular.ttf", 32.0f, &nukConfig);
+		nk_sdl_font_stash_end();
+		nk_style_set_font(nukCtx, &nukFont16->handle);
+
 		bool done = false;
 		SDL_Event e;
 		uint64_t last = SDL_GetPerformanceCounter();
@@ -139,6 +155,7 @@ int main(int argc, char* args[])
 			textureManager.update();
 			fontManager.update(xFormer);
 
+			nk_input_begin(nukCtx);
 			while (SDL_PollEvent(&e) != 0) {
 				if (e.type == SDL_QUIT) {
 					done = true;
@@ -146,7 +163,62 @@ int main(int argc, char* args[])
 				else if (e.type == SDL_WINDOWEVENT) {
 					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
 				}
+				nk_sdl_handle_event(&e);
 			}
+			//nk_sdl_handle_grab();	// FIXME: do we want grab? why isn't it defined?
+			nk_input_end(nukCtx);
+
+			/* GUI */
+			// nuklear "endorsed" hack:
+			//nukFont->handle.height = xFormer.s(nukFontBaseSize * nukFontMult);
+
+			float fontSize = xFormer.s(nukFontBaseSize);
+			float fontErr12 = fabs(fontSize - 12.0f);
+			float fontErr16 = fabs(fontSize - 16.0f);
+			float fontErr32 = fabs(fontSize - 32.0f);
+
+			if (fontErr12 < fontErr16 && fontErr12 < fontErr32)
+				nk_style_set_font(nukCtx, &nukFont12->handle);
+			else if (fontErr16 < fontErr12 && fontErr16 < fontErr32)
+				nk_style_set_font(nukCtx, &nukFont16->handle);
+			else
+				nk_style_set_font(nukCtx, &nukFont32->handle);
+
+			RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
+			if (nk_begin(nukCtx, "Demo", nk_rect(guiRect.x, guiRect.y, guiRect.w, guiRect.h),
+				NK_WINDOW_BORDER | // NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+				NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+			{
+				enum { EASY, HARD };
+				static int op = EASY;
+				static int property = 20;
+				nk_colorf bg{ 0, 0, 0, 0 };
+
+				nk_layout_row_static(nukCtx, xFormer.s(30.f), xFormer.s(80), 1);
+				if (nk_button_label(nukCtx, "button"))
+					fprintf(stdout, "button pressed\n");
+				nk_layout_row_dynamic(nukCtx, 30, 2);
+				if (nk_option_label(nukCtx, "easy", op == EASY)) op = EASY;
+				if (nk_option_label(nukCtx, "hard", op == HARD)) op = HARD;
+				nk_layout_row_dynamic(nukCtx, xFormer.s(25.f), 1);
+				// fixme: doesn't slide with the correct scale
+				nk_property_int(nukCtx, "Compression:", 0, &property, 100, 10, 1.0f);
+
+				nk_layout_row_dynamic(nukCtx, xFormer.s(20.f), 1);
+				nk_label(nukCtx, "background:", NK_TEXT_LEFT);
+				nk_layout_row_dynamic(nukCtx, xFormer.s(25.f), 1);
+				/*if (nk_combo_begin_color(nukCtx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(nukCtx), 400))) {
+					nk_layout_row_dynamic(nukCtx, 120, 1);
+					bg = nk_color_picker(nukCtx, bg, NK_RGBA);
+					nk_layout_row_dynamic(nukCtx, 25, 1);
+					bg.r = nk_propertyf(nukCtx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
+					bg.g = nk_propertyf(nukCtx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
+					bg.b = nk_propertyf(nukCtx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
+					bg.a = nk_propertyf(nukCtx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
+					nk_combo_end(nukCtx);
+				}*/
+			}
+			nk_end(nukCtx);
 
 			SDL_SetRenderDrawColor(sdlRenderer, 0, 179, 228, 255);
 			SDL_RenderClear(sdlRenderer);
@@ -163,7 +235,7 @@ int main(int argc, char* args[])
 
 			// Test against Ps
 			if (Texture::ready({ ps0, ps1, ps2, ps3, ps4, ps5 })) {
-				SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 0, 256, 256 });
+				SDL_Rect dest = xFormer.t(SDL_Rect{ 300, 0, 256, 256 });
 				//SDL_RenderBlend
 				SDL_RenderCopy(sdlRenderer, ps0->sdlTexture(), nullptr, &dest);
 				SDL_RenderCopy(sdlRenderer, ps1->sdlTexture(), nullptr, &dest);
@@ -207,6 +279,7 @@ int main(int argc, char* args[])
 			}
 
 			// Update screen
+			nk_sdl_render(NK_ANTI_ALIASING_ON);
 			SDL_RenderPresent(sdlRenderer);
 			++frame;
 
@@ -218,7 +291,9 @@ int main(int argc, char* args[])
 		}
 		pool.WaitforAll();	// flush out texture loads in flight
 		textureManager.freeAll();
+		nk_sdl_shutdown();
 	}
+
 #if defined(_DEBUG) && defined(_WIN32)
 	int knownNumLeak = 0;
 	int knownLeakSize = 0;
@@ -239,7 +314,6 @@ int main(int argc, char* args[])
 	assert(s3.lCounts[1] <= knownNumLeak);
 	assert(s3.lSizes[1] <= knownLeakSize);
 #endif
-
 	TTF_Quit();
 	SDL_DestroyRenderer(sdlRenderer);
 	SDL_DestroyWindow(window);

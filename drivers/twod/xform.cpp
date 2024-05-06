@@ -86,3 +86,23 @@ SDL_Rect XFormer::t(const SDL_Rect& r) const
 	SDL_Rect out = { p.x, p.y, s(r.w), s(r.h) };
 	return out;
 }
+
+PointF XFormer::t(const PointF& p) const
+{
+	PointF out;
+	out.x = float(_offset.x) + s(p.x);
+	out.y = float(_offset.y) + s(p.y);
+	return out;
+}
+
+
+RectF XFormer::t(const RectF& r) const
+{
+	RectF out;
+	PointF p = t(PointF{r.x, r.y});
+	out.x = p.x;
+	out.y = p.y;
+	out.w = s(r.w);
+	out.h = s(r.h);
+	return out;
+}

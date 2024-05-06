@@ -17,6 +17,21 @@ struct Point {
 	}
 };
 
+struct PointF {
+	PointF() {}
+	PointF(float x, float y) : x(x), y(y) {}
+
+	float x = 0;
+	float y = 0;
+
+	bool operator==(const PointF& rhs) const {
+		return x == rhs.x && y == rhs.y;
+	}
+	bool operator!=(const PointF& rhs) const {
+		return !(*this == rhs);
+	}
+};
+
 struct Rect {
 	int x = 0;
 	int y = 0;
@@ -27,6 +42,20 @@ struct Rect {
 		return x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h;
 	}
 	bool operator!=(const Rect& rhs) const {
+		return !(*this == rhs);
+	}
+};
+
+struct RectF {
+	float x = 0;
+	float y = 0;
+	float w = 0;
+	float h = 0;
+
+	bool operator==(const RectF& rhs) const {
+		return x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h;
+	}
+	bool operator!=(const RectF& rhs) const {
 		return !(*this == rhs);
 	}
 };
@@ -65,6 +94,8 @@ public:
 	Point t(const Point& p) const;
 	Point t(int x, int y) const { return t(Point(x, y)); }
 	SDL_Rect t(const SDL_Rect& r) const;
+	PointF t(const PointF& p) const;
+	RectF t(const RectF& r) const;
 
 private:
 	Rect _renderSize;
