@@ -40,6 +40,8 @@ private:
 	int _width = 0;
 	int _height = 0;
 	FontManager* _fontManager = nullptr;
+	bool _hqOpaque = false;
+	SDL_Color _bg = SDL_Color{ 0, 0, 0, 0 };
 
 	// No good solutions here. But this is used as a cache invalid flag.
 	// FIXME: replacing with a hash would make this clearer.
@@ -55,8 +57,7 @@ public:
 	void loadFont(const std::string& name, const std::string& path, int size);
 	void update(const XFormer& xf);
 
-	std::shared_ptr<TextField> createTextField(const std::string& name, const std::string& font, int width, int height);
-	//void unlinkTextField(const TextField* tf);
+	std::shared_ptr<TextField> createTextField(const std::string& name, const std::string& font, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
 
 	void renderTextField(const TextField* tf, const std::string& text, int x, int y, SDL_Color color);
 

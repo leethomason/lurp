@@ -122,7 +122,13 @@ void TextureManager::update()
 			int err = SDL_LockTextureToSurface(texture->_sdlTexture, nullptr, &target);
 			assert(err == 0);
 			assert(target);
-			memset(target->pixels, 0, target->pitch * target->h);
+
+			if (update.hqOpaque) {
+				SDL_FillRect(target, nullptr, SDL_MapRGBA(target->format, update.bg.r, update.bg.g, update.bg.b, 255));
+			}
+			else {
+				memset(target->pixels, 0, target->pitch * target->h);
+			}
 			SDL_BlitSurface(surface, nullptr, target, nullptr);
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}

@@ -105,7 +105,12 @@ int main(int argc, char* args[])
 			SDL_RenderSetClipRect(sdlRenderer, &clip);
 		}
 
+		const SDL_Color drawColor = { 0, 179, 228, 255 };
+
 		TextureManager textureManager(pool, sdlRenderer);
+
+		// fixme: re-loading a texture should be free
+		// fixme: think about asset names
 		std::shared_ptr<Texture> atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
 		std::shared_ptr<Texture> portrait11 = textureManager.loadTexture("portrait11", "assets/portraitTest11.png");
 		std::shared_ptr<Texture> ps0 = textureManager.loadTexture("ps-back", "assets/back.png");
@@ -117,8 +122,12 @@ int main(int argc, char* args[])
 		std::shared_ptr<Texture> tree = textureManager.loadTexture("tree", "assets/tree.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
-		fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 22);
+		// fixme: can remove the point size
+		//fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 22);
+		fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 22);
+		// fixme: path not font name
 		std::shared_ptr<TextField> tf0 = fontManager.createTextField("textField0", "roboto16", 300, 600);
+		std::shared_ptr<TextField> tf1 = fontManager.createTextField("textField1", "roboto16", 300, 300, true, drawColor);
 
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
@@ -199,7 +208,7 @@ int main(int argc, char* args[])
 			}
 			nk_end(nukCtx);
 
-			SDL_SetRenderDrawColor(sdlRenderer, 0, 179, 228, 255);
+			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
 			SDL_RenderClear(sdlRenderer);
 			DrawTestPattern(sdlRenderer, 
 				380, SCREEN_HEIGHT, 16, 
@@ -238,6 +247,9 @@ int main(int argc, char* args[])
 			{
 				std::string text = fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", frame/60);
 				tf0->Render(text, 400, 300, SDL_Color{255, 255, 255, 255});
+
+				std::string text2 = "This is some fancy pants hq text.";
+				tf1->Render(text2, 20, 550, SDL_Color{ 255, 255, 255, 255 });
 			}
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();

@@ -87,6 +87,7 @@ public:
 	int renderW() const { return _renderSize.w; }
 	int renderH() const { return _renderSize.h; }
 
+	// fixme: bugs in the test grid. spaces due to rounding.
 	int s(int x) const { return (int)roundf(x * _scale); }
 	float s(float x) const { return x * _scale; }
 	Point s(const Point& p) const { return Point(s(p.x), s(p.y)); }	

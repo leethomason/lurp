@@ -16,18 +16,23 @@ public:
 
 	virtual void ExecuteRange(enki::TaskSetPartition /*range_*/, uint32_t /*threadnum_*/) override 
 	{
-		SDL_Surface* surface = TTF_RenderUTF8_Blended_Wrapped(_font, _text.c_str(), _color, _texture->width());
+		static std::mutex gTTFMutex;
+		SDL_Surface* surface = nullptr;
+		{
+			// TTF, it turns out, is not thread safe.
+			std::lock_guard<std::mutex> lock(gTTFMutex);
 
-		// Much higher quality, but not transparent
-		// I experimented with converting to an alpha map, but it looks no better than the blended version
-		//SDL_Surface* surface = TTF_RenderUTF8_LCD_Wrapped(_font, _text.c_str(), _color, SDL_Color{0, 0, 0, 0}, _texture->width());
-		assert(surface);
+			if (_hqOpaque)
+				surface = TTF_RenderUTF8_LCD_Wrapped(_font, _text.c_str(), _color, _bg, _texture->width());
+			else
+				surface = TTF_RenderUTF8_Blended_Wrapped(_font, _text.c_str(), _color, _texture->width());
+			assert(surface);
+		}
 
 #if DEBUG_TEXT
-		fmt::print("Rendered text: '{}' {} chars at {}x{}\n", _text.substr(0, 20), _text.size(), surface->w, surface->h);
+		fmt::print("Rendered text: '{}' {} chars at {}x{} hq=\n", _text.substr(0, 20), _text.size(), surface->w, surface->h, _hqOpaque ? 1 : 0);
 #endif
-
-		TextureUpdate update{ _texture, surface, _generation };
+		TextureUpdate update{ _texture, surface, _generation, _hqOpaque, _bg };
 		_queue->push(update);
 	}
 
@@ -38,6 +43,8 @@ public:
 	TTF_Font* _font = nullptr;
 	std::string _text;
 	SDL_Color _color;
+	SDL_Color _bg;
+	bool _hqOpaque = false;
 };
 
 FontManager::~FontManager()
@@ -117,7 +124,7 @@ Font* FontManager::getFont(const std::string& name)
 }
 
 
-std::shared_ptr<TextField> FontManager::createTextField(const std::string& name, const std::string& font, int width, int height)
+std::shared_ptr<TextField> FontManager::createTextField(const std::string& name, const std::string& font, int width, int height, bool useOpaqueHQ, SDL_Color bg)
 {
 	Font* f = getFont(font);
 	assert(f);
@@ -130,6 +137,8 @@ std::shared_ptr<TextField> FontManager::createTextField(const std::string& name,
 	tf->_height = height;
 	tf->_fontManager = this;
 	tf->_texture = _textureManager.createTextField(name, width, height);
+	tf->_hqOpaque = useOpaqueHQ;
+	tf->_bg = bg;
 
 	std::shared_ptr<TextField> ptr(tf);
 	_textFields.push_back(ptr);
@@ -159,6 +168,9 @@ void FontManager::renderTextField(const TextField* tf, const std::string& text, 
 		task->_font = tf->_font->font;
 		task->_color = color;
 		task->_text = text;
+
+		task->_hqOpaque = tf->_hqOpaque;
+		task->_bg = tf->_bg;
 
 		tf->_text = text;
 		tf->_color = color;
