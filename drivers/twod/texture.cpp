@@ -51,6 +51,11 @@ TextureManager::~TextureManager()
 
 std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& name, const std::string& path)
 {
+	auto it = std::find_if(_textures.begin(), _textures.end(), [&name](const auto& t) { return t->name() == name; });
+	if (it != _textures.end()) {
+		return *it;
+	}
+
 #if DEBUG_TEXTURES
 	fmt::print("loadTexture: {}\n", name);
 #endif

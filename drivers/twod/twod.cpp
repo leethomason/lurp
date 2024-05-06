@@ -109,7 +109,6 @@ int main(int argc, char* args[])
 
 		TextureManager textureManager(pool, sdlRenderer);
 
-		// fixme: re-loading a texture should be free
 		// fixme: think about asset names
 		std::shared_ptr<Texture> atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
 		std::shared_ptr<Texture> portrait11 = textureManager.loadTexture("portrait11", "assets/portraitTest11.png");
@@ -122,9 +121,9 @@ int main(int argc, char* args[])
 		std::shared_ptr<Texture> tree = textureManager.loadTexture("tree", "assets/tree.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
-		// fixme: can remove the point size
-		//fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 22);
-		fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 22);
+		//fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 16);
+		fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 16);
+		
 		// fixme: path not font name
 		std::shared_ptr<TextField> tf0 = fontManager.createTextField("textField0", "roboto16", 300, 600);
 		std::shared_ptr<TextField> tf1 = fontManager.createTextField("textField1", "roboto16", 300, 300, true, drawColor);

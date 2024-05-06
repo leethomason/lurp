@@ -59,13 +59,13 @@ public:
 	TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer);
 	~TextureManager();
 
+	// Loads a texture, or returns the existing one if it's already loaded.
 	std::shared_ptr<Texture> loadTexture(const std::string& name, const std::string& path);
+
 	// The TextureManager can throw textures away at will, so getTexture() isn't very useful.
 	// Use loadTexture() instead, which can re-load the texture if it's been thrown away.
 	// std::shared_ptr<Texture> getTexture(const std::string& name) const;
 	std::shared_ptr<Texture> createTextField(const std::string& name, int w, int h);
-
-	// void unlinkTexture(const Texture* t);
 
 	void update();
 	void freeAll();

@@ -54,7 +54,7 @@ public:
 	FontManager(SDL_Renderer* renderer, enki::TaskScheduler& pool, TextureManager& textureManager, int virtualW, int virtualH) : _renderer(renderer), _pool(pool), _textureManager(textureManager), _xf(virtualW, virtualH) {}
 	~FontManager();
 
-	void loadFont(const std::string& name, const std::string& path, int size);
+	void loadFont(const std::string& name, const std::string& path, int virtualSize);
 	void update(const XFormer& xf);
 
 	std::shared_ptr<TextField> createTextField(const std::string& name, const std::string& font, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});

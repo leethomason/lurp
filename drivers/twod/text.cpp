@@ -55,10 +55,10 @@ FontManager::~FontManager()
 	}
 }
 
-void FontManager::loadFont(const std::string& name, const std::string& path, int size)
+void FontManager::loadFont(const std::string& name, const std::string& path, int virtualSize)
 {
 	Font* font = new Font();
-	font->size = size;
+	font->size = virtualSize;
 	font->name = name;
 	font->path = path;
 	_fonts.push_back(font);
