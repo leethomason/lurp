@@ -469,15 +469,12 @@ int main(int argc, const char* argv[])
 
 	std::string dir = GameFileToDir(scriptFile);
 	std::filesystem::path savePath = SavePath(dir, "saves");
-	std::filesystem::path logPath = LogPath();
+	std::filesystem::path logPath = LogPath("lurp");
 
-	plog::Severity logLevel = plog::warning;
-	if (log == "error")
-		logLevel = plog::error;
-	else if (log == "info")
-		logLevel = plog::info;
-	else if (log == "debug")
-		logLevel = plog::debug;
+	plog::Severity logLevel = plog::severityFromString(log.c_str());
+	if (logLevel == plog::none) {
+		logLevel = plog::warning;
+	}
 
 	static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
 	static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.string().c_str(), 1'000'000, 3);

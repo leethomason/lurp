@@ -16,9 +16,9 @@
 using namespace lurp::swbattle;
 using namespace lurp;
 
-int gNTestPass = 0;
-int gNTestFail = 0;
-int gNRunTest = 0;
+static int gNTestPass = 0;
+static int gNTestFail = 0;
+static int gNRunTest = 0;
 
 void IncTestRun() { ++gNRunTest; }
 

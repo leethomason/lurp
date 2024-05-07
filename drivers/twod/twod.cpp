@@ -5,6 +5,9 @@
 #include "test2d.h"
 
 #include "nuk.h"
+#include "argh.h"
+
+#include "../platform.h"
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -20,10 +23,29 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-int main(int argc, char* args[])
+int main(int argc, char* argv[])
 {
-	(void)argc;
-	(void)args;
+	argh::parser cmdl;
+	cmdl.add_params({ "-l", "--log" });
+	cmdl.parse(argc, argv);
+
+	std::string log = "warning";
+	cmdl({ "-l", "--log" }, log) >> log;
+	plog::Severity logLevel = plog::severityFromString(log.c_str());
+	if (logLevel == plog::none) {
+		logLevel = plog::warning;
+	}
+	//std::string dir = GameFileToDir(scriptFile);
+	//std::filesystem::path savePath = SavePath(dir, "saves");
+	std::filesystem::path logPath = lurp::LogPath("lurp2d");
+	fmt::print("Log path: {}\n", logPath.string());
+
+	static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+	static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(logPath.string().c_str(), 1'000'000, 3);
+	plog::init(logLevel, &consoleAppender).addAppender(&fileAppender);
+
+	PLOG(plog::info) << "Logging started.";
+	//PLOG(plog::info) << "Save path: " << savePath.string();
 
 	// SDL init - not included by memory tracker
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
@@ -55,6 +77,14 @@ int main(int argc, char* args[])
 	SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
 	fmt::print("SDL window = {}x{} renderer= {}x{}\n", windowW, windowH, renderW, renderH);
 
+	PLOG(plog::info) << "LuRP2D starting up.";
+	SDL_version compiled;
+	SDL_version linked;
+	SDL_VERSION(&compiled);
+	SDL_GetVersion(&linked);
+	PLOG(plog::info) << "Compiled against SDL version " << (int)compiled.major << "." << (int)compiled.minor << "." << (int)compiled.patch;
+	PLOG(plog::info) << "Linked against SDL version " << (int)linked.major << "." << (int)linked.minor << "." << (int)linked.patch;
+	int rc = -1;
 
 #if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.
@@ -66,7 +96,7 @@ int main(int argc, char* args[])
 		pool.Initialize();
 
 		RunTests2D();
-		int rc = TestReturnCode();
+		rc = TestReturnCode();
 		LogTestResults();
 		if (rc == 0)
 			PLOG(plog::info) << "LuRP2D tests run successfully.";
@@ -78,14 +108,18 @@ int main(int argc, char* args[])
 		{
 			SDL_Rect clip = xFormer.sdlClipRect();
 			SDL_RenderSetClipRect(sdlRenderer, &clip);
+			PLOG(plog::info) << fmt::format("SDL renderer = {}x{}", renderW, renderH);
 		}
+
+		SDL_RendererInfo rendererInfo;
+		SDL_GetRendererInfo(sdlRenderer, &rendererInfo);
+		PLOG(plog::info) << fmt::format("SDL renderer = {}  Texture max = {}x{}", rendererInfo.name, rendererInfo.max_texture_width, rendererInfo.max_texture_width);
 
 		TextureManager textureManager(pool, sdlRenderer);
 		// fixme: think about asset names
 		std::shared_ptr<Texture> atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
-		fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 16);
 		//fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 16);
 
 		AssetsTest assetsTest(sdlRenderer, textureManager, fontManager);
@@ -113,8 +147,10 @@ int main(int argc, char* args[])
 			{
 				SDL_Rect clip = xFormer.sdlClipRect();
 				SDL_RenderSetClipRect(sdlRenderer, &clip);
-				if (oldRenderW != renderW || oldRenderH != renderH)
+				if (oldRenderW != renderW || oldRenderH != renderH) {
 					fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
+					PLOG(plog::info) << fmt::format("SDL renderer = {}x{}", renderW, renderH);
+				}
 			}
 
 			textureManager.update();
@@ -138,7 +174,7 @@ int main(int argc, char* args[])
 			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
 			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
-			assetsTest.drawGUI(nukCtx, realFontSize, xFormer, frameCounter);
+			assetsTest.layoutGUI(nukCtx, realFontSize, xFormer, frameCounter);
 
 			const SDL_Color drawColor = { 0, 179, 228, 255 };
 			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
@@ -206,5 +242,5 @@ int main(int argc, char* args[])
 	SDL_DestroyRenderer(sdlRenderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	return 0;
+	return rc;
 }

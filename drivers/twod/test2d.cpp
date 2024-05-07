@@ -144,8 +144,8 @@ static void XFormerAlignment()
 
 void RunTests2D()
 {
-	TestXFormer();
-	XFormerAlignment();
+	RUN_TEST(TestXFormer());
+	RUN_TEST(XFormerAlignment());
 }
 
 void AssetsTest::load()
@@ -160,6 +160,7 @@ void AssetsTest::load()
 	tree = _textureManager.loadTexture("tree", "assets/tree.png");
 
 	// fixme: path not font name
+	_fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 16);
 	tf0 = _fontManager.createTextField("textField0", "roboto16", 300, 600);
 	tf1 = _fontManager.createTextField("textField1", "roboto16", 300, 300, true, clearColor);
 }
@@ -204,7 +205,7 @@ void AssetsTest::draw(const XFormer& xFormer, uint64_t frame)
 	}
 }
 
-void AssetsTest::drawGUI(nk_context* nukCtx, float fs, const XFormer& xFormer, uint64_t /*frame*/)
+void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer, uint64_t /*frame*/)
 {
 	RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
 	const float height = fs * 1.8f;

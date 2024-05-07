@@ -106,10 +106,11 @@ std::filesystem::path SavePath(const std::string& dir, const std::string& stem, 
     return p;
 }
 
-std::filesystem::path LogPath()
+std::filesystem::path LogPath(const std::string& stem)
 {
     std::filesystem::path logPath = OSSavePath();
-    return logPath / "lurp.txt";
+    std::string name = stem + ".txt";
+    return logPath / name;
 }
 
 #ifdef _WIN32
