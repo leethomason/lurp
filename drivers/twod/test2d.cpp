@@ -150,19 +150,18 @@ void RunTests2D()
 
 void AssetsTest::load()
 {
-	portrait11 = _textureManager.loadTexture("portrait11", "assets/portraitTest11.png");
-	ps0 = _textureManager.loadTexture("ps-back", "assets/back.png");
-	ps1 = _textureManager.loadTexture("ps-layer1", "assets/layer1_100.png");
-	ps2 = _textureManager.loadTexture("ps-layer2", "assets/layer2_100.png");
-	ps3 = _textureManager.loadTexture("ps-layer3", "assets/layer3_100.png");
-	ps4 = _textureManager.loadTexture("ps-layer4", "assets/layer4_100.png");
-	ps5 = _textureManager.loadTexture("ps-layer5", "assets/layer5_100.png");
-	tree = _textureManager.loadTexture("tree", "assets/tree.png");
+	portrait11 = _textureManager.loadTexture("assets/portraitTest11.png");
+	ps0 = _textureManager.loadTexture("assets/back.png");
+	ps1 = _textureManager.loadTexture("assets/layer1_100.png");
+	ps2 = _textureManager.loadTexture("assets/layer2_100.png");
+	ps3 = _textureManager.loadTexture("assets/layer3_100.png");
+	ps4 = _textureManager.loadTexture("assets/layer4_100.png");
+	ps5 = _textureManager.loadTexture("assets/layer5_100.png");
+	tree = _textureManager.loadTexture("assets/tree.png");
 
-	// fixme: path not font name
-	_fontManager.loadFont("roboto16", "assets/Roboto-Regular.ttf", 16);
-	tf0 = _fontManager.createTextField("textField0", "roboto16", 300, 600);
-	tf1 = _fontManager.createTextField("textField1", "roboto16", 300, 300, true, clearColor);
+	const Font* roboto16 = _fontManager.loadFont("assets/Roboto-Regular.ttf", 16);
+	tf0 = _fontManager.createTextField(roboto16, 300, 600);
+	tf1 = _fontManager.createTextField(roboto16, 300, 300, true, clearColor);
 }
 
 void AssetsTest::draw(const XFormer& xFormer, uint64_t frame)

@@ -29,7 +29,7 @@ public:
 	SDL_Texture* sdlTexture() const { _age = 0; return _sdlTexture; }
 	int width() const { return _w; }
 	int height() const { return _h; }
-	const std::string& name() const { return _name; }
+	const std::string& path() const { return _path; }
 
 	static bool ready(std::vector<const Texture*> textures) {
 		return std::all_of(textures.begin(), textures.end(), [](const Texture* t) { return t->ready(); });
@@ -40,7 +40,6 @@ public:
 
 private:
 	SDL_Texture* _sdlTexture = nullptr;
-	std::string _name;
 	std::string _path;
 	int _generation = 0;
 	int _w = 0;
@@ -60,12 +59,12 @@ public:
 	~TextureManager();
 
 	// Loads a texture, or returns the existing one if it's already loaded.
-	std::shared_ptr<Texture> loadTexture(const std::string& name, const std::string& path);
+	std::shared_ptr<Texture> loadTexture(const std::string& path);
 
 	// The TextureManager can throw textures away at will, so getTexture() isn't very useful.
 	// Use loadTexture() instead, which can re-load the texture if it's been thrown away.
 	// std::shared_ptr<Texture> getTexture(const std::string& name) const;
-	std::shared_ptr<Texture> createTextField(const std::string& name, int w, int h);
+	std::shared_ptr<Texture> createTextField(int w, int h);
 
 	void update();
 	void freeAll();

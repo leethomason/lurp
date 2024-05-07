@@ -49,9 +49,9 @@ TextureManager::~TextureManager()
 	freeAll();
 }
 
-std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& name, const std::string& path)
+std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& path)
 {
-	auto it = std::find_if(_textures.begin(), _textures.end(), [&name](const auto& t) { return t->name() == name; });
+	auto it = std::find_if(_textures.begin(), _textures.end(), [&path](const auto& t) { return t->path() == path; });
 	if (it != _textures.end()) {
 		return *it;
 	}
@@ -60,7 +60,6 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& name, co
 	fmt::print("loadTexture: {}\n", name);
 #endif
 	Texture* texture = new Texture();
-	texture->_name = name;
 	texture->_path = path;
 	auto ptr = std::shared_ptr<Texture>(texture);
 
@@ -75,13 +74,12 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& name, co
 	return ptr;
 }
 
-std::shared_ptr<Texture> TextureManager::createTextField(const std::string& name, int w, int h)
+std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 {
 #if DEBUG_TEXTURES
 	fmt::print("createTextField: {}\n", name);
 #endif
 	Texture* texture = new Texture();
-	texture->_name = name;
 	texture->_w = w;
 	texture->_h = h;
 	texture->_bytes = 4;

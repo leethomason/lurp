@@ -6,6 +6,7 @@
 #include <SDL.h>
 
 #include <fmt/core.h>
+#include <plog/Log.h>
 
 #define DEBUG_TEXT 0
 
@@ -55,13 +56,21 @@ FontManager::~FontManager()
 	}
 }
 
-void FontManager::loadFont(const std::string& name, const std::string& path, int virtualSize)
+const Font* FontManager::loadFont(const std::string& path, int virtualSize)
 {
+	for (Font* f : _fonts) {
+		if (f->path == path && f->size == virtualSize) {
+			return f;
+		}
+	}
+
 	Font* font = new Font();
 	font->size = virtualSize;
-	font->name = name;
 	font->path = path;
 	_fonts.push_back(font);
+
+	PLOG(plog::info) << "Loaded font '" << path << "' at size " << virtualSize;
+	return font;
 }
 
 void FontManager::update(const XFormer& xf)
@@ -107,36 +116,34 @@ void FontManager::update(const XFormer& xf)
 			// This is super exciting! The texture size may change as well. (this is so complex!!)
 			Point size = xf.s(Point{ tf->_width, tf->_height });
 			if (size.x != tf->_texture->width() || size.y != tf->_texture->height()) {
-				tf->_texture = _textureManager.createTextField(tf->_name, size.x, size.y);
+				tf->_texture = _textureManager.createTextField(size.x, size.y);
 			}			
 		}
 	}
 }
 
-Font* FontManager::getFont(const std::string& name)
+Font* FontManager::getFont(const Font* font)
 {
 	for (Font* f : _fonts) {
-		if (f->name == name) {
+		if (f == font)
 			return f;
-		}
 	}
 	return nullptr;
 }
 
 
-std::shared_ptr<TextField> FontManager::createTextField(const std::string& name, const std::string& font, int width, int height, bool useOpaqueHQ, SDL_Color bg)
+std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int width, int height, bool useOpaqueHQ, SDL_Color bg)
 {
 	Font* f = getFont(font);
 	assert(f);
 	if (!f) return nullptr;
 
 	TextField* tf = new TextField();
-	tf->_name = name;
 	tf->_font = f;
 	tf->_width = width;
 	tf->_height = height;
 	tf->_fontManager = this;
-	tf->_texture = _textureManager.createTextField(name, width, height);
+	tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
 	tf->_bg = bg;
 

@@ -117,10 +117,9 @@ int main(int argc, char* argv[])
 
 		TextureManager textureManager(pool, sdlRenderer);
 		// fixme: think about asset names
-		std::shared_ptr<Texture> atlas = textureManager.loadTexture("ascii", "assets/ascii.png");
+		std::shared_ptr<Texture> atlas = textureManager.loadTexture("assets/ascii.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
-		//fontManager.loadFont("roboto16", "assets/Lora-Medium.ttf", 16);
 
 		AssetsTest assetsTest(sdlRenderer, textureManager, fontManager);
 		assetsTest.load();

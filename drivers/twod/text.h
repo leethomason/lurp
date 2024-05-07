@@ -19,7 +19,7 @@ struct Font {
 	TTF_Font* font = nullptr;	// this is kept current on the main thread and is always valid (the pool will be flushed before this changes)
 	int size = 0;				// virtual size
 	int realSize = 0;			// render size
-	std::string name;
+	//std::string name;
 	std::string path;
 };
 
@@ -34,7 +34,7 @@ public:
 	void Render(const std::string& text, int x, int y, SDL_Color color);
 
 private:
-	std::string _name;
+	std::string _name;	// info / debugging only
 	std::shared_ptr<Texture> _texture;
 	const Font* _font = nullptr;
 	int _width = 0;
@@ -54,15 +54,20 @@ public:
 	FontManager(SDL_Renderer* renderer, enki::TaskScheduler& pool, TextureManager& textureManager, int virtualW, int virtualH) : _renderer(renderer), _pool(pool), _textureManager(textureManager), _xf(virtualW, virtualH) {}
 	~FontManager();
 
-	void loadFont(const std::string& name, const std::string& path, int virtualSize);
+	// Fast to get an existing font.
+	// New fonts or resizing is expensive - keep the font count low.
+	// Note that a 'const Font*' is returned. The font is never destroyed, and owned by the manager.
+	const Font* loadFont(const std::string& path, int virtualSize);
+
 	void update(const XFormer& xf);
 
-	std::shared_ptr<TextField> createTextField(const std::string& name, const std::string& font, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
+	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
 
+	// Do not call directly. Use TextField::Render()
 	void renderTextField(const TextField* tf, const std::string& text, int x, int y, SDL_Color color);
 
 private:
-	Font* getFont(const std::string& name);
+	Font* getFont(const Font*);
 
 	SDL_Renderer* _renderer;
 	enki::TaskScheduler& _pool;
