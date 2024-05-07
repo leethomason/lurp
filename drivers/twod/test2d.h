@@ -3,6 +3,7 @@
 #include "test.h"
 #include "texture.h"
 #include "text.h"
+#include "drawable.h"
 
 class TextureManager;
 class FontManager;
@@ -11,14 +12,14 @@ struct nk_context;
 void RunTests2D();
 
 
-class AssetsTest
+class AssetsTest : public IDrawable
 {
 public:
 	AssetsTest(SDL_Renderer* renderer, TextureManager& textureManager, FontManager& fontManager) : _renderer(renderer), _textureManager(textureManager), _fontManager(fontManager) {}
 
-	void load();
-	void draw(const XFormer& xformer, uint64_t frame);
-	void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer, uint64_t frame);
+	virtual void load() override;
+	virtual void draw(const XFormer& xformer, uint64_t frame) override;
+	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer, uint64_t frame) override;
 
 private:
 	SDL_Renderer* _renderer;

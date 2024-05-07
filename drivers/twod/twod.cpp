@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "xform.h"
 #include "test2d.h"
+#include "drawable.h"
 
 #include "nuk.h"
 #include "argh.h"
@@ -56,10 +57,14 @@ int main(int argc, char* argv[])
 		PLOG(plog::error) << "Could not initialize SDL TTF: " << SDL_GetError();
 		FATAL_INTERNAL_ERROR();
 	}
+
+	SDL_Rect displayBounds;
+	SDL_GetDisplayBounds(0, &displayBounds);
+
 	SDL_Window* window = SDL_CreateWindow(
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		SCREEN_WIDTH, SCREEN_HEIGHT,
+		3 * displayBounds.w/4, 3 * displayBounds.h/4,
 		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE //| SDL_WINDOW_ALLOW_HIGHDPI //| SDL_WINDOW_FULLSCREEN_DESKTOP
 	);
 	if (!window) {
@@ -122,21 +127,25 @@ int main(int argc, char* argv[])
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		AssetsTest assetsTest(sdlRenderer, textureManager, fontManager);
-		assetsTest.load();
+		IDrawable* iAssetsTests = &assetsTest;
 		
-		lurp::RollingAverage<uint64_t, 48> innerAve;
-		lurp::RollingAverage<uint64_t, 48> frameAve;
-
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
 		const float nukFontBaseSize = 16.0f;
 		NukFontAtlas nukFontAtlas(nukCtx);
 		nukFontAtlas.load("assets/Roboto-Regular.ttf", { 12.f, 16.f, 24.f, 32.f, 48.f, 64.f });
+
+		// ---------- Initialization done -----------
+		lurp::RollingAverage<uint64_t, 48> innerAve;
+		lurp::RollingAverage<uint64_t, 48> frameAve;
+
+		iAssetsTests->load();
 
 		bool done = false;
 		SDL_Event e;
 		uint64_t lastFrameTime = SDL_GetPerformanceCounter();
 		uint64_t frameCounter = 0;
 
+		// ---------- Main Loop ------------ //
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
 
@@ -173,7 +182,7 @@ int main(int argc, char* argv[])
 			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
 			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
-			assetsTest.layoutGUI(nukCtx, realFontSize, xFormer, frameCounter);
+			iAssetsTests->layoutGUI(nukCtx, realFontSize, xFormer, frameCounter);
 
 			const SDL_Color drawColor = { 0, 179, 228, 255 };
 			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
@@ -184,7 +193,7 @@ int main(int argc, char* argv[])
 				SDL_Color{192, 192, 192, 255}, SDL_Color{128, 128, 128, 255},
 				xFormer);
 
-			assetsTest.draw(xFormer, frameCounter);
+			iAssetsTests->draw(xFormer, frameCounter);
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();
@@ -212,6 +221,7 @@ int main(int argc, char* argv[])
 			frameAve.add(now - lastFrameTime);
 			lastFrameTime = now;
 		}
+		// ---------- Tear Down ------- //
 		pool.WaitforAll();	// flush out texture loads in flight
 		textureManager.freeAll();
 		nk_sdl_shutdown();
