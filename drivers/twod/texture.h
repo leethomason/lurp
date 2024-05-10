@@ -9,6 +9,7 @@
 #include <string>
 #include <algorithm>
 #include <numeric>
+#include <filesystem>
 
 class XFormer;
 class TextureManager;
@@ -59,7 +60,8 @@ public:
 	~TextureManager();
 
 	// Loads a texture, or returns the existing one if it's already loaded.
-	std::shared_ptr<Texture> loadTexture(const std::string& path);
+	//std::shared_ptr<Texture> loadTexture(const std::string& path);
+	std::shared_ptr<Texture> loadTexture(const std::filesystem::path& path);
 
 	// The TextureManager can throw textures away at will, so getTexture() isn't very useful.
 	// Use loadTexture() instead, which can re-load the texture if it's been thrown away.

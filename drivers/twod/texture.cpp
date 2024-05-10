@@ -16,13 +16,31 @@ public:
 
 	virtual void ExecuteRange(enki::TaskSetPartition /*range_*/, uint32_t /*threadnum_*/) override {
 		assert(!_texture->_textField);
-		SDL_Surface* surface = IMG_Load(_texture->_path.c_str());
+
+		// This path stuff is here just to get it off the main thread.
+		std::filesystem::path path = _texture->_path;
+		std::filesystem::path ext = path.extension();
+		std::string extS = lurp::toLower(ext.string());
+
+		if (extS == ".png" || extS == ".jpg" || extS == ".qoi") {
+			// we have a supported, qualified path. do nothing.
+		}
+		else {
+			path.replace_extension(".qoi");
+			if (!std::filesystem::exists(path)) {
+				path.replace_extension(".png");
+				if (!std::filesystem::exists(path)) {
+					path.replace_extension(".jpg");
+				}
+			}
+		}
+
+		SDL_Surface* surface = IMG_Load(path.string().c_str());
 		assert(surface);
 		assert(_queue);
 		_texture->_w = surface->w;
 		_texture->_h = surface->h;
 		_texture->_bytes = surface->format->BytesPerPixel;
-		assert(_texture->_bytes == 3 || _texture->_bytes == 4);
 
 		TextureUpdate update{ _texture, surface, _generation };
 #if DEBUG_TEXTURES
@@ -49,9 +67,9 @@ TextureManager::~TextureManager()
 	freeAll();
 }
 
-std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& path)
+std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path& path)
 {
-	auto it = std::find_if(_textures.begin(), _textures.end(), [&path](const auto& t) { return t->path() == path; });
+	auto it = std::find_if(_textures.begin(), _textures.end(), [&path](const auto& t) { return t->path() == path.string(); });
 	if (it != _textures.end()) {
 		return *it;
 	}
@@ -60,7 +78,7 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& path)
 	fmt::print("loadTexture: {}\n", name);
 #endif
 	Texture* texture = new Texture();
-	texture->_path = path;
+	texture->_path = path.string();
 	auto ptr = std::shared_ptr<Texture>(texture);
 
 	TextureLoadTask* task = new TextureLoadTask();
@@ -69,7 +87,6 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::string& path)
 	task->_generation = ++_generation;
 
 	_pool.AddTaskSetToPipe(task);
-
 	_textures.push_back(ptr);
 	return ptr;
 }
@@ -85,7 +102,6 @@ std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 	texture->_bytes = 4;
 	texture->_textField = true;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
-	//texture->_manager = this;
 
 	auto ptr = std::shared_ptr<Texture>(texture);
 	_textures.push_back(ptr);

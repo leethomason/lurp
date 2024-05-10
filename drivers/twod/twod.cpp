@@ -4,6 +4,8 @@
 #include "xform.h"
 #include "test2d.h"
 #include "drawable.h"
+#include "config.h"
+#include "statemachine.h"
 
 #include "nuk.h"
 #include "argh.h"
@@ -36,6 +38,9 @@ int main(int argc, char* argv[])
 	if (logLevel == plog::none) {
 		logLevel = plog::warning;
 	}
+
+	bool doAssetsTest = false;
+
 	//std::string dir = GameFileToDir(scriptFile);
 	//std::filesystem::path savePath = SavePath(dir, "saves");
 	std::filesystem::path logPath = lurp::LogPath("lurp2d");
@@ -108,7 +113,12 @@ int main(int argc, char* argv[])
 		else
 			PLOG(plog::error) << "LuRP2D tests failed.";
 
-		XFormer xFormer(SCREEN_WIDTH, SCREEN_HEIGHT);
+		GameConfig gameConfig = GameConfig::demoConfig();
+		gameConfig.assetsDir = "assets";
+		gameConfig.validate();
+		StateMachine machine(gameConfig);
+
+		XFormer xFormer(gameConfig.virtualSize.x, gameConfig.virtualSize.y);
 		xFormer.setRenderSize(renderW, renderH);
 		{
 			SDL_Rect clip = xFormer.sdlClipRect();
@@ -121,14 +131,13 @@ int main(int argc, char* argv[])
 		PLOG(plog::info) << fmt::format("SDL renderer = {}  Texture max = {}x{}", rendererInfo.name, rendererInfo.max_texture_width, rendererInfo.max_texture_width);
 
 		TextureManager textureManager(pool, sdlRenderer);
-		// fixme: think about asset names
 		std::shared_ptr<Texture> atlas = textureManager.loadTexture("assets/ascii.png");
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-		AssetsTest assetsTest(sdlRenderer, textureManager, fontManager);
+		AssetsTest assetsTest;
 		IDrawable* iAssetsTests = &assetsTest;
-		
+
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
 		const float nukFontBaseSize = 16.0f;
 		NukFontAtlas nukFontAtlas(nukCtx);
@@ -138,16 +147,20 @@ int main(int argc, char* argv[])
 		lurp::RollingAverage<uint64_t, 48> innerAve;
 		lurp::RollingAverage<uint64_t, 48> frameAve;
 
-		iAssetsTests->load();
+		FrameData frameData;
+		Drawing drawing(sdlRenderer, textureManager, fontManager, gameConfig);
+
+		if (doAssetsTest)
+			iAssetsTests->load(drawing, frameData);
 
 		bool done = false;
 		SDL_Event e;
 		uint64_t lastFrameTime = SDL_GetPerformanceCounter();
-		uint64_t frameCounter = 0;
 
 		// ---------- Main Loop ------------ //
 		while (!done) {
 			uint64_t start = SDL_GetPerformanceCounter();
+			uint64_t startMillis = SDL_GetTicks64();
 
 			int oldRenderW = renderW, oldRenderH = renderH;
 			SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
@@ -160,6 +173,12 @@ int main(int argc, char* argv[])
 					PLOG(plog::info) << fmt::format("SDL renderer = {}x{}", renderW, renderH);
 				}
 			}
+			
+			frameData.sceneTime += startMillis - frameData.timeMillis;
+			frameData.timeMillis = startMillis;
+			std::shared_ptr<Scene> scene = machine.tick(&frameData);
+			if (scene)
+				scene->load(drawing, frameData);
 
 			textureManager.update();
 			fontManager.update(xFormer);
@@ -182,18 +201,24 @@ int main(int argc, char* argv[])
 			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
 			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
-			iAssetsTests->layoutGUI(nukCtx, realFontSize, xFormer, frameCounter);
+			if (doAssetsTest)
+				iAssetsTests->layoutGUI(nukCtx, realFontSize, xFormer);
+			else
+				scene->layoutGUI(nukCtx, realFontSize, xFormer);
 
 			const SDL_Color drawColor = { 0, 179, 228, 255 };
 			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
-			SDL_RenderClear(sdlRenderer);
+			SDL_RenderClear(sdlRenderer);	// ignores clipping (which is good)
 
 			DrawTestPattern(sdlRenderer, 
 				380, SCREEN_HEIGHT, 16, 
 				SDL_Color{192, 192, 192, 255}, SDL_Color{128, 128, 128, 255},
 				xFormer);
 
-			iAssetsTests->draw(xFormer, frameCounter);
+			if (doAssetsTest)
+				iAssetsTests->draw(drawing, frameData, xFormer);
+			else
+				scene->draw(drawing, frameData, xFormer);
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();
@@ -214,7 +239,8 @@ int main(int argc, char* argv[])
 			// Update screen
 			nk_sdl_render(NK_ANTI_ALIASING_ON);
 			SDL_RenderPresent(sdlRenderer);
-			++frameCounter;
+			frameData.frame++;
+			frameData.sceneFrame++;
 
 			// Sample *after* the present to include vsync
 			uint64_t now = SDL_GetPerformanceCounter();

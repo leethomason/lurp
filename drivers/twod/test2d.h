@@ -15,17 +15,13 @@ void RunTests2D();
 class AssetsTest : public IDrawable
 {
 public:
-	AssetsTest(SDL_Renderer* renderer, TextureManager& textureManager, FontManager& fontManager) : _renderer(renderer), _textureManager(textureManager), _fontManager(fontManager) {}
+	AssetsTest() = default;
 
-	virtual void load() override;
-	virtual void draw(const XFormer& xformer, uint64_t frame) override;
-	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer, uint64_t frame) override;
+	virtual void load(Drawing& d, const FrameData& f) override;
+	virtual void draw(Drawing& d, const FrameData& f, const XFormer& xformer) override;
+	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
 private:
-	SDL_Renderer* _renderer;
-	TextureManager& _textureManager;
-	FontManager& _fontManager;
-
 	const SDL_Color clearColor = { 0, 179, 228, 255 };
 
 	std::shared_ptr<Texture> portrait11, ps0, ps1, ps2, ps3, ps4, ps5, tree;

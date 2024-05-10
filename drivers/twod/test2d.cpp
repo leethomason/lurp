@@ -148,55 +148,55 @@ void RunTests2D()
 	RUN_TEST(XFormerAlignment());
 }
 
-void AssetsTest::load()
+void AssetsTest::load(Drawing& d, const FrameData&)
 {
-	portrait11 = _textureManager.loadTexture("assets/portraitTest11.png");
-	ps0 = _textureManager.loadTexture("assets/back.png");
-	ps1 = _textureManager.loadTexture("assets/layer1_100.png");
-	ps2 = _textureManager.loadTexture("assets/layer2_100.png");
-	ps3 = _textureManager.loadTexture("assets/layer3_100.png");
-	ps4 = _textureManager.loadTexture("assets/layer4_100.png");
-	ps5 = _textureManager.loadTexture("assets/layer5_100.png");
-	tree = _textureManager.loadTexture("assets/tree.png");
+	portrait11 = d.textureManager.loadTexture("assets/portraitTest11.png");
+	ps0 = d.textureManager.loadTexture("assets/back.png");
+	ps1 = d.textureManager.loadTexture("assets/layer1_100.png");
+	ps2 = d.textureManager.loadTexture("assets/layer2_100.png");
+	ps3 = d.textureManager.loadTexture("assets/layer3_100.png");
+	ps4 = d.textureManager.loadTexture("assets/layer4_100.png");
+	ps5 = d.textureManager.loadTexture("assets/layer5_100.png");
+	tree = d.textureManager.loadTexture("assets/tree.png");
 
-	const Font* roboto16 = _fontManager.loadFont("assets/Roboto-Regular.ttf", 16);
-	tf0 = _fontManager.createTextField(roboto16, 300, 600);
-	tf1 = _fontManager.createTextField(roboto16, 300, 300, true, clearColor);
+	const Font* roboto16 = d.fontManager.loadFont("assets/Roboto-Regular.ttf", 16);
+	tf0 = d.fontManager.createTextField(roboto16, 300, 600);
+	tf1 = d.fontManager.createTextField(roboto16, 300, 300, true, clearColor);
 }
 
-void AssetsTest::draw(const XFormer& xFormer, uint64_t frame)
+void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 {
 	// Draw a texture. Confirm sRGB is working.
 	if (portrait11->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->width(), portrait11->height() });
-		SDL_RenderCopy(_renderer, portrait11->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, portrait11->sdlTexture(), nullptr, &dest);
 	}
 
 	// Test against Ps
 	if (Texture::ready({ ps0, ps1, ps2, ps3, ps4, ps5 })) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 300, 0, 256, 256 });
 		//SDL_RenderBlend
-		SDL_RenderCopy(_renderer, ps0->sdlTexture(), nullptr, &dest);
-		SDL_RenderCopy(_renderer, ps1->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, ps0->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, ps1->sdlTexture(), nullptr, &dest);
 		SDL_SetTextureAlphaMod(ps2->sdlTexture(), 128);
-		SDL_RenderCopy(_renderer, ps2->sdlTexture(), nullptr, &dest);
-		SDL_RenderCopy(_renderer, ps3->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, ps2->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, ps3->sdlTexture(), nullptr, &dest);
 		SDL_SetTextureAlphaMod(ps4->sdlTexture(), 128);
-		SDL_RenderCopy(_renderer, ps4->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, ps4->sdlTexture(), nullptr, &dest);
 		SDL_SetTextureAlphaMod(ps5->sdlTexture(), 128);
-		SDL_RenderCopy(_renderer, ps5->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, ps5->sdlTexture(), nullptr, &dest);
 	}
 	if (tree->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, 400, 400 });
-		SDL_RenderCopy(_renderer, tree->sdlTexture(), nullptr, &dest);
+		SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &dest);
 
 		for (int i = 0; i < 3; i++) {
 			SDL_Rect r = xFormer.t(SDL_Rect{ i * 100, 400, 50 + 50 * i, 50 + 50 * i });
-			SDL_RenderCopy(_renderer, tree->sdlTexture(), nullptr, &r);
+			SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &r);
 		}
 	}
 	{
-		std::string text = fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", frame / 60);
+		std::string text = fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame/ 60);
 		tf0->Render(text, 400, 300, SDL_Color{ 255, 255, 255, 255 });
 
 		std::string text2 = "This is some fancy pants hq text.";
@@ -204,7 +204,7 @@ void AssetsTest::draw(const XFormer& xFormer, uint64_t frame)
 	}
 }
 
-void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer, uint64_t /*frame*/)
+void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer)
 {
 	RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
 	const float height = fs * 1.8f;
