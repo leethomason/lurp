@@ -7,7 +7,7 @@
 {
 	GameConfig c;
 	c.openingTitles = { "title1", "title2"};
-	c.mainBackground = "main1";
+	c.mainBackground = "main";
 
 	return c;
 }

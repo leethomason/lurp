@@ -197,14 +197,19 @@ int main(int argc, char* argv[])
 			nk_input_end(nukCtx);
 
 			/* GUI */
-			float realFontSize = 0;
-			nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
-			nk_style_set_font(nukCtx, &nukFontBest->handle);
 
-			if (doAssetsTest)
+			if (doAssetsTest) {
+				float realFontSize = 0;
+				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
+				nk_style_set_font(nukCtx, &nukFontBest->handle);
 				iAssetsTests->layoutGUI(nukCtx, realFontSize, xFormer);
-			else
+			}
+			else {
+				float realFontSize = 0;
+				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(48), &realFontSize);
+				nk_style_set_font(nukCtx, &nukFontBest->handle);
 				scene->layoutGUI(nukCtx, realFontSize, xFormer);
+			}
 
 			const SDL_Color drawColor = { 0, 179, 228, 255 };
 			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);

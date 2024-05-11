@@ -102,6 +102,11 @@ public:
 	PointF t(const PointF& p) const;
 	RectF t(const RectF& r) const;
 
+	RectF tf(float xFract, float yFract, float wFract, float hFract) const {
+		RectF rf{ xFract * _virtualSize.w, yFract * _virtualSize.h, wFract * _virtualSize.w, hFract * _virtualSize.h };
+		return t(rf);
+	}
+
 private:
 	Rect _renderSize;
 	Rect _virtualSize;
