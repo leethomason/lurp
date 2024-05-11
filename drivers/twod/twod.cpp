@@ -215,24 +215,25 @@ int main(int argc, char* argv[])
 			}
 			else {
 				float realFontSize = 0;
-				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(48), &realFontSize);
+				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(48.f), &realFontSize);
 				nk_style_set_font(nukCtx, &nukFontBest->handle);
 				scene->layoutGUI(nukCtx, realFontSize, xFormer);
 			}
 
-			const SDL_Color drawColor = { 0, 179, 228, 255 };
-			SDL_SetRenderDrawColor(sdlRenderer, drawColor.r, drawColor.g, drawColor.b, drawColor.a);
+			//const SDL_Color drawColor = { 0, 179, 228, 255 };
+			SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0, 255);
 			SDL_RenderClear(sdlRenderer);	// ignores clipping (which is good)
 
-			DrawTestPattern(sdlRenderer, 
-				380, SCREEN_HEIGHT, 16, 
-				SDL_Color{192, 192, 192, 255}, SDL_Color{128, 128, 128, 255},
-				xFormer);
-
-			if (doAssetsTest)
+			if (doAssetsTest) {
+				DrawTestPattern(sdlRenderer,
+					380, SCREEN_HEIGHT, 16,
+					SDL_Color{ 192, 192, 192, 255 }, SDL_Color{ 128, 128, 128, 255 },
+					xFormer);
 				iAssetsTests->draw(drawing, frameData, xFormer);
-			else
+			}
+			else {
 				scene->draw(drawing, frameData, xFormer);
+			}
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t end = SDL_GetPerformanceCounter();

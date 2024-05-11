@@ -212,21 +212,19 @@ void Draw(SDL_Renderer* renderer,
 	switch (quality) {
 	case RenderQuality::kFullscreen:
 	case RenderQuality::kBlit:
+	case RenderQuality::kBest:
 		mode = SDL_ScaleMode::SDL_ScaleModeBest;
 		break;
 	case RenderQuality::kText:
-		mode = SDL_ScaleMode::SDL_ScaleModeNearest;
-		break;
 	case RenderQuality::kNearest:
 		mode = SDL_ScaleMode::SDL_ScaleModeNearest;
 		break;
 	case RenderQuality::kLinear:
 		mode = SDL_ScaleMode::SDL_ScaleModeLinear;
 		break;
-	case RenderQuality::kBest:
-		mode = SDL_ScaleMode::SDL_ScaleModeBest;
-		break;
 	}
+	// Lower quality modes saves some GPU time. But it's critical for the engine to look good.
+	// Always use the best quality mode for the use case.
 	SDL_SetTextureScaleMode(texture->sdlTexture(), mode);
 	SDL_RenderCopy(renderer, texture->sdlTexture(), src, dst);
 }

@@ -1,5 +1,6 @@
 #include "titlescene.h"
 #include "config.h"
+#include "tweeny.h"
 
 void TitleScene::load(Drawing& d, const FrameData& f)
 {
