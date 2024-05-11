@@ -109,3 +109,15 @@ struct PreserveColor {
 	SDL_Renderer* _renderer;
 	Uint8 r, g, b, a;
 };
+
+enum class RenderQuality {
+	kFullscreen,
+	kBlit,
+	kText,
+
+	kNearest,
+	kLinear,
+	kBest
+};
+
+void Draw(SDL_Renderer* renderer, std::shared_ptr<Texture> texture, const SDL_Rect* src, const SDL_Rect* dst, RenderQuality quality);

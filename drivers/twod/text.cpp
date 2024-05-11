@@ -188,6 +188,7 @@ void FontManager::renderTextField(const TextField* tf, const std::string& text, 
 		Point p = _xf.t(Point{ vx, vy });
 		SDL_Rect dst = { p.x, p.y, tf->_texture->width(), tf->_texture->height() };
 		SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_BLEND);
+		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
 		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), nullptr, &dst);
 	}
 }
@@ -232,6 +233,7 @@ void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Textur
 		dst.h = yStep;
 
 		SDL_Rect xDst = xf.t(dst);
+		SDL_SetTextureScaleMode(tex->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
 		SDL_RenderCopy(renderer, tex->sdlTexture(), &src, &xDst);
 	};
 }

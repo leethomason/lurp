@@ -20,8 +20,9 @@ void TitleScene::draw(Drawing& d, const FrameData& f, const XFormer& xf)
 	std::shared_ptr<Texture> texture = _textures[std::min(f.sceneTime / 1000, _textures.size() - 1)];
 	if (texture->ready()) {
 		SDL_Rect dst = xf.sdlClipRect();
-		SDL_SetTextureScaleMode(texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeBest);
-		SDL_RenderCopy(d.renderer, texture->sdlTexture(), nullptr, &dst);
+		//SDL_SetTextureScaleMode(texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeBest);
+		//SDL_RenderCopy(d.renderer, texture->sdlTexture(), nullptr, &dst);
+		Draw(d.renderer, texture, nullptr, &dst, RenderQuality::kFullscreen);
 	}
 	if (f.sceneTime / 1000 > _textures.size())
 		setState(State::kDone);

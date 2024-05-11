@@ -14,8 +14,9 @@ void MainScene::draw(Drawing& d, const FrameData&, const XFormer& xf)
 {
 	if (!_texture->ready()) return;
 	SDL_Rect dst = xf.sdlClipRect();
-	SDL_SetTextureScaleMode(_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeBest);
-	SDL_RenderCopy(d.renderer, _texture->sdlTexture(), nullptr, &dst);
+	//SDL_SetTextureScaleMode(_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeBest);
+	//SDL_RenderCopy(d.renderer, _texture->sdlTexture(), nullptr, &dst);
+	Draw(d.renderer, _texture, nullptr, &dst, RenderQuality::kFullscreen);
 }
 
 void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf)

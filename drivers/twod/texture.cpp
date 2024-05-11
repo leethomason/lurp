@@ -199,3 +199,34 @@ void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, SDL_Color c
 		}
 	}
 }
+
+void Draw(SDL_Renderer* renderer,
+	std::shared_ptr<Texture> texture,
+	const SDL_Rect* src,
+	const SDL_Rect* dst,
+	RenderQuality quality)
+{
+	if (!texture->ready()) return;
+
+	SDL_ScaleMode mode = SDL_ScaleMode::SDL_ScaleModeBest;
+	switch (quality) {
+	case RenderQuality::kFullscreen:
+	case RenderQuality::kBlit:
+		mode = SDL_ScaleMode::SDL_ScaleModeBest;
+		break;
+	case RenderQuality::kText:
+		mode = SDL_ScaleMode::SDL_ScaleModeNearest;
+		break;
+	case RenderQuality::kNearest:
+		mode = SDL_ScaleMode::SDL_ScaleModeNearest;
+		break;
+	case RenderQuality::kLinear:
+		mode = SDL_ScaleMode::SDL_ScaleModeLinear;
+		break;
+	case RenderQuality::kBest:
+		mode = SDL_ScaleMode::SDL_ScaleModeBest;
+		break;
+	}
+	SDL_SetTextureScaleMode(texture->sdlTexture(), mode);
+	SDL_RenderCopy(renderer, texture->sdlTexture(), src, dst);
+}

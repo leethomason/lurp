@@ -28,6 +28,11 @@
 
 int main(int argc, char* argv[])
 {
+	fmt::print("LuRP2D\n");
+	fmt::print("Options:\n");
+	fmt::print("  -l, --log         Set log level: 'error', 'warning', 'info', 'debug'. Default: 'warning'\n");
+	fmt::print("  --assets          Run assets test\n");
+
 	argh::parser cmdl;
 	cmdl.add_params({ "-l", "--log" });
 	cmdl.parse(argc, argv);
@@ -39,7 +44,7 @@ int main(int argc, char* argv[])
 		logLevel = plog::warning;
 	}
 
-	bool doAssetsTest = false;
+	bool doAssetsTest = cmdl[{"--assets" }];
 
 	//std::string dir = GameFileToDir(scriptFile);
 	//std::filesystem::path savePath = SavePath(dir, "saves");
@@ -117,6 +122,10 @@ int main(int argc, char* argv[])
 		gameConfig.assetsDir = "assets";
 		gameConfig.validate();
 		StateMachine machine(gameConfig);
+
+		if (doAssetsTest) {
+			gameConfig.virtualSize = { 800, 600 };
+		}
 
 		XFormer xFormer(gameConfig.virtualSize.x, gameConfig.virtualSize.y);
 		xFormer.setRenderSize(renderW, renderH);

@@ -169,7 +169,8 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	// Draw a texture. Confirm sRGB is working.
 	if (portrait11->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->width(), portrait11->height() });
-		SDL_RenderCopy(d.renderer, portrait11->sdlTexture(), nullptr, &dest);
+		//SDL_RenderCopy(d.renderer, portrait11->sdlTexture(), nullptr, &dest);
+		Draw(d.renderer, portrait11, nullptr, &dest, RenderQuality::kBlit);
 	}
 
 	// Test against Ps
@@ -188,11 +189,13 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	}
 	if (tree->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, 400, 400 });
-		SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &dest);
+		//SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &dest);
+		Draw(d.renderer, tree, nullptr, &dest, RenderQuality::kBlit);
 
 		for (int i = 0; i < 3; i++) {
 			SDL_Rect r = xFormer.t(SDL_Rect{ i * 100, 400, 50 + 50 * i, 50 + 50 * i });
-			SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &r);
+			//SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &r);
+			Draw(d.renderer, tree, nullptr, &r, RenderQuality::kBlit);
 		}
 	}
 	{
