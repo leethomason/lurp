@@ -19,26 +19,44 @@ std::shared_ptr<Scene> StateMachine::tick(FrameData* frameData)
 		newScene = true;
 		_currentScene = std::make_shared<TitleScene>();
 		_type = Type::kTitle;
+		if (frameData) {
+			frameData->sceneFrame = 0;
+			frameData->sceneTime = 0;
+		}
+		return _currentScene;
 	}
-	else {
-		if (_currentScene->state() == Scene::State::kDone) {
-			switch (_type) {
-			case Type::kNone: {
-				FATAL_INTERNAL_ERROR();
-				break;
-			}
-			case Type::kTitle: {
-				_currentScene = std::make_shared<MainScene>();
-				_type = Type::kMain;
-				newScene = true;
-				break;
-			}
-			default:
-				FATAL_INTERNAL_ERROR();
-				break;
-			}
+
+	Scene::State state = _currentScene->state();
+	if (state == Scene::State::kActive) {
+		// Scene is processing, do nothing
+		return _currentScene;
+	}
+
+	if(_type == Type::kTitle) {
+		if (state == Scene::State::kDone) {
+			_currentScene = std::make_shared<MainScene>();
+			_type = Type::kMain;
+			newScene = true;
+		}
+		else {
+			FATAL_INTERNAL_ERROR();
 		}
 	}
+	else if (_type == Type::kMain) {
+		if (state == Scene::State::kQuit) {
+			_done = true;
+		}
+		else if (state == Scene::State::kNewGame) {
+			_currentScene = std::make_shared<GameScene>();
+			_type = Type::kGame;
+			newScene = true;
+		}
+		// FIXME: add other states
+		//else {
+		//	FATAL_INTERNAL_ERROR();
+		//}
+	}
+
 	if (newScene) {
 		if (frameData) {
 			frameData->sceneFrame = 0;

@@ -10,12 +10,16 @@ public:
 
 	std::shared_ptr<Scene> tick(FrameData* frameData);
 
+	bool done() const { return _done; }
+
 private:
 	enum class Type {
 		kNone,
 		kTitle,
-		kMain
+		kMain,
+		kGame
 	};
+	bool _done = false;
 	GameConfig _gameConfig;
 	std::shared_ptr<Scene> _currentScene;
 	Type _type = Type::kNone;

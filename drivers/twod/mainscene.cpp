@@ -39,7 +39,7 @@ void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf
 	{
 		nk_layout_row_dynamic(ctx, height, 1);
 		if (nk_button_label(ctx, "New Game")) {
-			//setState(State::kNewGame);
+			setState(State::kNewGame);
 		}
 		if (nk_button_label(ctx, "Continue")) {
 			//setState(State::kSaveLoad);
@@ -48,7 +48,7 @@ void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf
 			//setState(State::kSettings);
 		}
 		if (nk_button_label(ctx, "Quit")) {
-			//setState(State::kQuit);
+			setState(State::kQuit);
 		}
 	}
 	nk_end(ctx);

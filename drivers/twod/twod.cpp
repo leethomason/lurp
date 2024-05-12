@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 		uint64_t lastFrameMillis = SDL_GetTicks64();
 
 		// ---------- Main Loop ------------ //
-		while (!done) {
+		while (!done && !machine.done()) {
 			uint64_t startFramePC = SDL_GetPerformanceCounter();
 			uint64_t startMillis = SDL_GetTicks64();
 
