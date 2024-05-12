@@ -164,11 +164,12 @@ int main(int argc, char* argv[])
 
 		bool done = false;
 		SDL_Event e;
-		uint64_t lastFrameTime = SDL_GetPerformanceCounter();
+		uint64_t lastFramePC = SDL_GetPerformanceCounter();
+		uint64_t lastFrameMillis = SDL_GetTicks64();
 
 		// ---------- Main Loop ------------ //
 		while (!done) {
-			uint64_t start = SDL_GetPerformanceCounter();
+			uint64_t startFramePC = SDL_GetPerformanceCounter();
 			uint64_t startMillis = SDL_GetTicks64();
 
 			int oldRenderW = renderW, oldRenderH = renderH;
@@ -185,6 +186,9 @@ int main(int argc, char* argv[])
 			
 			frameData.sceneTime += startMillis - frameData.timeMillis;
 			frameData.timeMillis = startMillis;
+			frameData.time = frameData.timeMillis / 1000.0;
+			frameData.dt = (startMillis - lastFrameMillis) / 1000.0;
+
 			std::shared_ptr<Scene> scene = machine.tick(&frameData);
 			if (scene)
 				scene->load(drawing, frameData);
@@ -236,8 +240,8 @@ int main(int argc, char* argv[])
 			}
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
-			uint64_t end = SDL_GetPerformanceCounter();
-			innerAve.add(end - start);
+			uint64_t endFrameTime = SDL_GetPerformanceCounter();
+			innerAve.add(endFrameTime - startFramePC);
 			{
 				uint64_t microInner = innerAve.average() * 1'000'000 / SDL_GetPerformanceFrequency();
 				uint64_t microFrame = frameAve.average() * 1'000'000 / SDL_GetPerformanceFrequency();
@@ -256,11 +260,12 @@ int main(int argc, char* argv[])
 			SDL_RenderPresent(sdlRenderer);
 			frameData.frame++;
 			frameData.sceneFrame++;
+			lastFrameMillis = startMillis;
 
 			// Sample *after* the present to include vsync
 			uint64_t now = SDL_GetPerformanceCounter();
-			frameAve.add(now - lastFrameTime);
-			lastFrameTime = now;
+			frameAve.add(now - lastFramePC);
+			lastFramePC = now;
 		}
 		// ---------- Tear Down ------- //
 		pool.WaitforAll();	// flush out texture loads in flight

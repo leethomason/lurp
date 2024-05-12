@@ -2,6 +2,7 @@
 
 #include "scene.h"
 #include "texture.h"
+#include "tween.h"
 
 #include <vector>
 
@@ -16,6 +17,7 @@ public:
 
 private:
 	std::vector<std::shared_ptr<Texture>> _textures;
+	std::vector<tween::Tween> _tweens;
 };
 
 

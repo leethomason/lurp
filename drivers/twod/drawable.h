@@ -23,6 +23,8 @@ struct FrameData {
 	uint64_t sceneFrame = 0;
 	uint64_t timeMillis = 0;
 	uint64_t sceneTime = 0;
+	double time = 0.0;
+	double dt = 0.0;
 };
 
 class IDrawable

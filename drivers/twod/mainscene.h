@@ -2,6 +2,7 @@
 
 #include "scene.h"
 #include "texture.h"
+#include "tween.h"
 
 class MainScene : public Scene
 {
@@ -14,6 +15,7 @@ public:
 
 private:
 	std::shared_ptr<Texture> _texture;
+	tween::Tween _tween;
 };
 
 

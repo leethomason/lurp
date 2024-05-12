@@ -204,9 +204,12 @@ void Draw(SDL_Renderer* renderer,
 	std::shared_ptr<Texture> texture,
 	const SDL_Rect* src,
 	const SDL_Rect* dst,
-	RenderQuality quality)
+	RenderQuality quality,
+	double alpha)
 {
+	assert(renderer);
 	if (!texture->ready()) return;
+	if (alpha <= 0) return;
 
 	SDL_ScaleMode mode = SDL_ScaleMode::SDL_ScaleModeBest;
 	switch (quality) {
@@ -226,5 +229,16 @@ void Draw(SDL_Renderer* renderer,
 	// Lower quality modes saves some GPU time. But it's critical for the engine to look good.
 	// Always use the best quality mode for the use case.
 	SDL_SetTextureScaleMode(texture->sdlTexture(), mode);
+	uint8_t a8 = (Uint8)lurp::clamp(round(alpha * 255), 0.0, 255.0);
+	if (a8 == 0)
+		return;
+
+	if (a8 == 255) {
+		SDL_SetTextureBlendMode(texture->sdlTexture(), SDL_BLENDMODE_NONE);
+	}
+	else {
+		SDL_SetTextureBlendMode(texture->sdlTexture(), SDL_BLENDMODE_BLEND);
+		SDL_SetTextureAlphaMod(texture->sdlTexture(), a8);
+	}
 	SDL_RenderCopy(renderer, texture->sdlTexture(), src, dst);
 }

@@ -120,4 +120,8 @@ enum class RenderQuality {
 	kBest
 };
 
-void Draw(SDL_Renderer* renderer, std::shared_ptr<Texture> texture, const SDL_Rect* src, const SDL_Rect* dst, RenderQuality quality);
+void Draw(SDL_Renderer* renderer, 
+	std::shared_ptr<Texture> texture, 
+	const SDL_Rect* src, const SDL_Rect* dst, 
+	RenderQuality quality,
+	double alpha = 1.0);

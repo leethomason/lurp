@@ -6,15 +6,21 @@
 
 void MainScene::load(Drawing& d, const FrameData& f)
 {
-	if (f.sceneFrame == 0)
+	constexpr double RAMP = 0.2;
+
+	if (f.sceneFrame == 0) {
 		_texture = d.textureManager.loadTexture(d.config.assetsDir / d.config.mainBackground);
+		_tween.add(RAMP, 1.0, tween::cosine);
+	}
 }
 
-void MainScene::draw(Drawing& d, const FrameData&, const XFormer& xf)
+void MainScene::draw(Drawing& d, const FrameData& f, const XFormer& xf)
 {
 	if (!_texture->ready()) return;
 	SDL_Rect dst = xf.sdlClipRect();
-	Draw(d.renderer, _texture, nullptr, &dst, RenderQuality::kFullscreen);
+	_tween.tick(f.dt);
+	double alpha = _tween.value();
+	Draw(d.renderer, _texture, nullptr, &dst, RenderQuality::kFullscreen, alpha);
 }
 
 void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf)

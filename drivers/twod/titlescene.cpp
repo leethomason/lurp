@@ -1,16 +1,31 @@
 #include "titlescene.h"
 #include "config.h"
-#include "tweeny.h"
+#include "tween.h"
 
 void TitleScene::load(Drawing& d, const FrameData& f)
 {
-	if (f.sceneFrame == 0) {
-		if (d.config.openingTitles.size() > 0)
-			_textures.push_back(d.textureManager.loadTexture(d.config.assetsDir / d.config.openingTitles[0]));
+	constexpr double RAMP = 0.2;
+	constexpr double HALF = RAMP / 2.0;
+	constexpr double HOLD = 1.0;
+
+	std::function<double(double)> func0 = tween::cosine;
+	std::function<double(double)> func1 = tween::cosine;
+
+	if (f.sceneFrame == 0 && d.config.openingTitles.size() > 0) {
+		_textures.push_back(d.textureManager.loadTexture(d.config.assetsDir / d.config.openingTitles[0]));
+
+		tween::Tween t(0.0);
+		t.addASR(RAMP, HOLD, RAMP, 0.0, 1.0, func0, func1);
+		_tweens.push_back(t);
 	}
 	else if (f.sceneFrame == 2) {
 		for(size_t i=1; i<d.config.openingTitles.size(); i++) {
 			_textures.push_back(d.textureManager.loadTexture(d.config.assetsDir / d.config.openingTitles[i]));
+
+			tween::Tween t(0.0);
+			t.add((RAMP * 2.0 + HOLD) * i - HALF, 0.0);
+			t.addASR(RAMP, HOLD, RAMP, 0.0, 1.0, func0, func1);
+			_tweens.push_back(t);
 		}
 	}
 }
@@ -18,14 +33,16 @@ void TitleScene::load(Drawing& d, const FrameData& f)
 void TitleScene::draw(Drawing& d, const FrameData& f, const XFormer& xf)
 {
 	if (_textures.empty()) return;
-	std::shared_ptr<Texture> texture = _textures[std::min(f.sceneTime / 1000, _textures.size() - 1)];
-	if (texture->ready()) {
-		SDL_Rect dst = xf.sdlClipRect();
-		//SDL_SetTextureScaleMode(texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeBest);
-		//SDL_RenderCopy(d.renderer, texture->sdlTexture(), nullptr, &dst);
-		Draw(d.renderer, texture, nullptr, &dst, RenderQuality::kFullscreen);
+
+	SDL_Rect dst = xf.sdlClipRect();
+
+	for (size_t i = 0; i < _textures.size(); i++) {
+		_tweens[i].tick(f.dt);
+		std::shared_ptr<Texture> texture = _textures[i];
+		double alpha = _tweens[i].value();
+		Draw(d.renderer, texture, nullptr, &dst, RenderQuality::kFullscreen, alpha);
 	}
-	if (f.sceneTime / 1000 > _textures.size())
+	if (_tweens.back().done())
 		setState(State::kDone);
 }
 

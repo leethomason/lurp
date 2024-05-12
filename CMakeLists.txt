@@ -56,12 +56,6 @@ FetchContent_Declare(
     GIT_REPOSITORY  https://github.com/Immediate-Mode-UI/Nuklear.git
     GIT_TAG         37e54da201cc5aad78ebcf621f6dc161407f4713
 )
-FetchContent_Declare(
-    tweeny
-    EXCLUDE_FROM_ALL
-    GIT_REPOSITORY  https://github.com/mobius3/tweeny.git
-    GIT_TAG         3f7312034add5be888360e62005f596294ac93b0
-)
 # FIXME: windws & MSVC only
 FetchContent_Declare(
     SDL2
@@ -77,7 +71,7 @@ FetchContent_Declare(
     SDL2_TTF
     URL      https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-devel-2.22.0-VC.zip
 )
-FetchContent_MakeAvailable(lua fmt argh ionic plog md4c enkiTS nuklear tweeny SDL2 SDL2_image SDL2_ttf)
+FetchContent_MakeAvailable(lua fmt argh ionic plog md4c enkiTS nuklear SDL2 SDL2_image SDL2_ttf)
 
 file(GLOB SOURCES "src/*.cpp" "src/*.c")
 file(GLOB HEADERS "src/*.h")
@@ -88,7 +82,6 @@ list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/lua.c")
 list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/src/luac.c")
 set(ENKITS_SOURCES ${enkiTS_SOURCE_DIR}/src/TaskScheduler.cpp ${enkiTS_SOURCE_DIR}/src/TaskScheduler.h)
 set(NUKLEAR_SOURCES ${nuklear_SOURCE_DIR}/nuklear.h ${nuklear_SOURCE_DIR}/demo/sdl_renderer/nuklear_sdl_renderer.h)
-set(TWEENY_SOURCES ${tweeny_SOURCE_DIR}/include/tweeny.h)
 
 source_group("lua" FILES ${LUA_SOURCES})
 
@@ -153,7 +146,6 @@ add_executable(lurp2d
   ${TWOD_SRC}
   ${ENKITS_SOURCES}
   ${NUKLEAR_SOURCES}
-  ${TWEENY_SOURCES}
 )
 
 #FIXME: windws & MSVC only
@@ -175,7 +167,6 @@ target_include_directories(lurp2d PUBLIC src
   ${enkiTS_SOURCE_DIR}/src
   ${nuklear_SOURCE_DIR}
   ${nuklear_SOURCE_DIR}/demo/sdl_renderer
-  ${tweeny_SOURCE_DIR}/include
 )
 
 target_link_libraries(lurp2d SDL2::SDL2main)
