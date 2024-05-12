@@ -2,6 +2,7 @@
 #include "titlescene.h"
 #include "debug.h"
 #include "mainscene.h"
+#include "gamescene.h"
 
 #include "nuk.h"
 

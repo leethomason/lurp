@@ -11,18 +11,17 @@
 
 struct GameRegion {
 	std::string name;
-	Rect position = { 0, 0, 1920, 1080 }; // (960x540 at half scale)
+	Rect position = { 0, 0, 1920, 1080 };
 	
 	enum class Type {
-		image,
-		text,
-		opaqueText,
+		kNone,
+		kConstImage,
+		kText,
+		kOpaqueText,
 	};
-	Type type;
+	Type type = Type::kNone;
+	std::string imagePath;		// kConstImage
 	SDL_Color bgColor;
-
-	std::shared_ptr<Texture> texture;
-	std::string text;
 };
 
 struct GameConfig {
@@ -36,10 +35,11 @@ struct GameConfig {
 	std::string saveLoadBackground;
 
 	std::filesystem::path assetsDir;
+	std::string scriptFile;
+	std::string startingZone;
 
 	static GameConfig demoConfig();
 	bool validate() const;
-//	bool getPath(const std::string& asset, std::filesystem::path& p) const;
 
 private:
 	bool validatePath(const std::filesystem::path& dir, const std::string& stem) const;

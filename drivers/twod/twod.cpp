@@ -6,6 +6,7 @@
 #include "drawable.h"
 #include "config.h"
 #include "statemachine.h"
+#include "../platform.h"
 
 #include "nuk.h"
 #include "argh.h"
@@ -29,6 +30,7 @@
 int main(int argc, char* argv[])
 {
 	fmt::print("LuRP2D\n");
+	fmt::print("Usage: lurp2d <path/to/lua/file> <starting-zone>\n");
 	fmt::print("Options:\n");
 	fmt::print("  -l, --log         Set log level: 'error', 'warning', 'info', 'debug'. Default: 'warning'\n");
 	fmt::print("  --assets          Run assets test\n");
@@ -36,6 +38,8 @@ int main(int argc, char* argv[])
 	argh::parser cmdl;
 	cmdl.add_params({ "-l", "--log" });
 	cmdl.parse(argc, argv);
+	std::string scriptFile = cmdl[1];
+	std::string startingZone = cmdl[2];
 
 	std::string log = "warning";
 	cmdl({ "-l", "--log" }, log) >> log;
@@ -46,9 +50,10 @@ int main(int argc, char* argv[])
 
 	bool doAssetsTest = cmdl[{"--assets" }];
 
-	//std::string dir = GameFileToDir(scriptFile);
-	//std::filesystem::path savePath = SavePath(dir, "saves");
+	std::string dir = lurp::GameFileToDir(scriptFile);
+	std::filesystem::path savePath = lurp::SavePath(dir, "saves");
 	std::filesystem::path logPath = lurp::LogPath("lurp2d");
+	fmt::print("Save path: {}\n", savePath.string());
 	fmt::print("Log path: {}\n", logPath.string());
 
 	static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
@@ -56,7 +61,7 @@ int main(int argc, char* argv[])
 	plog::init(logLevel, &consoleAppender).addAppender(&fileAppender);
 
 	PLOG(plog::info) << "Logging started.";
-	//PLOG(plog::info) << "Save path: " << savePath.string();
+	PLOG(plog::info) << "Save path: " << savePath.string();
 
 	// SDL init - not included by memory tracker
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
@@ -118,9 +123,24 @@ int main(int argc, char* argv[])
 		else
 			PLOG(plog::error) << "LuRP2D tests failed.";
 
+		if (scriptFile.empty()) {
+			PLOG(plog::error) << "No script file specified.";
+		}
+		else {
+			if (!std::filesystem::exists(scriptFile)) {
+				PLOG(plog::error) << "Script file does not exist: " << scriptFile;
+			}
+			else {
+				PLOG(plog::info) << "Script file: " << scriptFile;
+			}
+		}
+
 		GameConfig gameConfig = GameConfig::demoConfig();
 		gameConfig.assetsDir = "assets";
 		gameConfig.validate();
+		gameConfig.scriptFile = scriptFile;
+		gameConfig.startingZone = startingZone;
+
 		StateMachine machine(gameConfig);
 
 		if (doAssetsTest) {
