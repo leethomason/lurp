@@ -15,9 +15,11 @@ struct GameRegion {
 	
 	enum class Type {
 		kNone,
+		kImage,
 		kConstImage,
 		kText,
 		kOpaqueText,
+		kInfo,					// fixme: how to handle this?
 	};
 	Type type = Type::kNone;
 	std::string imagePath;		// kConstImage

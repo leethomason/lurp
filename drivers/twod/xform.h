@@ -44,6 +44,9 @@ struct Rect {
 	bool operator!=(const Rect& rhs) const {
 		return !(*this == rhs);
 	}
+	SDL_Rect toSDLRect() const {
+		return SDL_Rect{ x, y, w, h };
+	}
 };
 
 struct RectF {

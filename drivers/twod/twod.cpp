@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 		GameConfig gameConfig = GameConfig::demoConfig();
 		gameConfig.assetsDir = "assets";
 		gameConfig.validate();
-		gameConfig.scriptFile = scriptFile;
+		gameConfig.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
 		gameConfig.startingZone = startingZone;
 
 		StateMachine machine(gameConfig);
