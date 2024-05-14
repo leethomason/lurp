@@ -369,10 +369,10 @@ function Entity(entityID)
     return t
 end
 
-function SetupScriptEnv(_script, _player, _npc, _zone, _room)
+function SetupScriptEnv(_script, _npc, _zone, _room)
     --print("SetupScriptEnv", _script, _player, _npc, _zone, _room)
     script = CoreTable({ entityID = _script })
-    player = Entity(_player)
+    player = Entity("player")
 
     npc = {}
     if _npc then
