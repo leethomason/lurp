@@ -623,7 +623,7 @@ static void FlagTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	using Mode = ZoneDriver::Mode;
 
 	ScriptAssets assets(ca);
-	ZoneDriver driver(assets, bridge, "TEST_ZONE_1", "player");
+	ZoneDriver driver(assets, bridge, "TEST_ZONE_1");
 
 	TEST(driver.mode() == Mode::kText);
 	TEST(driver.mapData.coreData.coreGet("TEST_ACTOR_1", "npcFlag").second.boolean == true);
@@ -888,12 +888,7 @@ void BattleTest::Read()
 		TEST(sp.rangeMult == 2);
 		TEST(sp.effectMult == 1);
 	}
-#if 0
 	{
-		FIXME this does a resolution on testplayer - which is no substitution - 
-			whereas player does. Need to fix this somehow
-
-
 		const Actor& player = assets.getActor("player");
 		SWCombatant c = SWCombatant::convert(player, assets, binder);
 		TEST(c.link == "player");
@@ -904,7 +899,6 @@ void BattleTest::Read()
 		TEST(c.arcane.d == 4);
 		TEST(c.powers.size() == 1);
 	}
-#endif
 }
 
 void BattleTest::TestRegionSpells()
@@ -1088,7 +1082,7 @@ void BattleTest::TestExample()
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("game/example-battle/example-battle.lua");
 	ScriptAssets assets(csassets);
-	ZoneDriver driver(assets, bridge, "BATTLE_ZONE", "player");
+	ZoneDriver driver(assets, bridge, "BATTLE_ZONE");
 
 	TEST(driver.mode() == ZoneDriver::Mode::kText);	// "choose your gear"
 	driver.advance();
@@ -1130,7 +1124,7 @@ static void TestExampleZone()
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("game/example-zone/example-zone.lua");
 	ScriptAssets assets(csassets);
-	ZoneDriver driver(assets, bridge, "ZONE", "player");
+	ZoneDriver driver(assets, bridge, "ZONE");
 
 	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
 	TEST(driver.getContainers().size() == 1);
@@ -1248,7 +1242,7 @@ static void TestChullu()
 	ScriptBridge bridge;
 	ConstScriptAssets csassets = bridge.readCSA("game/chullu/chullu.lua");
 	ScriptAssets assets(csassets);
-	ZoneDriver driver(assets, bridge, NO_ENTITY, "player");
+	ZoneDriver driver(assets, bridge, NO_ENTITY);
 
 	TEST(driver.mode() == ZoneDriver::Mode::kText);
 	TEST(driver.currentRoom().name == "Your Apartment");

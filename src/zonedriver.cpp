@@ -19,7 +19,7 @@ ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge)
 	_bridge.setICore(&mapData.coreData);
 }
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player) 
+ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone) 
 	: _assets(assets), _bridge(bridge), mapData(MapData::kSeed)
 {
 	_bridge.setIMap(this);
