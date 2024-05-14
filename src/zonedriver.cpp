@@ -11,8 +11,8 @@
 
 namespace lurp {
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player) 
-	: _assets(assets), _bridge(bridge), _playerID(player), mapData(MapData::kSeed)
+ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge) 
+	: _assets(assets), _bridge(bridge), mapData(MapData::kSeed)
 {
 	_bridge.setIMap(this);
 	_bridge.setIAsset(&assets);
@@ -20,7 +20,7 @@ ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityI
 }
 
 ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player) 
-	: _assets(assets), _bridge(bridge), _playerID(player), mapData(MapData::kSeed)
+	: _assets(assets), _bridge(bridge), mapData(MapData::kSeed)
 {
 	_bridge.setIMap(this);
 	_bridge.setIAsset(&assets);
@@ -78,7 +78,7 @@ const Zone& ZoneDriver::currentZone() const
 
 const Actor& ZoneDriver::getPlayer()
 {
-	return _assets.getActor(_playerID);
+	return _assets.getActor("player");
 }
 
 std::vector<Edge> ZoneDriver::edges(EntityID room) const
@@ -170,7 +170,7 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 			const Container& c = _assets._csa.containers[ref.index];
 			bool eval = true;
 
-			ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _playerID, NO_ENTITY };
+			ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), NO_ENTITY };
 			ScriptHelper helper(_bridge, mapData.coreData, env);
 			eval = helper.call(c.eval, 1);
 \
@@ -184,7 +184,7 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 bool ZoneDriver::filterInteraction(const Interaction& i)
 {
 	bool eval = true;
-	ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), _playerID, NO_ENTITY };
+	ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), NO_ENTITY };
 	ScriptHelper helper(_bridge, mapData.coreData, env);
 	eval = helper.call(i.eval, 1);
 	return eval;
@@ -232,7 +232,7 @@ ScriptEnv ZoneDriver::getScriptEnv(const Interaction* interaction)
 	env.script = interaction->next;
 	env.zone = currentZone().entityID;
 	env.room = currentRoom().entityID;
-	env.player = _playerID;
+	//env.player = _playerID;
 	env.npc = interaction->npc;
 	return env;
 }
@@ -388,7 +388,7 @@ bool ZoneDriver::tryUnlock(const Entity& e)
 		return false;
 
 	const Item& key = _assets.getItem(keyName);
-	Inventory& inv = _assets.inventories.at(_playerID);
+	Inventory& inv = _assets.inventories.at("player");
 	if (inv.hasItem(key)) {
 		mapData.coreData.coreSet(e.entityID, "locked", false, false);
 		if (edge)
@@ -459,7 +459,7 @@ void ZoneDriver::save(std::ostream& stream) const
 	ZoneDriver::saveTextRead(stream, mapData.textRead);
 
 	fmt::print(stream, "Map = {{\n");
-	fmt::print(stream, "  playerID = '{}',\n", _playerID);
+	//fmt::print(stream, "  playerID = '{}',\n", _playerID);
 	fmt::print(stream, "  currentZone = '{}',\n", _assets._csa.zones[_zone.index].entityID);
 	fmt::print(stream, "  currentRoom = '{}',\n", _assets._csa.rooms[_room.index].entityID);
 	fmt::print(stream, "}}\n");

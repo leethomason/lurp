@@ -36,7 +36,7 @@ public:
 	// FIXME: hides a MapData getting constructed with a default seed
 
 	// Create a map with navigation, containers, and interactions.
-	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& player);
+	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge);
 	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone, const EntityID& player);
 	~ZoneDriver();
 
@@ -139,7 +139,6 @@ private:
 
 	ScriptAssets& _assets;
 	ScriptBridge& _bridge;
-	EntityID _playerID;
 public:
 	MapData mapData;
 private:

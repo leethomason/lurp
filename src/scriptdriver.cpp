@@ -42,7 +42,7 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const E
 	_scriptEnv.script = scriptID;
 	_scriptEnv.zone = zoneDriver.currentZone().entityID;
 	_scriptEnv.room = zoneDriver.currentRoom().entityID;
-	_scriptEnv.player = zoneDriver.getPlayer().entityID;
+	//_scriptEnv.player = zoneDriver.getPlayer().entityID;
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
 	_helper->bridge().setIText(this);
@@ -440,7 +440,7 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 	fmt::print(stream, "  script = '{}',\n", env.script);
 	fmt::print(stream, "  zone = '{}',\n", env.zone);
 	fmt::print(stream, "  room = '{}',\n", env.room);
-	fmt::print(stream, "  player = '{}',\n", env.player);
+	//fmt::print(stream, "  player = '{}',\n", env.player);
 	fmt::print(stream, "  npc = '{}',\n", env.npc);
 	fmt::print(stream, "}}\n");
 }
@@ -455,7 +455,7 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 	env.script = loader.getStrField("script", { "" });
 	env.zone = loader.getStrField("zone", { "" });
 	env.room = loader.getStrField("room", { "" });
-	env.player = loader.getStrField("player", { "" });
+	//env.player = loader.getStrField("player", { "" });
 	env.npc = loader.getStrField("npc", { "" });
 	loader.pop();
 
