@@ -8,7 +8,7 @@
 #include <fmt/core.h>
 #include <plog/Log.h>
 
-#define DEBUG_TEXT 0
+#define DEBUG_TEXT 1
 
 class RenderFontTask : public lurp::SelfDeletingTask
 {
@@ -111,13 +111,12 @@ void FontManager::update(const XFormer& xf)
 	// Remember we already flushed the open tasks.
 	if (change) {
 		for (auto& tf : _textFields) {
-			tf->_text = "<--cache invalid-->";
-
-			// This is super exciting! The texture size may change as well. (this is so complex!!)
-			Point size = xf.s(Point{ tf->_width, tf->_height });
+			// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
+			Point size = xf.s(Point{ tf->_virtualSize });
 			if (size.x != tf->_texture->width() || size.y != tf->_texture->height()) {
 				tf->_texture = _textureManager.createTextField(size.x, size.y);
-			}			
+			}
+			tf->_needUpdate = true;
 		}
 	}
 }
@@ -140,9 +139,7 @@ std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int wi
 
 	TextField* tf = new TextField();
 	tf->_font = f;
-	tf->_width = width;
-	tf->_height = height;
-	tf->_fontManager = this;
+	tf->_virtualSize = Point{ width, height };
 	tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
 	tf->_bg = bg;
@@ -156,31 +153,24 @@ TextField::~TextField()
 {
 }
 
-void TextField::Render(const std::string& text, int x, int y, SDL_Color color)
-{
-	_fontManager->renderTextField(this, text, x, y, color);
-}
-
-void FontManager::renderTextField(const TextField* tf, const std::string& text, int vx, int vy, SDL_Color color)
+void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
 {
 	assert(tf->_font);	
 	assert(tf->_font->font); // should be kept up to date in update()
 
-	if (tf->_text != text || !ColorEqual(tf->_color, color))  {
+	if (tf->_needUpdate)  {
+		tf->_needUpdate = false;
 		RenderFontTask* task = new RenderFontTask();
 		task->_texture = tf->_texture;
 		task->_queue = &_textureManager._loadQueue;
 		task->_generation = ++_textureManager._generation;
 
 		task->_font = tf->_font->font;
-		task->_color = color;
-		task->_text = text;
+		task->_color = tf->_color;
+		task->_text = tf->_text;
 
 		task->_hqOpaque = tf->_hqOpaque;
 		task->_bg = tf->_bg;
-
-		tf->_text = text;
-		tf->_color = color;
 
 		_textureManager._pool.AddTaskSetToPipe(task);
 	}

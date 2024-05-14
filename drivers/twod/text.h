@@ -19,7 +19,6 @@ struct Font {
 	TTF_Font* font = nullptr;	// this is kept current on the main thread and is always valid (the pool will be flushed before this changes)
 	int size = 0;				// virtual size
 	int realSize = 0;			// render size
-	//std::string name;
 	std::string path;
 };
 
@@ -48,12 +47,13 @@ public:
 		}
 	}
 
+	Point virtualSize() const {
+		return _virtualSize;
+	}
+
 	// Warning: may return 0,0 if the text rendering hasn't flushed from the text thread.
 	Point renderedSize() const {
 		return _renderedSize; 
-	}
-	Point size() const {
-		return Point{ _texture->width(), _texture->height() };
 	}
 	SDL_Color color() const { return _color; }
 	SDL_Color bgColor() const { return _bg; }
@@ -66,9 +66,12 @@ private:
 	}
 
 	bool _needUpdate = false;
+
 	std::shared_ptr<Texture> _texture;
 	const Font* _font = nullptr;
-	Point _renderedSize;
+	Point _virtualSize;
+	Point _renderedSize;	// size of the rendered text; usually a little smaller than _size
+
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 0 };
 	std::string _text;
