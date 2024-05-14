@@ -37,7 +37,7 @@ Power {
 }
 
 Actor {
-    entityID = "testplayer",
+    entityID = "player",
     name = "Test Player",
     wild = true,
 

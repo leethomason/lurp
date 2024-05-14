@@ -13,11 +13,10 @@ struct ScriptEnv {
 	EntityID script;
 	EntityID zone;
 	EntityID room;
-	EntityID player;
 	EntityID npc;
 
 	bool complete() const {
-		return !script.empty() && !zone.empty() && !room.empty() && !player.empty() && !npc.empty();
+		return !script.empty() && !zone.empty() && !room.empty() && !npc.empty();
 	}
 };
 

@@ -160,13 +160,13 @@ std::string VarBinder::evalPath(const ScriptEnv& env, const std::string& in) con
 		// can call other scripts and what a mess. Use the special magic name.
 		first = std::string(_SCRIPTENV);
 	}
-	else if (first == "player") {
-		if (env.player.empty()) {
-			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;
-			assert(false);
-		}
-		first = env.player;
-	}
+//	else if (first == "player") {
+//		if (env.player.empty()) {
+//			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;
+//			assert(false);
+//		}
+//		first = env.player;
+//	}
 	else if (first == "npc") {
 		if (env.npc.empty()) {
 			PLOG(plog::warning) << "Attempt to access player variable '" << in << "' with no " << first;

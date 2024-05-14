@@ -246,7 +246,7 @@ static int SelectEdge(const Value& v, const std::vector<DirEdge>& edges)
 
 static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, EntityID zone, std::string dir, uint32_t seed)
 {
-	ZoneDriver driver(assets, bridge, zone, "player");
+	ZoneDriver driver(assets, bridge, zone);
 	driver.mapData.random.setSeed(seed);
 
 	while (!driver.isGameOver()) {

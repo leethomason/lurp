@@ -42,7 +42,6 @@ void ScriptHelper::setupScriptEnv()
 	CHECK(t == LUA_TFUNCTION);
 
 	lua_pushstring(L, _SCRIPTENV);
-	lua_pushstring(L, _scriptEnv.player.c_str());
 	if (_scriptEnv.npc.empty())
 		lua_pushnil(L);
 	else
@@ -57,7 +56,7 @@ void ScriptHelper::setupScriptEnv()
 		lua_pushnil(L);
 	else
 		lua_pushstring(L, _scriptEnv.room.c_str());
-	pcall(-1, 5, 0);
+	pcall(-1, 4, 0);
 
 	// Basic check everything is okay:
 	t = lua_getglobal(L, "script");
