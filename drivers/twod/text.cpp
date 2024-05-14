@@ -158,6 +158,7 @@ void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
 	assert(tf->_font);	
 	assert(tf->_font->font); // should be kept up to date in update()
 
+	// FIXME: move the needUpdate to the update() above.
 	if (tf->_needUpdate)  {
 		tf->_needUpdate = false;
 		RenderFontTask* task = new RenderFontTask();
@@ -177,7 +178,10 @@ void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
 	if (tf->_texture->ready()) {
 		Point p = _xf.t(Point{ vx, vy });
 		SDL_Rect dst = { p.x, p.y, tf->_texture->width(), tf->_texture->height() };
-		SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_BLEND);
+		if (tf->_hqOpaque)
+			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);
+		else
+			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_BLEND);
 		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
 		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), nullptr, &dst);
 	}

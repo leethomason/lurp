@@ -19,7 +19,7 @@ struct Font {
 	TTF_Font* font = nullptr;	// this is kept current on the main thread and is always valid (the pool will be flushed before this changes)
 	int size = 0;				// virtual size
 	int realSize = 0;			// render size
-	std::string path;
+	std::string path;			// for reload, which has to be done on resize (keeping fonts 1:1)
 };
 
 class TextField {
@@ -62,7 +62,9 @@ public:
 private:
 	void update() {
 		_needUpdate = true;
-		_renderedSize = Point{ 0, 0 };
+		// Not sure about this. Need to think through when the renderedSize
+		// can be correct and incorrect.
+		//_renderedSize = Point{ 0, 0 };
 	}
 
 	bool _needUpdate = false;
@@ -92,7 +94,6 @@ public:
 
 	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
 
-	// Do not call directly. Use TextField::Render()
 	void draw(std::shared_ptr<TextField>& tf, int x, int y);
 
 private:
