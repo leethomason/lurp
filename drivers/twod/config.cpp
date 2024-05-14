@@ -23,7 +23,7 @@
 	GameRegion background;
 	background.name = "background";
 	background.position = { 0, 0, 1920, 1080 };
-	background.type = GameRegion::Type::kConstImage;
+	background.type = GameRegion::Type::kImage;
 	background.imagePath = "game";
 	c.regions.push_back(background);
 

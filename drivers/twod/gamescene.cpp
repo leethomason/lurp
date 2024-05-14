@@ -5,11 +5,12 @@
 void GameScene::load(Drawing& d, const FrameData& f)
 {
 	if (f.sceneFrame != 0) return;
+
 	_data.resize(d.config.regions.size());
 
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
-		if (r.type == GameRegion::Type::kConstImage) {
+		if (r.type == GameRegion::Type::kImage && !r.imagePath.empty()) {
 			_data[i].texture = d.textureManager.loadTexture(d.config.assetsDir / r.imagePath);
 		}	
 		//else if (r.type == GameRegion::Type::kText) {
@@ -19,7 +20,7 @@ void GameScene::load(Drawing& d, const FrameData& f)
 
 	_csassets = _bridge.readCSA(d.config.scriptFile);
 	_assets = new lurp::ScriptAssets(_csassets);
-	_zoneDriver = new lurp::ZoneDriver(*_assets, _bridge, d.config.startingZone, "player");
+	_zoneDriver = new lurp::ZoneDriver(*_assets, _bridge, d.config.startingZone);
 }
 
 GameScene::~GameScene()
@@ -32,7 +33,7 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 {
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
-		if (r.type == GameRegion::Type::kConstImage) {
+		if (r.type == GameRegion::Type::kImage) {
 			SDL_Rect dest = x.t(r.position).toSDLRect();
 			Draw(d.renderer, _data[i].texture, nullptr, &dest, RenderQuality::kBlit);
 		}

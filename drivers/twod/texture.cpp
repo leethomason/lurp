@@ -208,6 +208,7 @@ void Draw(SDL_Renderer* renderer,
 	double alpha)
 {
 	assert(renderer);
+	if (!texture) return;
 	if (!texture->ready()) return;
 	if (alpha <= 0) return;
 
