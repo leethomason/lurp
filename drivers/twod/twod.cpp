@@ -179,8 +179,13 @@ int main(int argc, char* argv[])
 		FrameData frameData;
 		Drawing drawing(sdlRenderer, textureManager, fontManager, gameConfig);
 
-		if (doAssetsTest)
+		if (doAssetsTest) {
 			iAssetsTests->load(drawing, frameData);
+		}
+		else {
+			gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 20);	// fixme: hardcode. should be in config.
+		}
+
 
 		bool done = false;
 		SDL_Event e;

@@ -29,24 +29,50 @@ public:
 	TextField() {}
 	~TextField();
 
-	const std::string& name() const { return _name; }
+	void setText(const std::string& text) {
+		if (text != _text) {
+			_text = text;
+			_needUpdate = true;
+		}
+	}
+	void setColor(SDL_Color color) {
+		if (color.r != _color.r || color.g != _color.g || color.b != _color.b || color.a != _color.a) {
+			_color = color;
+			_needUpdate = true;
+		}
+	}
+	void setBgColor(SDL_Color color) {
+		if (color.r != _bg.r || color.g != _bg.g || color.b != _bg.b || color.a != _bg.a) {
+			_bg = color;
+			_needUpdate = true;
+		}
+	}
 
-	void Render(const std::string& text, int x, int y, SDL_Color color);
+	// Warning: may return 0,0 if the text rendering hasn't flushed from the text thread.
+	Point renderedSize() const {
+		return _renderedSize; 
+	}
+	Point size() const {
+		return Point{ _texture->width(), _texture->height() };
+	}
+	SDL_Color color() const { return _color; }
+	SDL_Color bgColor() const { return _bg; }
+	const std::string& text() const { return _text; }
 
 private:
-	std::string _name;	// info / debugging only
+	void update() {
+		_needUpdate = true;
+		_renderedSize = Point{ 0, 0 };
+	}
+
+	bool _needUpdate = false;
 	std::shared_ptr<Texture> _texture;
 	const Font* _font = nullptr;
-	int _width = 0;
-	int _height = 0;
-	FontManager* _fontManager = nullptr;
+	Point _renderedSize;
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 0 };
-
-	// No good solutions here. But this is used as a cache invalid flag.
-	// FIXME: replacing with a hash would make this clearer.
-	mutable std::string _text;
-	mutable SDL_Color _color = SDL_Color{ 0, 0, 0, 0 };
+	std::string _text;
+	SDL_Color _color = SDL_Color{ 0, 0, 0, 0 };
 };
 
 class FontManager {
@@ -64,7 +90,7 @@ public:
 	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
 
 	// Do not call directly. Use TextField::Render()
-	void renderTextField(const TextField* tf, const std::string& text, int x, int y, SDL_Color color);
+	void draw(std::shared_ptr<TextField>& tf, int x, int y);
 
 private:
 	Font* getFont(const Font*);

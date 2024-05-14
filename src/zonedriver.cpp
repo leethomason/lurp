@@ -76,7 +76,7 @@ const Zone& ZoneDriver::currentZone() const
 	return _assets._csa.zones[_zone.index];
 }
 
-const Actor& ZoneDriver::getPlayer()
+const Actor& ZoneDriver::getPlayer() const
 {
 	return _assets.getActor("player");
 }

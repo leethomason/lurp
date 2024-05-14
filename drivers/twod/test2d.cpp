@@ -169,7 +169,6 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	// Draw a texture. Confirm sRGB is working.
 	if (portrait11->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->width(), portrait11->height() });
-		//SDL_RenderCopy(d.renderer, portrait11->sdlTexture(), nullptr, &dest);
 		Draw(d.renderer, portrait11, nullptr, &dest, RenderQuality::kBlit);
 	}
 
@@ -199,11 +198,13 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 		}
 	}
 	{
-		std::string text = fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame/ 60);
-		tf0->Render(text, 400, 300, SDL_Color{ 255, 255, 255, 255 });
+		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame/ 60));
+		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
+		d.fontManager.draw(tf0, 400, 300);
 
-		std::string text2 = "This is some fancy pants hq text.";
-		tf1->Render(text2, 20, 550, SDL_Color{ 255, 255, 255, 255 });
+		tf1->setText("This is some fancy pants hq text.");
+		tf1->setColor(SDL_Color{ 255, 255, 255, 255 });
+		d.fontManager.draw(tf1, 20, 550);
 	}
 }
 

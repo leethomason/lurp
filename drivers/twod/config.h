@@ -9,6 +9,8 @@
 #include <vector>
 #include <filesystem>
 
+struct Font;
+
 struct GameRegion {
 	std::string name;
 	Rect position = { 0, 0, 1920, 1080 };
@@ -38,6 +40,8 @@ struct GameConfig {
 	std::filesystem::path assetsDir;
 	std::string scriptFile;
 	std::string startingZone;
+
+	const Font* font = nullptr;
 
 	static GameConfig demoConfig();
 	bool validate() const;

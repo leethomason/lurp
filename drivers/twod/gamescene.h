@@ -2,6 +2,7 @@
 
 #include "scene.h"
 #include "texture.h"
+#include "text.h"
 
 #include "scriptbridge.h"
 #include "scriptasset.h"
@@ -23,8 +24,8 @@ public:
 private:
 	// Grapics ----------------
 	struct GSData {
-		std::string text;
 		std::shared_ptr<Texture> texture;
+		std::shared_ptr<TextField> textField;
 	};
 	std::vector<GSData> _data;
 
@@ -33,4 +34,6 @@ private:
 	lurp::ConstScriptAssets _csassets;
 	lurp::ScriptAssets* _assets = nullptr;
 	lurp::ZoneDriver* _zoneDriver = nullptr;
+
+	void process();
 };

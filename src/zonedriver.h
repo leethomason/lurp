@@ -46,7 +46,7 @@ public:
 	// ------ Queries ------
 	const Room& currentRoom() const;
 	const Zone& currentZone() const;
-	const Actor& getPlayer();
+	const Actor& getPlayer() const;
 
 	// ------ Driver ------
 	enum class Mode { kText, kChoices, kNavigation, kBattle };
