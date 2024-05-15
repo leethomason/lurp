@@ -135,7 +135,7 @@ void TextureManager::update()
 #endif
 			assert(texture->_sdlTexture);	// fixed size - should always be there.
 			SDL_Surface* target = nullptr;
-			// Do not free 'target`: done be the unlock
+			// Do not free 'target`: done by the unlock
 			int err = SDL_LockTextureToSurface(texture->_sdlTexture, nullptr, &target);
 			assert(err == 0);
 			assert(target);
@@ -210,7 +210,7 @@ void Draw(SDL_Renderer* renderer,
 	assert(renderer);
 	if (!texture) return;
 	if (!texture->ready()) return;
-	if (alpha <= 0) return;
+	if (alpha <= 0.001) return;
 
 	SDL_ScaleMode mode = SDL_ScaleMode::SDL_ScaleModeBest;
 	switch (quality) {
@@ -227,8 +227,6 @@ void Draw(SDL_Renderer* renderer,
 		mode = SDL_ScaleMode::SDL_ScaleModeLinear;
 		break;
 	}
-	// Lower quality modes saves some GPU time. But it's critical for the engine to look good.
-	// Always use the best quality mode for the use case.
 	uint8_t a8 = (Uint8)lurp::clamp(round(alpha * 255), 0.0, 255.0);
 	if (a8 == 0)
 		return;

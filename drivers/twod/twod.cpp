@@ -226,9 +226,15 @@ int main(int argc, char* argv[])
 				if (e.type == SDL_QUIT) {
 					done = true;
 				}
-				//else if (e.type == SDL_WINDOWEVENT) {
-				//	fmt::print("SDL renderer= {}x{}\n", renderW, renderH);
-				//}
+				else if (e.type == SDL_KEYDOWN) {
+					switch (e.key.keysym.sym) {
+					case SDLK_t:
+						fontManager.toggleQuality();
+						break;
+					default:
+						break;
+					}
+				}
 				nk_sdl_handle_event(&e);
 			}
 			//nk_sdl_handle_grab();	// FIXME: do we want grab? why isn't it defined?

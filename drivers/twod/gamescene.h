@@ -35,5 +35,5 @@ private:
 	lurp::ScriptAssets* _assets = nullptr;
 	lurp::ZoneDriver* _zoneDriver = nullptr;
 
-	void process();
+	void process(Drawing& d);
 };

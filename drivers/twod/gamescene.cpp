@@ -35,7 +35,7 @@ GameScene::~GameScene()
 
 void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 {
-	process();
+	process(d);
 
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
@@ -51,9 +51,15 @@ void GameScene::layoutGUI(nk_context*, float, const XFormer&)
 
 }
 
-void GameScene::process()
+void GameScene::process(Drawing& d)
 {
-	//if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
-
-	//}
+	if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
+		for (size_t i = 0; i < d.config.regions.size(); ++i) {
+			const GameRegion& r = d.config.regions[i];
+			if (r.type == GameRegion::Type::kText) {
+				_data[i].textField->setText(_zoneDriver->text().text);
+				break;
+			}
+		}
+	}
 }

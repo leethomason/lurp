@@ -10,6 +10,8 @@
 
 #define DEBUG_TEXT 1
 
+static int gQuality = 0;
+
 class RenderFontTask : public lurp::SelfDeletingTask
 {
 public:
@@ -25,12 +27,19 @@ public:
 			const char* s = _text.c_str();
 			if (!*s) {
 				s = " "; // TTF doesn't like empty strings
+				// fixme: return null and clear the texture
 			}
 
-			if (_hqOpaque)
+			if (_hqOpaque) {
+				//if (gQuality == 0)
+				//	surface = TTF_RenderUTF8_Shaded_Wrapped(_font, s, _color, _bg, _texture->width());
+				//else
+				// Lots of fiddling about - liked LCD best in the end.
 				surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->width());
-			else
+			}
+			else {
 				surface = TTF_RenderUTF8_Blended_Wrapped(_font, s, _color, _texture->width());
+			}
 			assert(surface);
 		}
 
@@ -71,6 +80,8 @@ const Font* FontManager::loadFont(const std::string& path, int virtualSize)
 	Font* font = new Font();
 	font->size = virtualSize;
 	font->path = path;
+	font->font = TTF_OpenFont(path.c_str(), virtualSize);
+	assert(font->font);	
 	_fonts.push_back(font);
 
 	PLOG(plog::info) << "Loaded font '" << path << "' at size " << virtualSize;
@@ -98,10 +109,9 @@ void FontManager::update(const XFormer& xf)
 #if DEBUG_TEXT
 			fmt::print("Loading font {} at size {}...", f->path, realSize);
 #endif
-			// Now it is safe to change the font size
-			if (f->font)
-				TTF_CloseFont(f->font);
-			f->font = TTF_OpenFont(f->path.c_str(), realSize);
+
+			TTF_SetFontSize(f->font, realSize);
+
 #if DEBUG_TEXT
 			fmt::print("done\n");
 #endif
@@ -191,6 +201,18 @@ void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
 		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), nullptr, &dst);
 	}
 }
+
+void FontManager::toggleQuality()
+{
+	static constexpr int kQuality = 2;
+	gQuality = (gQuality + 1) % kQuality;
+	for (auto& tf : _textFields) {
+		tf->_needUpdate = true;
+	}
+	if (gQuality == 0) fmt::print("Shaded font\n");
+	else if (gQuality == 1) fmt::print("LCD font\n");
+}
+
 
 void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf)
 {

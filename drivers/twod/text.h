@@ -24,6 +24,7 @@ struct Font {
 
 class TextField {
 	friend class FontManager;
+
 public:
 	TextField() {}
 	~TextField();
@@ -95,6 +96,9 @@ public:
 	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
 
 	void draw(std::shared_ptr<TextField>& tf, int x, int y);
+
+	void toggleQuality();
+
 
 private:
 	Font* getFont(const Font*);
