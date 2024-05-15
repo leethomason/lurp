@@ -176,15 +176,22 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	if (Texture::ready({ ps0, ps1, ps2, ps3, ps4, ps5 })) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 300, 0, 256, 256 });
 		//SDL_RenderBlend
-		SDL_RenderCopy(d.renderer, ps0->sdlTexture(), nullptr, &dest);
-		SDL_RenderCopy(d.renderer, ps1->sdlTexture(), nullptr, &dest);
-		SDL_SetTextureAlphaMod(ps2->sdlTexture(), 128);
-		SDL_RenderCopy(d.renderer, ps2->sdlTexture(), nullptr, &dest);
-		SDL_RenderCopy(d.renderer, ps3->sdlTexture(), nullptr, &dest);
-		SDL_SetTextureAlphaMod(ps4->sdlTexture(), 128);
-		SDL_RenderCopy(d.renderer, ps4->sdlTexture(), nullptr, &dest);
-		SDL_SetTextureAlphaMod(ps5->sdlTexture(), 128);
-		SDL_RenderCopy(d.renderer, ps5->sdlTexture(), nullptr, &dest);
+		Draw(d.renderer, ps0, nullptr, &dest, RenderQuality::kBlit);
+		Draw(d.renderer, ps1, nullptr, &dest, RenderQuality::kBlit);
+		Draw(d.renderer, ps2, nullptr, &dest, RenderQuality::kBlit, 0.5);
+		Draw(d.renderer, ps3, nullptr, &dest, RenderQuality::kBlit);
+		Draw(d.renderer, ps4, nullptr, &dest, RenderQuality::kBlit, 0.5);
+		Draw(d.renderer, ps5, nullptr, &dest, RenderQuality::kBlit, 0.5);
+
+		//SDL_RenderCopy(d.renderer, ps0->sdlTexture(), nullptr, &dest);
+		//SDL_RenderCopy(d.renderer, ps1->sdlTexture(), nullptr, &dest);
+		//SDL_SetTextureAlphaMod(ps2->sdlTexture(), 128);
+		//SDL_RenderCopy(d.renderer, ps2->sdlTexture(), nullptr, &dest);
+		//SDL_RenderCopy(d.renderer, ps3->sdlTexture(), nullptr, &dest);
+		//SDL_SetTextureAlphaMod(ps4->sdlTexture(), 128);
+		//SDL_RenderCopy(d.renderer, ps4->sdlTexture(), nullptr, &dest);
+		//SDL_SetTextureAlphaMod(ps5->sdlTexture(), 128);
+		//SDL_RenderCopy(d.renderer, ps5->sdlTexture(), nullptr, &dest);
 	}
 	if (tree->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, 400, 400 });
@@ -198,7 +205,7 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 		}
 	}
 	{
-		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame/ 60));
+		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", 0)); // f.frame / 60));
 		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
 		d.fontManager.draw(tf0, 400, 300);
 

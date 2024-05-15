@@ -38,8 +38,7 @@ public:
 		SDL_Surface* surface = IMG_Load(path.string().c_str());
 		assert(surface);
 		assert(_queue);
-		_texture->_w = surface->w;
-		_texture->_h = surface->h;
+		_texture->_size = Point({ surface->w, surface->h });
 		_texture->_bytes = surface->format->BytesPerPixel;
 
 		TextureUpdate update{ _texture, surface, _generation };
@@ -97,8 +96,7 @@ std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 	fmt::print("createTextField: {}\n", name);
 #endif
 	Texture* texture = new Texture();
-	texture->_w = w;
-	texture->_h = h;
+	texture->_size = Point{ w, h };
 	texture->_bytes = 4;
 	texture->_textField = true;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
@@ -148,7 +146,8 @@ void TextureManager::update()
 			else {
 				memset(target->pixels, 0, target->pitch * target->h);
 			}
-			SDL_BlitSurface(surface, nullptr, target, nullptr);
+			SDL_Rect r{ 0, 0, std::min(surface->w, texture->width()), std::min(surface->h, texture->height())};
+			SDL_BlitSurface(surface, &r, target, &r);
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}
 		else {
@@ -165,6 +164,7 @@ void TextureManager::update()
 			texture->_sdlTexture = SDL_CreateTextureFromSurface(_sdlRenderer, surface);
 		}
 		texture->_generation = generation;
+		texture->_surfaceSize = Point{ surface->w, surface->h };
 		SDL_FreeSurface(surface);
 	}
 	for (auto& t : _textures) {
@@ -229,17 +229,12 @@ void Draw(SDL_Renderer* renderer,
 	}
 	// Lower quality modes saves some GPU time. But it's critical for the engine to look good.
 	// Always use the best quality mode for the use case.
-	SDL_SetTextureScaleMode(texture->sdlTexture(), mode);
 	uint8_t a8 = (Uint8)lurp::clamp(round(alpha * 255), 0.0, 255.0);
 	if (a8 == 0)
 		return;
 
-	if (a8 == 255) {
-		SDL_SetTextureBlendMode(texture->sdlTexture(), SDL_BLENDMODE_NONE);
-	}
-	else {
-		SDL_SetTextureBlendMode(texture->sdlTexture(), SDL_BLENDMODE_BLEND);
-		SDL_SetTextureAlphaMod(texture->sdlTexture(), a8);
-	}
+	SDL_SetTextureScaleMode(texture->sdlTexture(), mode);
+	SDL_SetTextureBlendMode(texture->sdlTexture(), SDL_BLENDMODE_BLEND);
+	SDL_SetTextureAlphaMod(texture->sdlTexture(), a8);
 	SDL_RenderCopy(renderer, texture->sdlTexture(), src, dst);
 }

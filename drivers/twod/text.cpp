@@ -22,16 +22,20 @@ public:
 		{
 			// TTF, it turns out, is not thread safe.
 			std::lock_guard<std::mutex> lock(gTTFMutex);
+			const char* s = _text.c_str();
+			if (!*s) {
+				s = " "; // TTF doesn't like empty strings
+			}
 
 			if (_hqOpaque)
-				surface = TTF_RenderUTF8_LCD_Wrapped(_font, _text.c_str(), _color, _bg, _texture->width());
+				surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->width());
 			else
-				surface = TTF_RenderUTF8_Blended_Wrapped(_font, _text.c_str(), _color, _texture->width());
+				surface = TTF_RenderUTF8_Blended_Wrapped(_font, s, _color, _texture->width());
 			assert(surface);
 		}
 
 #if DEBUG_TEXT
-		fmt::print("Rendered text: '{}' {} chars at {}x{} hq=\n", _text.substr(0, 20), _text.size(), surface->w, surface->h, _hqOpaque ? 1 : 0);
+		fmt::print("Rendered text: '{}' {} chars at {}x{} hq={}\n", _text.substr(0, 20), _text.size(), surface->w, surface->h, _hqOpaque ? 1 : 0);
 #endif
 		TextureUpdate update{ _texture, surface, _generation, _hqOpaque, _bg };
 		_queue->push(update);
@@ -83,7 +87,7 @@ void FontManager::update(const XFormer& xf)
 	_xf = xf;
 	bool change = false;
 
-	// Update all the fonts.
+	// Stage 1: update the fonts if the screen size changed.
 	for (Font* f : _fonts) {
 		int realSize = xf.s(f->size);
 		if (realSize != f->realSize) {
@@ -107,16 +111,33 @@ void FontManager::update(const XFormer& xf)
 		}
 	}
 
-	// And new the text fields attached to the fonts. 
-	// Remember we already flushed the open tasks.
+	// Stage 2: update the text fields if the screen size changed.
 	if (change) {
 		for (auto& tf : _textFields) {
 			// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
 			Point size = xf.s(Point{ tf->_virtualSize });
-			if (size.x != tf->_texture->width() || size.y != tf->_texture->height()) {
-				tf->_texture = _textureManager.createTextField(size.x, size.y);
-			}
+			tf->_texture = _textureManager.createTextField(size.x, size.y);
 			tf->_needUpdate = true;
+		}
+	}
+
+	// Stage 3: update the text fields if they need it, because of font, color, or text changes.
+	for (auto& tf : _textFields) {
+		if (tf->_needUpdate) {
+			tf->_needUpdate = false;
+			RenderFontTask* task = new RenderFontTask();
+			task->_texture = tf->_texture;
+			task->_queue = &_textureManager._loadQueue;
+			task->_generation = ++_textureManager._generation;
+
+			task->_font = tf->_font->font;
+			task->_color = tf->_color;
+			task->_text = tf->_text;
+
+			task->_hqOpaque = tf->_hqOpaque;
+			task->_bg = tf->_bg;
+
+			_textureManager._pool.AddTaskSetToPipe(task);
 		}
 	}
 }
@@ -158,23 +179,6 @@ void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
 	assert(tf->_font);	
 	assert(tf->_font->font); // should be kept up to date in update()
 
-	// FIXME: move the needUpdate to the update() above.
-	if (tf->_needUpdate)  {
-		tf->_needUpdate = false;
-		RenderFontTask* task = new RenderFontTask();
-		task->_texture = tf->_texture;
-		task->_queue = &_textureManager._loadQueue;
-		task->_generation = ++_textureManager._generation;
-
-		task->_font = tf->_font->font;
-		task->_color = tf->_color;
-		task->_text = tf->_text;
-
-		task->_hqOpaque = tf->_hqOpaque;
-		task->_bg = tf->_bg;
-
-		_textureManager._pool.AddTaskSetToPipe(task);
-	}
 	if (tf->_texture->ready()) {
 		Point p = _xf.t(Point{ vx, vy });
 		SDL_Rect dst = { p.x, p.y, tf->_texture->width(), tf->_texture->height() };
@@ -182,7 +186,8 @@ void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);
 		else
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_BLEND);
-		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
+
+		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);	// straight copy: shouldn't matter
 		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), nullptr, &dst);
 	}
 }

@@ -255,7 +255,7 @@ int main(int argc, char* argv[])
 
 			if (doAssetsTest) {
 				DrawTestPattern(sdlRenderer,
-					380, SCREEN_HEIGHT, 16,
+					800, SCREEN_HEIGHT, 16,
 					SDL_Color{ 192, 192, 192, 255 }, SDL_Color{ 128, 128, 128, 255 },
 					xFormer);
 				iAssetsTests->draw(drawing, frameData, xFormer);

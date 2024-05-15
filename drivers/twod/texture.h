@@ -3,6 +3,7 @@
 #include "TaskScheduler.h"
 #include "util.h"
 #include "textureupdate.h"
+#include "xform.h"
 
 #include <SDL.h>
 
@@ -28,8 +29,10 @@ public:
 
 	bool ready() const { return _sdlTexture != nullptr; }
 	SDL_Texture* sdlTexture() const { _age = 0; return _sdlTexture; }
-	int width() const { return _w; }
-	int height() const { return _h; }
+	int width() const { return _size.x; }
+	int height() const { return _size.y; }
+	const Point& size() const { return _size; }
+	const Point& surfaceSize() const { return _surfaceSize; }	
 	const std::string& path() const { return _path; }
 
 	static bool ready(std::vector<const Texture*> textures) {
@@ -43,8 +46,8 @@ private:
 	SDL_Texture* _sdlTexture = nullptr;
 	std::string _path;
 	int _generation = 0;
-	int _w = 0;
-	int _h = 0;
+	Point _size;	// allocated size, and size of the texture
+	Point _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
 	int _bytes = 0;	// 3 or 4
 	bool _textField = false;
 	mutable uint32_t _age = 0;
