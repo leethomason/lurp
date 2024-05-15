@@ -182,30 +182,18 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 		Draw(d.renderer, ps3, nullptr, &dest, RenderQuality::kBlit);
 		Draw(d.renderer, ps4, nullptr, &dest, RenderQuality::kBlit, 0.5);
 		Draw(d.renderer, ps5, nullptr, &dest, RenderQuality::kBlit, 0.5);
-
-		//SDL_RenderCopy(d.renderer, ps0->sdlTexture(), nullptr, &dest);
-		//SDL_RenderCopy(d.renderer, ps1->sdlTexture(), nullptr, &dest);
-		//SDL_SetTextureAlphaMod(ps2->sdlTexture(), 128);
-		//SDL_RenderCopy(d.renderer, ps2->sdlTexture(), nullptr, &dest);
-		//SDL_RenderCopy(d.renderer, ps3->sdlTexture(), nullptr, &dest);
-		//SDL_SetTextureAlphaMod(ps4->sdlTexture(), 128);
-		//SDL_RenderCopy(d.renderer, ps4->sdlTexture(), nullptr, &dest);
-		//SDL_SetTextureAlphaMod(ps5->sdlTexture(), 128);
-		//SDL_RenderCopy(d.renderer, ps5->sdlTexture(), nullptr, &dest);
 	}
 	if (tree->ready()) {
 		SDL_Rect dest = xFormer.t(SDL_Rect{ 400, 300, 400, 400 });
-		//SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &dest);
 		Draw(d.renderer, tree, nullptr, &dest, RenderQuality::kBlit);
 
 		for (int i = 0; i < 3; i++) {
 			SDL_Rect r = xFormer.t(SDL_Rect{ i * 100, 400, 50 + 50 * i, 50 + 50 * i });
-			//SDL_RenderCopy(d.renderer, tree->sdlTexture(), nullptr, &r);
 			Draw(d.renderer, tree, nullptr, &r, RenderQuality::kBlit);
 		}
 	}
 	{
-		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", 0)); // f.frame / 60));
+		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame / 60));
 		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
 		d.fontManager.draw(tf0, 400, 300);
 

@@ -231,6 +231,18 @@ int main(int argc, char* argv[])
 					case SDLK_t:
 						fontManager.toggleQuality();
 						break;
+					case SDLK_1:	SDL_SetWindowSize(window, 800, 600);	break;
+					case SDLK_2:	SDL_SetWindowSize(window, 960, 540);	break;
+					case SDLK_3:	SDL_SetWindowSize(window, 1024, 768);	break;
+					case SDLK_4:	SDL_SetWindowSize(window, 1920, 1080);	break;
+					case SDLK_f:
+						if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) {
+							SDL_SetWindowFullscreen(window, 0);
+						}
+						else {
+							SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+						}
+						break;
 					default:
 						break;
 					}

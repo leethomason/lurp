@@ -176,6 +176,8 @@ struct Queue {
 	std::queue<T> queue;
 };
 
+// Thread safe, multi-reader multi-writer queue
+// Not very efficient, but fine for small queues
 template<typename T>
 struct QueueMT {
 
