@@ -10,6 +10,11 @@ Item {
 }
 
 Actor {
+    entityID = "player",
+    name = "Player"
+}
+
+Actor {
     entityID = "TEST_ACTOR_1",
     name = "TestActor1",
 }

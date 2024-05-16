@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_TEXTURES 0
+#define DEBUG_TEXTURES 1
 
 class TextureLoadTask : public lurp::SelfDeletingTask
 {
@@ -43,7 +43,7 @@ public:
 
 		TextureUpdate update{ _texture, surface, _generation };
 #if DEBUG_TEXTURES
-		fmt::print("TextureLoadTask -> queue: {} {} {} {}\n", _texture->_name, _texture->_w, _texture->_h, _texture->_bytes);
+		fmt::print("TextureLoadTask -> queue: {} {}\n", _texture->width(), _texture->height());
 #endif
 		_queue->push(update);
 	}

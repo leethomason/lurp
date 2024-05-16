@@ -3,6 +3,7 @@
 #include "scene.h"
 #include "texture.h"
 #include "text.h"
+#include "config.h"
 
 #include "scriptbridge.h"
 #include "scriptasset.h"
@@ -28,6 +29,8 @@ private:
 		std::shared_ptr<TextField> textField;
 	};
 	std::vector<GSData> _data;
+
+	std::pair<const GameRegion*, GSData*> getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
 
 	// Game -------------------
 	lurp::ScriptBridge _bridge;

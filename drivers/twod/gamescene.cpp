@@ -14,11 +14,11 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		if (r.type == GameRegion::Type::kImage && !r.imagePath.empty()) {
 			_data[i].texture = d.textureManager.loadTexture(d.config.assetsDir / r.imagePath);
 		}	
-		else if (r.type == GameRegion::Type::kText) {
-			_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, false, r.bgColor);
-		}
-		else if (r.type == GameRegion::Type::kOpaqueText) {
-			_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, true, r.bgColor);
+		else if (r.type == GameRegion::Type::kText || r.type == GameRegion::Type::kInfo) {
+			if (r.bgColor.a < 255)
+				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, false, r.bgColor);
+			else
+				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, true, r.bgColor);
 		}
 	}
 
@@ -39,10 +39,12 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
-		if (r.type == GameRegion::Type::kImage) {
-			SDL_Rect dest = x.t(r.position).toSDLRect();
+		SDL_Rect dest = x.t(r.position).toSDLRect();
+
+		if (_data[i].texture)
 			Draw(d.renderer, _data[i].texture, nullptr, &dest, RenderQuality::kBlit);
-		}
+		if (_data[i].textField)
+			d.fontManager.draw(_data[i].textField, dest.x, dest.y);
 	}
 }
 
@@ -51,15 +53,31 @@ void GameScene::layoutGUI(nk_context*, float, const XFormer&)
 
 }
 
+std::pair<const GameRegion*, GameScene::GSData*> GameScene::getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions)
+{
+	for (size_t i = 0; i < regions.size(); ++i) {
+		const GameRegion& r = regions[i];
+		if (r.type == type) {
+			return { &r, &_data[i] };
+		}
+	}
+	return { nullptr, nullptr };
+}
+
 void GameScene::process(Drawing& d)
 {
 	if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
-		for (size_t i = 0; i < d.config.regions.size(); ++i) {
-			const GameRegion& r = d.config.regions[i];
-			if (r.type == GameRegion::Type::kText) {
-				_data[i].textField->setText(_zoneDriver->text().text);
-				break;
-			}
+		auto[region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
+		if (region && data) {
+			//data->textField->setText(_zoneDriver->text().text);
+			data->textField->setText("Hello there");
+		}
+	}
+	{
+		const std::string& zoneName = _zoneDriver->currentZone().name;
+		auto[region, data] = getRegion(GameRegion::Type::kInfo, d.config.regions);
+		if (region && data) {
+			data->textField->setText(zoneName);
 		}
 	}
 }

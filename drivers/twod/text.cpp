@@ -8,7 +8,7 @@
 #include <fmt/core.h>
 #include <plog/Log.h>
 
-#define DEBUG_TEXT 0
+#define DEBUG_TEXT 1
 
 static int gQuality = 0;
 

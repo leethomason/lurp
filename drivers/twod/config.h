@@ -19,12 +19,11 @@ struct GameRegion {
 		kNone,
 		kImage,
 		kText,
-		kOpaqueText,
 		kInfo,					// fixme: how to handle this?
 	};
 	Type type = Type::kNone;
 	std::string imagePath;		// default image - can be changed by the game
-	SDL_Color bgColor;
+	SDL_Color bgColor = SDL_Color{ 0, 0, 0, 0 };
 };
 
 struct GameConfig {
