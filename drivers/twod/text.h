@@ -48,12 +48,11 @@ public:
 		}
 	}
 
-	Point virtualSize() const {
+	Size virtualSize() const {
 		return _virtualSize;
 	}
 
-	// Warning: may return 0,0 if the text rendering hasn't flushed from the text thread.
-	Point renderedSize() const {
+	Size renderedSize() const {
 		return _renderedSize; 
 	}
 	SDL_Color color() const { return _color; }
@@ -72,8 +71,8 @@ private:
 
 	std::shared_ptr<Texture> _texture;
 	const Font* _font = nullptr;
-	Point _virtualSize;
-	Point _renderedSize;	// size of the rendered text; usually a little smaller than _size
+	Size _virtualSize;
+	Size _renderedSize;	// size of the rendered text; usually a little smaller than _size
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 0 };
@@ -95,7 +94,8 @@ public:
 
 	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
 
-	void draw(std::shared_ptr<TextField>& tf, int x, int y);
+	// Note it draws in real pixels (like ::Draw)
+	void Draw(std::shared_ptr<TextField>& tf, int x, int y);
 
 	void toggleQuality();
 

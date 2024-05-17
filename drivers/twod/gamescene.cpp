@@ -19,6 +19,9 @@ void GameScene::load(Drawing& d, const FrameData& f)
 				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, false, r.bgColor);
 			else
 				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, true, r.bgColor);
+
+			_data[i].textField->setColor({ 255, 255, 255, 255 });
+			_data[i].textField->setBgColor({ 255, r.bgColor.g, r.bgColor.b, 255 });
 		}
 	}
 
@@ -39,12 +42,16 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
-		SDL_Rect dest = x.t(r.position).toSDLRect();
 
-		if (_data[i].texture)
-			Draw(d.renderer, _data[i].texture, nullptr, &dest, RenderQuality::kBlit);
-		if (_data[i].textField)
-			d.fontManager.draw(_data[i].textField, dest.x, dest.y);
+		if (_data[i].texture) {
+			Rect rDst = x.t(r.position);
+			SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
+			Draw(d.renderer, _data[i].texture, nullptr, &dst, RenderQuality::kBlit);
+		}
+		if (_data[i].textField) {
+			Point pDst = x.t(Point{ r.position.x, r.position.y });
+			d.fontManager.Draw(_data[i].textField, pDst.x, pDst.y);
+		}
 	}
 }
 
