@@ -32,8 +32,22 @@ public:
 	}
 
 	void setICore(ICoreHandler* handler) {
-		assert((handler && !_iCoreHandler) || (!handler && _iCoreHandler));
-		_iCoreHandler = handler;
+		if (handler) {
+			if (_iCoreCount == 0) {
+				assert(!_iCoreHandler);
+				_iCoreHandler = handler;
+			}
+			else {
+				assert(handler == _iCoreHandler);
+			}
+			_iCoreCount++;
+		}
+		else {
+			_iCoreCount--;
+			if (_iCoreCount == 0) {
+				_iCoreHandler = nullptr;
+			}
+		}
 	}
 
 	void setIText(ITextHandler* handler) {
@@ -117,6 +131,7 @@ private:
 	ICoreHandler* _iCoreHandler = nullptr;
 	ITextHandler* _iTextHandler = nullptr;
 	IAssetHandler* _iAssetHandler = nullptr;
+	int _iCoreCount = 0;
 
 	void registerCallbacks();
 
