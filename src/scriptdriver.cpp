@@ -34,10 +34,9 @@ ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptB
 {
 	_scriptEnv = env;
 	_bridge.setICore(&mapData.coreData);
+	_bridge.setIText(this);
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
-	_helper->bridge().setIText(this);
-	//_helper->pushScriptContext();
 	_helper->call(func, 0);
 
 	_tree.log();
@@ -47,8 +46,7 @@ ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptB
 ScriptDriver::~ScriptDriver()
 {
 	_bridge.setICore(nullptr);
-	//_helper->popScriptContext();
-	_helper->bridge().setIText(nullptr);
+	_bridge.setIText(nullptr);
 }
 
 void ScriptDriver::abort()

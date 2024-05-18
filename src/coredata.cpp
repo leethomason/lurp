@@ -69,12 +69,6 @@ void CoreData::coreSet(const std::string& entity, const std::string& key, Varian
 
 	Flag flag{ entity, key, mutableUser };
 	_coreData[flag] = val;
-
-#if 0
-	fmt::print("CoreData set {}:{} = ", entity, path);
-	val.dump();
-	fmt::print("\n");
-#endif
 }
 
 std::pair<bool, Variant> CoreData::coreGet(const std::string& entity, const std::string& key) const
@@ -83,11 +77,6 @@ std::pair<bool, Variant> CoreData::coreGet(const std::string& entity, const std:
 	if (it == _coreData.end()) {
 		return { false, Variant() };
 	}
-#if 0
-	fmt::print("CoreData get {}:{} = ", entity, key);
-	it->second.dump();
-	fmt::print("\n");
-#endif
 	return { true, it->second };
 }
 

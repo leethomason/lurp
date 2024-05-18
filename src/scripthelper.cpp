@@ -23,7 +23,6 @@ ScriptHelper::ScriptHelper(
 
 ScriptHelper::~ScriptHelper()
 {
-	assert(_scriptContextCount == 0);
 	tearDownScriptEnv();
 }
 
@@ -75,24 +74,6 @@ void ScriptHelper::tearDownScriptEnv()
 
 	_coreData.clearScriptEnv();
 }
-
-#if 0
-void ScriptHelper::pushScriptContext()
-{
-	// FIXME?
-	// This could obviously be implemented as a stack. Each
-	// script gets a new context, and variables are scoped
-	// and don't collide. BUT, that also means introducing
-	// a "holder" script isolates it. Trying with one scritpt
-	// context. Up for debate.
-	_scriptContextCount++;
-}
-
-void ScriptHelper::popScriptContext()
-{
-	_scriptContextCount--;
-}
-#endif
 
 bool ScriptHelper::call(int ref, int nResult) const
 {

@@ -25,14 +25,6 @@ public:
 
 	bool callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const;
 
-	// fixme: hacky - for the driver to get access
-	ScriptBridge& bridge() const { return _bridge; }
-
-	// When used by the ScriptDriver
-	//void pushScriptContext();
-	//void popScriptContext();
-	int contextDepth() const { return _scriptContextCount; }
-
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:
@@ -43,8 +35,6 @@ private:
 	ScriptBridge& _bridge;
 	CoreData& _coreData;
 	const ScriptEnv& _scriptEnv;
-
-	int _scriptContextCount = 0;
 };
 
 } // namespace lurp
