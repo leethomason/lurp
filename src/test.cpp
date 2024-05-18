@@ -201,7 +201,7 @@ static void TestInventory2()
 static void TestScriptAccess()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa= bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
 
 	ScriptEnv env;
@@ -221,27 +221,13 @@ static void TestScriptAccess()
 	TEST(binder.get("player.fighting").num == 4.0);
 }
 
-static void TestLoad()
+#if 0
+// TestSave() and TestLoad() need to work on a full example - 
+// either the simple examples or chullu.
+static void TestSave()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets ca = bridge.readCSA("");
-	ScriptAssets assets(ca);
-
-	ZoneDriver map(assets, bridge);
-
-	ScriptBridge loader;
-	std::filesystem::path path = SavePath("test", "testsave");
-	loader.loadLUA(path.string());
-	EntityID scriptID = map.load(loader);
-
-	TEST(!scriptID.empty());
-
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-	TEST(map.choices().choices[0].text == "Read another book");
-}
-
-static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge)
-{
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, bridge);
 
@@ -283,10 +269,30 @@ static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	stream.close();
 }
 
+static void TestLoad()
+{
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("");
+	ScriptAssets assets(ca);
+
+	ZoneDriver map(assets, bridge);
+
+	ScriptBridge loader;
+	std::filesystem::path path = SavePath("test", "testsave");
+	loader.loadLUA(path.string());
+	EntityID scriptID = map.load(loader);
+
+	TEST(!scriptID.empty());
+
+	TEST(map.mode() == ZoneDriver::Mode::kChoices);
+	TEST(map.choices().choices[0].text == "Read another book");
+}
+#endif
+
 static void TestCodeEval()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa = bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
 	MapData mapData(56);
 	ScriptEnv env = { "TEST_MAGIC_BOOK", NO_ENTITY, NO_ENTITY, NO_ENTITY };
@@ -468,8 +474,10 @@ static void TestScriptBridge()
 	}
 }
 
-static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestTextSubstitution()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	env.script = "_TEST_READING";
@@ -488,8 +496,10 @@ static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& brid
 	TEST(driver.done());
 }
 
-static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestTextTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	MapData mapData(56);
@@ -504,8 +514,10 @@ static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void CallScriptTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void CallScriptTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	MapData mapData(56);
@@ -519,8 +531,10 @@ static void CallScriptTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void ChoiceMode1RepeatTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode1RepeatTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	MapData mapData(56);
@@ -563,8 +577,10 @@ static void ChoiceMode1RepeatTest(const ConstScriptAssets& ca, ScriptBridge& bri
 	TEST(driver.done());
 }
 
-static void ChoiceMode1RewindTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode1RewindTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	MapData mapData(56);
@@ -599,8 +615,10 @@ static void ChoiceMode1RewindTest(const ConstScriptAssets& ca, ScriptBridge& bri
 	TEST(driver.done());
 }
 
-static void ChoiceMode1PopTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode1PopTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	MapData mapData(56);
@@ -624,8 +642,10 @@ static void ChoiceMode1PopTest(const ConstScriptAssets& ca, ScriptBridge& bridge
 	TEST(driver.done());
 }
 
-static void ChoiceMode2Test(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode2Test()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ScriptEnv env;
 	MapData mapData(56);
@@ -652,10 +672,12 @@ static void ChoiceMode2Test(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void FlagTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void FlagTest()
 {
 	using Mode = ZoneDriver::Mode;
 
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver driver(assets, bridge, "TEST_ZONE_1");
 
@@ -670,8 +692,12 @@ static void FlagTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.mapData.coreData.coreGet("_ScriptEnv", "scriptFlag").second.type == LUA_TNIL);
 }
 
-static void TestInventoryScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
+
+#if 0 // fixme: needs to work on a script & zone example
+static void TestInventoryScript()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, bridge);
 	ScriptEnv env = map.getScriptEnv();
@@ -689,9 +715,12 @@ static void TestInventoryScript(const ConstScriptAssets& ca, ScriptBridge& bridg
 
 	TEST(map.numItems("player", "SKELETON_KEY") == 1);
 }
+#endif 
 
-static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestContainers()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver zone(assets, bridge);
 	zone.setZone("TEST_ZONE_2", "TEST_ROOM_2");
@@ -718,8 +747,10 @@ static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(zone.mapData.newsQueue.size() == 2);	// unlocked and have gold
 }
 
-static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestWalkabout()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver zone(assets, bridge);
 	zone.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
@@ -763,15 +794,15 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 static void TestLuaCore()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa = bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptEnv env = zoneDriver.getScriptEnv();
+	ScriptEnv env;
 	env.script = "TEST_LUA_CORE";
-	ScriptDriver driver(assets, zoneDriver.mapData, bridge, env);
+	MapData mapData(56);
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
-	CoreData& cd = zoneDriver.mapData.coreData;
+	CoreData& cd = mapData.coreData;
 	TEST(cd.coreGet("ACTOR_01", "STR").second.num == 17.0);
 	TEST(cd.coreGet("ACTOR_01", "attributes").first == false);
 	cd.coreSet("ACTOR_01", "STR", Variant(18.0), false);
@@ -791,14 +822,18 @@ static void TestLuaCore()
 	binder.set("player.name", "Foozle");
 	TEST(binder.get("player.name").str == "Test Player");
 
+	// At this point we can't save the 'driver' because
+	// it is done(). But we can test save/load of the CoreData
+
 	// Save to a file for debugging
 	std::filesystem::path path = SavePath("test", "testluacore");
 	std::ofstream stream = OpenSaveStream(path);
-	zoneDriver.save(stream);
+	cd.save(stream);
 	stream.close();
 
+	// Do the same on a stream to test
 	std::ostringstream buffer;
-	zoneDriver.save(buffer);
+	cd.save(buffer);
 	std::string str = buffer.str();
 
 	TEST(str.find("STR") != std::string::npos);
@@ -839,16 +874,16 @@ class BattleTest {
 public:
 	static void Read();
 	static void TestSystem();
-	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
+	static void TestScript();
 	static void TestExample();
 	static void TestRegionSpells();
-	static void TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge);
+	static void TestBattle2();
 };
 
 void BattleTest::Read()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa = bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
 	CoreData coreData;
 	VarBinder binder(assets, bridge, coreData, ScriptEnv());
@@ -1076,8 +1111,10 @@ void BattleTest::TestSystem()
 
 }
 
-void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
+void BattleTest::TestScript()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	MapData mapData(56);
 	ScriptEnv env;
@@ -1147,8 +1184,10 @@ void BattleTest::TestExample()
 	TEST(driver.isGameOver() == true);
 }
 
-void BattleTest::TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge)
+void BattleTest::TestBattle2()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	MapData mapData(56);
 	ScriptEnv env;
@@ -1230,8 +1269,10 @@ static void TestTextParsing()
 	}
 }
 
-static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestInlineText()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	MapData mapData(56);
 	ScriptEnv env;
@@ -1263,8 +1304,10 @@ static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void TestFormatting(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestFormatting()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	// fixme: More to be done here; mostly now just testing it loads.
 	ScriptAssets assets(ca);
 	MapData mapData(56);
@@ -1368,7 +1411,6 @@ int RunTests()
 	RUN_TEST(TestScriptBridge());
 	RUN_TEST(DialogTest_Bookcase("DIALOG_BOOKCASE_V1"));
 	RUN_TEST(DialogTest_Bookcase("DIALOG_BOOKCASE_V2"));
-	/*
 	RUN_TEST(TestInventory1());
 	RUN_TEST(TestInventory2());
 	RUN_TEST(TestScriptAccess());
@@ -1382,9 +1424,9 @@ int RunTests()
 	RUN_TEST(ChoiceMode1PopTest());
 	RUN_TEST(ChoiceMode2Test());
 	RUN_TEST(FlagTest());
-	RUN_TEST(TestSave());
-	RUN_TEST(TestLoad());
-	RUN_TEST(TestInventoryScript());
+	//RUN_TEST(TestSave()); FIXME
+	//RUN_TEST(TestLoad()); FIXME
+	//RUN_TEST(TestInventoryScript()); FIXME
 	RUN_TEST(TestWalkabout());
 	RUN_TEST(TestLuaCore());
 	RUN_TEST(TestContainers());
@@ -1400,7 +1442,6 @@ int RunTests()
 	RUN_TEST(TestInlineText());
 	RUN_TEST(TestFormatting());
 	RUN_TEST(TestChullu());
-	*/
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);
