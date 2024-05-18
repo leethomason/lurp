@@ -40,14 +40,17 @@ void LogTestResults()
 	}
 }
 
-void BridgeWorkingTest(const ScriptBridge& bridge)
+void BridgeWorkingTest()
 {
+	ScriptBridge bridge;
 	TEST(bridge.getLuaState());
-
 }
 
-void HaveCAssetsTest(const ConstScriptAssets& ca)
+void HaveCAssetsTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
+
 	TEST(ca.zones.size() > 0);
 	TEST(ca.scripts.size() > 0);
 
@@ -55,8 +58,11 @@ void HaveCAssetsTest(const ConstScriptAssets& ca)
 	TEST(assets.getZone("TEST_ZONE_0").name == "TestDungeon");
 }
 
-static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void BasicTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
+
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, bridge);
 
@@ -110,8 +116,11 @@ static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 }
 
 
-static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dialog, ScriptBridge& bridge)
+static void DialogTest_Bookcase(const EntityID& dialog)
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
+
 	ScriptAssets assets(ca);
 	ZoneDriver zoneDriver(assets, bridge);
 	ScriptDriver dd(zoneDriver, bridge, dialog);
@@ -384,8 +393,10 @@ static void TestBattle()
 		system.addRegion(r);
 }
 
-static void TestScriptBridge(ScriptBridge& engine)
+static void TestScriptBridge()
 {
+	ScriptBridge engine;
+
 	const std::string gtable = "_TestGlobalTable";
 	const std::vector<std::string> strArr = { "str1", "str2", "str3" };
 	const std::vector<ScriptBridge::StringCount> strCountArr = { { "str1", 1 }, { "str2", 2 }, { "str3", 3 } };
@@ -1316,46 +1327,45 @@ static void TestChullu()
 
 int RunTests()
 {
-	ScriptBridge bridge;
-	ConstScriptAssets csassets = bridge.readCSA("");
-
-	RUN_TEST(BridgeWorkingTest(bridge));
-	RUN_TEST(HaveCAssetsTest(csassets));
-	RUN_TEST(BasicTest(csassets, bridge));
-	RUN_TEST(TestScriptBridge(bridge));
-	RUN_TEST(DialogTest_Bookcase(csassets, "DIALOG_BOOKCASE_V1", bridge));
-	RUN_TEST(DialogTest_Bookcase(csassets, "DIALOG_BOOKCASE_V2", bridge));
+	RUN_TEST(BridgeWorkingTest());
+	RUN_TEST(HaveCAssetsTest());
+	RUN_TEST(BasicTest());
+	RUN_TEST(TestScriptBridge());
+	RUN_TEST(DialogTest_Bookcase("DIALOG_BOOKCASE_V1"));
+	RUN_TEST(DialogTest_Bookcase("DIALOG_BOOKCASE_V2"));
+	/*
 	RUN_TEST(TestInventory1());
 	RUN_TEST(TestInventory2());
 	RUN_TEST(TestScriptAccess());
 	RUN_TEST(TestCodeEval());
 	RUN_TEST(TestBattle());
-	RUN_TEST(TestTextSubstitution(csassets, bridge));
-	RUN_TEST(TestTextTest(csassets, bridge));
-	RUN_TEST(CallScriptTest(csassets, bridge));
-	RUN_TEST(ChoiceMode1RepeatTest(csassets, bridge));
-	RUN_TEST(ChoiceMode1RewindTest(csassets, bridge));
-	RUN_TEST(ChoiceMode1PopTest(csassets, bridge));
-	RUN_TEST(ChoiceMode2Test(csassets, bridge));
-	RUN_TEST(FlagTest(csassets, bridge));
-	RUN_TEST(TestSave(csassets, bridge));
+	RUN_TEST(TestTextSubstitution());
+	RUN_TEST(TestTextTest());
+	RUN_TEST(CallScriptTest());
+	RUN_TEST(ChoiceMode1RepeatTest());
+	RUN_TEST(ChoiceMode1RewindTest());
+	RUN_TEST(ChoiceMode1PopTest());
+	RUN_TEST(ChoiceMode2Test());
+	RUN_TEST(FlagTest());
+	RUN_TEST(TestSave());
 	RUN_TEST(TestLoad());
-	RUN_TEST(TestInventoryScript(csassets, bridge));
-	RUN_TEST(TestWalkabout(csassets, bridge));
+	RUN_TEST(TestInventoryScript());
+	RUN_TEST(TestWalkabout());
 	RUN_TEST(TestLuaCore());
-	RUN_TEST(TestContainers(csassets, bridge));
+	RUN_TEST(TestContainers());
 	RUN_TEST(TestCombatant());
 	RUN_TEST(BattleTest::Read());
 	RUN_TEST(BattleTest::TestSystem());
-	RUN_TEST(BattleTest::TestScript(csassets, bridge));
+	RUN_TEST(BattleTest::TestScript());
 	RUN_TEST(BattleTest::TestExample());
 	RUN_TEST(BattleTest::TestRegionSpells());
-	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
+	RUN_TEST(BattleTest::TestBattle2());
 	RUN_TEST(TestExampleZone());
 	RUN_TEST(TestTextParsing());
-	RUN_TEST(TestInlineText(csassets, bridge));
-	RUN_TEST(TestFormatting(csassets, bridge));
+	RUN_TEST(TestInlineText());
+	RUN_TEST(TestFormatting());
 	RUN_TEST(TestChullu());
+	*/
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

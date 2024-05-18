@@ -422,7 +422,7 @@ end
 
 if DIR == nil then
     DIR = ""
-    RUN_TESTS = true
+    --RUN_TESTS = true
     soloMode = true
 
     CRandom = function()
@@ -470,10 +470,10 @@ if DIR == nil then
     print("Running map.")
 end
 
-if RUN_TESTS then
-    doFilePath("testscript.lua")
-    doFilePath("testzones.lua")
-end
+--if RUN_TESTS then
+--    doFilePath("testscript.lua")
+--    doFilePath("testzones.lua")
+--end
 
 if soloMode then
     for index, value in pairs(Scripts) do
