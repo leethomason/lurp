@@ -458,7 +458,6 @@ void ZoneDriver::save(std::ostream& stream) const
 	ZoneDriver::saveTextRead(stream, mapData.textRead);
 
 	fmt::print(stream, "Map = {{\n");
-	//fmt::print(stream, "  playerID = '{}',\n", _playerID);
 	fmt::print(stream, "  currentZone = '{}',\n", _assets._csa.zones[_zone.index].entityID);
 	fmt::print(stream, "  currentRoom = '{}',\n", _assets._csa.rooms[_room.index].entityID);
 	fmt::print(stream, "}}\n");

@@ -221,6 +221,156 @@ static void TestScriptAccess()
 	TEST(binder.get("player.fighting").num == 4.0);
 }
 
+static void TestScriptSave()
+{
+	std::filesystem::path path = SavePath("test", "testsave");
+
+	for (int story = 0; story < 3; story++) {
+
+		// SAVE
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(56);
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			if (story >= 0) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			if (story >= 1) {
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+				driver.choose(1);	// dress
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.");
+			}
+			if (story >= 2) {
+				driver.advance();
+				driver.advance();
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "Waitress, I'll have a...");
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+			}
+
+			std::ofstream stream = OpenSaveStream(path);
+			data.coreData.save(stream);	// so filtering will work
+			driver.save(stream);
+		}
+
+		// LOAD
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(48);	// note the change of the random number gen
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			ScriptBridge loader;
+			loader.loadLUA(path.string());
+			data.coreData.load(loader);	 // needed for filtering - must be before the driver.load()
+			bool success = driver.load(loader);
+			TEST(success);
+
+			if (story == 0) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			else if (story == 1) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.")
+			}
+			else if (story == 2) {
+				TEST(driver.type() == ScriptType::kChoices);
+			}
+		}
+	}
+}
+
+static void TestScriptSaveMutated()
+{
+	std::filesystem::path path = SavePath("test", "testsave");
+
+	for (int story = 0; story < 3; story++) {
+
+		// SAVE
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(56);
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			if (story >= 0) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			if (story >= 1) {
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+				driver.choose(1);	// dress
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.");
+			}
+			if (story >= 2) {
+				driver.advance();
+				driver.advance();
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "Waitress, I'll have a...");
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+			}
+
+			std::ofstream stream = OpenSaveStream(path);
+			data.coreData.save(stream);	// so filtering will work
+			driver.save(stream);
+		}
+
+		// LOAD
+		{
+			ScriptBridge bridge;
+			bridge.setGlobal("_STARTING_POOL_ID", 123);
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(48);	// note the change of the random number gen
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			ScriptBridge loader;
+			loader.loadLUA(path.string());
+			data.coreData.load(loader);	 // needed for filtering - must be before the driver.load()
+			driver.load(loader);
+
+			if (story == 0) {
+				// This SHOULD work because this is the first thing in the Script - a rollback will land us here.
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			else if (story == 1) {
+				// This SHOULD work because ENTERING_CASINO_TEXT anchors the script - even though the IDs are mutated, this is stable.
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.")
+			}
+			else if (story == 2) {
+				// This will not work because Choices doesn't have an ID, and it has to roll back.
+				// TEST(driver.type() == ScriptType::kChoices);
+				// Here's the roll-back:
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+		}
+	}
+}
+
 #if 0
 // TestSave() and TestLoad() need to work on a full example - 
 // either the simple examples or chullu.
@@ -1424,6 +1574,8 @@ int RunTests()
 	RUN_TEST(ChoiceMode1PopTest());
 	RUN_TEST(ChoiceMode2Test());
 	RUN_TEST(FlagTest());
+	RUN_TEST(TestScriptSave());
+	RUN_TEST(TestScriptSaveMutated());
 	//RUN_TEST(TestSave()); FIXME
 	//RUN_TEST(TestLoad()); FIXME
 	//RUN_TEST(TestInventoryScript()); FIXME

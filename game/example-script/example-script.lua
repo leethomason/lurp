@@ -33,6 +33,7 @@ Script {
     -- The console driver will display text with a speaker vs. without differently. The
     -- narrator (in this simple example) is a blank, but not empty, name.
     Text {
+        -- FIXME: shouldn't need an empty speaker
         s = " ", "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your..."
     },
     -- write flags to the player so we know what they are wearing
@@ -48,6 +49,7 @@ Script {
     },
     -- examples of testing what text to display
     Text {
+        entityID = "ENTERING_CASINO_TEXT",  -- the entityID is optional (it's here to support testing)
         { s = " ", test = "{player.tux}", "...in the mirror and double-check the semi-auto inside the jacket."},
         { s = " ", test = "{player.dress}", "...in the mirror and double-check the semi-auto inside your purse." },
         { s = " ", "The doors open and you walk out onto the Casino floor. Walking across the noise "..

@@ -14,8 +14,6 @@ Interactions = {}
 CallScripts = {}
 Entities = {}
 
-local soloMode = false
-
 Rand = {}
 
 Rand.random = function(low, high)
@@ -37,14 +35,6 @@ Rand.dice = function(n, d, b)
         sum = sum + (1 + CRandom() % d)
     end
     return sum + b
-end
-
-local function doFilePath(filename)
-    if not DIR then
-        dofile(filename)
-    else
-        dofile(DIR .. filename)
-    end
 end
 
 function PrintTable(t, d)
@@ -79,12 +69,17 @@ function EndGame(reason, bias)
 end
 
 local poolID = {}
+-- this weird little piece of code is to allow for changing 
+-- generated entityIDs for testing.
+if (not _STARTING_POOL_ID) then
+    _STARTING_POOL_ID = 0
+end
 local function createEntityID(entityID, base)
     if entityID then return entityID end
 
     assert(base ~= nil, "base required")
 
-    if not poolID[base] then poolID[base] = 0 end
+    if not poolID[base] then poolID[base] = _STARTING_POOL_ID end
     poolID[base] = poolID[base] + 1
 
     return "_GEN_"..base.."_"..poolID[base]
@@ -420,72 +415,9 @@ function ClearScriptEnv()
     room = nil
 end
 
-if DIR == nil then
-    DIR = ""
-    --RUN_TESTS = true
-    soloMode = true
-
-    CRandom = function()
-        return math.random(0, 1024 * 1024 * 1024)
-    end
-
-    CDeltaItem = function(containerID, itemID, n)
-        print("CDeltaItem", containerID, itemID, n)
-    end
-
-    CNumItems = function(containerID, itemID)
-        print("CNumItems", containerID, itemID)
-        return 0
-    end
-
-    CCoreSet = function(scopeID, varID, value, mutUser)
-        print("CCoreSet", scopeID, varID, value, mutUser)
-    end
-
-    -- returns present, value
-    CCoreGet = function(entityID, key)
-        print("CCoreGet", entityID, key)
-        return true, 0
-    end
-
-    CAllTextRead = function(entityID)
-        print("CAllTextRead", entityID)
-        return true
-    end
-
-    CMove = function(dstID, teleport)
-        print('CMove', dstID, teleport)
-    end
-
-    CEndGame = function(reason, bias)
-        print('CEndGame', reason, bias)
-    end
-
-    script = {}
-    player = {}
-    npc = {}
-    zone = {}
-    room = {}
-
-    print("Running map.")
-end
-
---if RUN_TESTS then
---    doFilePath("testscript.lua")
---    doFilePath("testzones.lua")
---end
-
-if soloMode then
-    for index, value in pairs(Scripts) do
-        print("->", index, value, value.entityID, type(value.entityID))
-    end
-end
-
 _TestFuncCallbacks = function ()
     --print("TestFuncCallbacks")
     CRandom()
-    --CIsLocked("none")
-    --CSetLocked("none", true)
     CDeltaItem("none", "none", 3)
     CDeltaItem("none", "none", -2)
     CNumItems("none", "none")
