@@ -93,6 +93,7 @@ end
 local function addToEntities(t)
     if Entities[t.entityID] then
         print("[ERROR] The entity "..t.entityID.." already exists.")
+        PrintTable(t, 0)
     end
     assert(t.entityID ~= nil, "entityID required")
     assert(Entities[t.entityID] == nil, "entityID already exists")
