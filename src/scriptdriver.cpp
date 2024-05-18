@@ -37,7 +37,7 @@ ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptB
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
 	_helper->bridge().setIText(this);
-	_helper->pushScriptContext();
+	//_helper->pushScriptContext();
 	_helper->call(func, 0);
 
 	_tree.log();
@@ -47,11 +47,8 @@ ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptB
 ScriptDriver::~ScriptDriver()
 {
 	_bridge.setICore(nullptr);
-	if (_helper.get()) {
-		_helper->popScriptContext();
-		_helper->bridge().setIText(nullptr);
-	}
-	//assert(_choicesStack.empty());
+	//_helper->popScriptContext();
+	_helper->bridge().setIText(nullptr);
 }
 
 void ScriptDriver::abort()
@@ -469,11 +466,8 @@ bool ScriptDriver::load(ScriptBridge& loader)
 	if (!_assets.isAsset(_scriptEnv.script)) {
 		return false;
 	}
-	ScriptRef scriptRef = _assets.getScriptRef(_scriptEnv.script);
-	if (scriptRef.type != ScriptType::kScript) {
-		return false;
-	}
-
+	_helper.reset(nullptr);
+	_helper.reset(new ScriptHelper(_bridge, _mapData.coreData, _scriptEnv));
 
 	loader.pushGlobal("ScriptDriver");
 
@@ -482,6 +476,11 @@ bool ScriptDriver::load(ScriptBridge& loader)
 	int textSubIndex = loader.getIntField("textSubIndex", { 0 });
 
 	_tree = Tree(_assets, _scriptEnv.script);
+	if (_tree.size() == 0) {
+		// deleted script??
+		assert(false);
+		return false;
+	}
 
 	loader.pushTable("choicesStack");
 	for (TableIt it(L, -1); !it.done(); it.next()) {

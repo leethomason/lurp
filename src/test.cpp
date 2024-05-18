@@ -371,6 +371,76 @@ static void TestScriptSaveMutated()
 	}
 }
 
+static void TestZoneSave()
+{
+	std::filesystem::path path = SavePath("test", "testsave");
+
+	for (int story = 0; story < 3; story++) {
+
+		// SAVE
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-zone/example-zone.lua");
+			ScriptAssets assets(csa);
+			ZoneDriver zd(assets, bridge, "ZONE");
+
+			if (story >= 0) {
+				TEST(zd.currentRoom().entityID == "FOYER");
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+				TEST(zd.getContainers().size() == 1);
+				const Container* c = zd.getContainers()[0];
+				TEST(c);
+				zd.transferAll(c->entityID, zd.getPlayer().entityID);
+				const Inventory& inv = assets.getInventory(*c);
+				TEST(inv.emtpy());
+			}
+			if (story >= 1) {
+				TEST(zd.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);
+				TEST(zd.getInteractions().size() == 1);
+				zd.startInteraction(zd.getInteractions()[0]);
+				TEST(zd.mode() == ZoneDriver::Mode::kText);
+				TEST(zd.text().text == "Hello there!");
+			}
+			if (story >=2) {
+				zd.advance();
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+			}
+
+			std::ofstream stream = OpenSaveStream(path);
+			zd.save(stream);
+		}
+		// LOAD
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-zone/example-zone.lua");
+			ScriptAssets assets(csa);
+			ZoneDriver zd(assets, bridge, "ZONE");
+
+			ScriptBridge loader;
+			loader.loadLUA(path.string());
+			zd.load(loader);
+
+			if (story == 0) {
+				TEST(zd.currentRoom().entityID == "FOYER");
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+				TEST(zd.getContainers().size() == 1);
+				const Container* c = zd.getContainers()[0];
+				TEST(c);
+				const Inventory& inv = assets.getInventory(*c);
+				TEST(inv.emtpy());
+			}
+			else if (story == 1) {
+				TEST(zd.currentRoom().entityID == "MAIN_HALL");
+				TEST(zd.mode() == ZoneDriver::Mode::kText);
+				TEST(zd.text().text == "Hello there!");
+			}
+			else if (story == 2) {
+				TEST(zd.currentRoom().entityID == "MAIN_HALL");
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+			}
+		}
+	}
+}
 
 static void TestCodeEval()
 {
@@ -1509,6 +1579,7 @@ int RunTests()
 	RUN_TEST(FlagTest());
 	RUN_TEST(TestScriptSave());
 	RUN_TEST(TestScriptSaveMutated());
+	RUN_TEST(TestZoneSave());
 	RUN_TEST(TestWalkabout());
 	RUN_TEST(TestLuaCore());
 	RUN_TEST(TestContainers());

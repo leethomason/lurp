@@ -29,8 +29,8 @@ public:
 	ScriptBridge& bridge() const { return _bridge; }
 
 	// When used by the ScriptDriver
-	void pushScriptContext();
-	void popScriptContext();
+	//void pushScriptContext();
+	//void popScriptContext();
 	int contextDepth() const { return _scriptContextCount; }
 
 	const ScriptEnv& env() const { return _scriptEnv; }

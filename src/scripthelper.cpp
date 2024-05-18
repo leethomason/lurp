@@ -76,6 +76,7 @@ void ScriptHelper::tearDownScriptEnv()
 	_coreData.clearScriptEnv();
 }
 
+#if 0
 void ScriptHelper::pushScriptContext()
 {
 	// FIXME?
@@ -91,6 +92,7 @@ void ScriptHelper::popScriptContext()
 {
 	_scriptContextCount--;
 }
+#endif
 
 bool ScriptHelper::call(int ref, int nResult) const
 {

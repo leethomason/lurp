@@ -487,9 +487,7 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 	lua_getglobal(L, "ScriptEnv");
 	if (!lua_isnil(L, -1)) {
 		script = loader.getStrField("script", {});
-		ScriptEnv env = this->getScriptEnv();
-		env.script = script;
-		_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, env);
+		_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, ScriptEnv());
 		bool okay = _scriptDriver->load(loader);
 		if (!okay) {
 			_scriptDriver.reset(nullptr);
