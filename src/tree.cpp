@@ -94,6 +94,16 @@ void Tree::log() const
 	}
 }
 
+void Tree::write(std::ostream& stream) const
+{
+	int idx = 0;
+	for (const NodeRef& ref : _tree) {
+		std::string msg = fmt::format("{:2} {: >{}} {} {}\n", idx, "", 2 + ref.depth * 2, ref.leading ? "L" : "T", ref.ref.entity->description());
+		stream << msg;
+		idx++;
+	}
+}
+
 ScriptRef TreeIt::next()
 {
 	_index++;
@@ -228,6 +238,15 @@ ScriptRef TreeIt::getParent() const
 {
 	int index = _tree.getParentTE(_index);
 	return _tree.get(index);
+}
+
+int Tree::find(const EntityID& entityID) const
+{
+	for (int i = 0; i < (int)_tree.size(); i++) {
+		if (_tree[i].entityID == entityID)
+			return i;
+	}
+	return -1;	
 }
 
 } // namespace lurp

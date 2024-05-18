@@ -21,7 +21,6 @@ class ScriptDriver : public ITextHandler
 {
 public:
 	ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptBridge& bridge, const ScriptEnv& env, int initLuaFunc = -1);
-
 	virtual ~ScriptDriver();
 
 	bool done() const;
@@ -52,7 +51,6 @@ public:
 	bool load(ScriptBridge& loader);
 	static void saveScriptEnv(std::ostream& stream, const ScriptEnv& env);
 	static ScriptEnv loadScriptEnv(ScriptBridge& loader);
-
 
 private:
 	bool parseAction(const std::string& str, Choices::Action& action) const;

@@ -61,6 +61,7 @@ public:
 	}
 
 	void loadLUA(const std::string& path);
+	// Read the CSAs. 
 	ConstScriptAssets readCSA(const std::string& path);
 
 	lua_State* getLuaState() const { return L; }
@@ -73,6 +74,7 @@ public:
 			return str == rhs.str && count == rhs.count;
 		}
 	};
+	void setGlobal(const std::string& key, const Variant& value);
 	void pushGlobal(const std::string& key);
 	void pushTable(const std::string& key, int index = 0);
 	void pushNewGlobalTable(const std::string& key);

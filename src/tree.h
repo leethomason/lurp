@@ -38,8 +38,10 @@ public:
 
 	ScriptRef get(int index) const { assert(index >= 0 && index < size()); return _tree[index].ref; }
 	NodeRef getNode(int index) const { assert(index >= 0 && index < size());  return _tree[index]; }
+	int find(const EntityID& entityID) const;	// returns -1 if not found
 
 	void log() const;
+	void write(std::ostream& stream) const;
 
 private:
 	int cDepth(int index) const { return _tree[index].depth; }

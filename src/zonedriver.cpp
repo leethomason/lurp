@@ -11,14 +11,6 @@
 
 namespace lurp {
 
-ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge) 
-	: _assets(assets), _bridge(bridge), mapData(MapData::kSeed)
-{
-	_bridge.setIMap(this);
-	_bridge.setIAsset(&assets);
-	_bridge.setICore(&mapData.coreData);
-}
-
 ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone) 
 	: _assets(assets), _bridge(bridge), mapData(MapData::kSeed)
 {
@@ -31,7 +23,7 @@ ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityI
 
 ZoneDriver::~ZoneDriver()
 {
-	delete _scriptDriver; _scriptDriver = nullptr;
+	_scriptDriver.reset(nullptr);
 	_bridge.setICore(nullptr);
 	_bridge.setIMap(nullptr);
 	_bridge.setIAsset(nullptr);
@@ -466,7 +458,6 @@ void ZoneDriver::save(std::ostream& stream) const
 	ZoneDriver::saveTextRead(stream, mapData.textRead);
 
 	fmt::print(stream, "Map = {{\n");
-	//fmt::print(stream, "  playerID = '{}',\n", _playerID);
 	fmt::print(stream, "  currentZone = '{}',\n", _assets._csa.zones[_zone.index].entityID);
 	fmt::print(stream, "  currentRoom = '{}',\n", _assets._csa.rooms[_room.index].entityID);
 	fmt::print(stream, "}}\n");
@@ -496,10 +487,11 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 	lua_getglobal(L, "ScriptEnv");
 	if (!lua_isnil(L, -1)) {
 		script = loader.getStrField("script", {});
-		ScriptEnv env = this->getScriptEnv();
-		env.script = script;
-		_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env);
-		_scriptDriver->load(loader);
+		_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, ScriptEnv());
+		bool okay = _scriptDriver->load(loader);
+		if (!okay) {
+			_scriptDriver.reset(nullptr);
+		}
 	}
 	lua_pop(L, 1);
 	return script;
@@ -566,8 +558,7 @@ void ZoneDriver::checkScriptDriver()
 		if (_scriptDriver->done()) {
 			EntityID scriptID = _scriptDriver->env().script;
 			markRequiredInteractionComplete(scriptID);
-			delete _scriptDriver;
-			_scriptDriver = nullptr;
+			_scriptDriver.reset(nullptr);
 		}
 	}
 
@@ -575,16 +566,16 @@ void ZoneDriver::checkScriptDriver()
 		const Interaction* iact = getRequiredInteraction();
 		if (iact) {
 			ScriptEnv env = getScriptEnv(iact);
-			_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env, iact->code);
+			_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, env, iact->code);
 		}
 	}
 }
 
 void ZoneDriver::startInteraction(const Interaction* interaction)
 {
-	assert(_scriptDriver == nullptr);
+	assert(!_scriptDriver);
 	ScriptEnv env = getScriptEnv(interaction);
-	_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env, interaction->code);
+	_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, env, interaction->code);
 	checkScriptDriver();
 }
 

@@ -261,6 +261,12 @@ void ScriptBridge::pushNewTable(const std::string& key, int index)
 	}
 }
 
+void ScriptBridge::setGlobal(const std::string& key, const Variant& value)
+{
+	LuaStackCheck check(L);
+	value.pushLua(L);
+	lua_setglobal(L, key.c_str());
+}
 
 void ScriptBridge::pushGlobal(const std::string& key)
 {
@@ -1067,25 +1073,20 @@ void ScriptBridge::loadLUA(const std::string& inputFilePath)
 
 ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 {
+	assert(!inputFilePath.empty());
 	ConstScriptAssets csa;
 	LuaStackCheck check(L);
-
-	lua_pushboolean(L, inputFilePath.empty() ? true : false);
-	lua_setglobal(L, "RUN_TESTS");
 
 	// required
 	doFile("script/_map.lua");
 
-	if (!inputFilePath.empty()) {
-		std::filesystem::path path = inputFilePath;
+	std::filesystem::path path = inputFilePath;
 
-		// game/start.lua
-		// parent_path:    `./game`
-		// need to append: 'game'
-		appendLuaPath(path.parent_path().string());
-
-		doFile(inputFilePath);
-	}
+	// game/start.lua
+	// parent_path:    `./game`
+	// need to append: 'game'
+	appendLuaPath(path.parent_path().string());
+	doFile(inputFilePath);
 
 	READ_ASSET("Scripts", "Script", scripts, readScript);
 	READ_ASSET("Texts", "Text", texts, readText);
