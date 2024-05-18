@@ -64,7 +64,7 @@ static void BasicTest()
 	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 
 	ScriptAssets assets(ca);
-	ZoneDriver map(assets, bridge);
+	ZoneDriver map(assets, bridge, "TEST_ZONE_0");
 
 	map.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
 	TEST(map.currentRoom().name == "RoomA");
@@ -722,7 +722,7 @@ static void TestContainers()
 	ScriptBridge bridge;
 	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zone(assets, bridge);
+	ZoneDriver zone(assets, bridge, "TEST_ZONE_2");
 	zone.setZone("TEST_ZONE_2", "TEST_ROOM_2");
 
 	const Actor& player = zone.getPlayer();
@@ -752,7 +752,7 @@ static void TestWalkabout()
 	ScriptBridge bridge;
 	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zone(assets, bridge);
+	ZoneDriver zone(assets, bridge, "TEST_ZONE_0");
 	zone.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
 	zone.move("TEST_ZONE_0_ROOM_B");
 	// failed:

@@ -32,14 +32,6 @@ public:
 		kSuccess,
 	};
 
-	// FIXME: why 2 constructors? Answer (eek): because the 2nd creates a ScriptDriver.
-	//        The 1st if generally used for "bring your own ScriptDriver".
-	//		  This is Not Good. The 2nd should be the only constructor, and the ScriptDriver
-	//        can be queried if needed. (Mostly testing.)
-	// FIXME: hides a MapData getting constructed with a default seed
-
-	// Create a map with navigation, containers, and interactions.
-	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge);
 	ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityID& zone);
 	~ZoneDriver();
 
