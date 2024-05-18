@@ -23,7 +23,7 @@ ZoneDriver::ZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, const EntityI
 
 ZoneDriver::~ZoneDriver()
 {
-	delete _scriptDriver; _scriptDriver = nullptr;
+	_scriptDriver.reset(nullptr);
 	_bridge.setICore(nullptr);
 	_bridge.setIMap(nullptr);
 	_bridge.setIAsset(nullptr);
@@ -489,8 +489,11 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 		script = loader.getStrField("script", {});
 		ScriptEnv env = this->getScriptEnv();
 		env.script = script;
-		_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env);
-		_scriptDriver->load(loader);
+		_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, env);
+		bool okay = _scriptDriver->load(loader);
+		if (!okay) {
+			_scriptDriver.reset(nullptr);
+		}
 	}
 	lua_pop(L, 1);
 	return script;
@@ -557,8 +560,7 @@ void ZoneDriver::checkScriptDriver()
 		if (_scriptDriver->done()) {
 			EntityID scriptID = _scriptDriver->env().script;
 			markRequiredInteractionComplete(scriptID);
-			delete _scriptDriver;
-			_scriptDriver = nullptr;
+			_scriptDriver.reset(nullptr);
 		}
 	}
 
@@ -566,16 +568,16 @@ void ZoneDriver::checkScriptDriver()
 		const Interaction* iact = getRequiredInteraction();
 		if (iact) {
 			ScriptEnv env = getScriptEnv(iact);
-			_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env, iact->code);
+			_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, env, iact->code);
 		}
 	}
 }
 
 void ZoneDriver::startInteraction(const Interaction* interaction)
 {
-	assert(_scriptDriver == nullptr);
+	assert(!_scriptDriver);
 	ScriptEnv env = getScriptEnv(interaction);
-	_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env, interaction->code);
+	_scriptDriver = std::make_unique<ScriptDriver>(this->_assets, this->mapData, _bridge, env, interaction->code);
 	checkScriptDriver();
 }
 

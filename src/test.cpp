@@ -371,73 +371,6 @@ static void TestScriptSaveMutated()
 	}
 }
 
-#if 0
-// TestSave() and TestLoad() need to work on a full example - 
-// either the simple examples or chullu.
-static void TestSave()
-{
-	ScriptBridge bridge;
-	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
-	ScriptAssets assets(ca);
-	ZoneDriver map(assets, bridge);
-
-	map.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
-	ContainerVec containerVec = map.getContainers();
-	const Container* chest = map.getContainer(containerVec[0]->entityID);
-	Inventory& chestInventory = assets.inventories.at(chest->entityID);
-
-	const Item& key01 = assets.getItem("KEY_01");
-	TEST(chestInventory.hasItem(key01) == true);
-
-	const Actor& player = assets._csa.actors[assets.getScriptRef("player").index];
-	Inventory& playerInventory = assets.inventories.at(player.entityID);
-
-	Inventory::transfer(key01, chestInventory, playerInventory, 1);
-	TEST(chestInventory.hasItem(key01) == false);
-
-	map.move("TEST_ZONE_0_ROOM_B");
-	TEST(map.currentRoom().name == "RoomB");
-
-	const InteractionVec& interactionVec = map.getInteractions();
-	TEST(interactionVec.size() == 3);
-	const Interaction* interaction = interactionVec[0];
-	map.startInteraction(interaction);
-
-	TEST(map.mode() == ZoneDriver::Mode::kText);
-	map.advance();
-	map.advance();
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-	map.choose(0);
-	TEST(map.mode() == ZoneDriver::Mode::kText);
-	map.advance();
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-
-	std::filesystem::path path = SavePath("test", "testsave");
-	std::ofstream stream = OpenSaveStream(path);
-
-	map.save(stream);
-	stream.close();
-}
-
-static void TestLoad()
-{
-	ScriptBridge bridge;
-	ConstScriptAssets ca = bridge.readCSA("");
-	ScriptAssets assets(ca);
-
-	ZoneDriver map(assets, bridge);
-
-	ScriptBridge loader;
-	std::filesystem::path path = SavePath("test", "testsave");
-	loader.loadLUA(path.string());
-	EntityID scriptID = map.load(loader);
-
-	TEST(!scriptID.empty());
-
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-	TEST(map.choices().choices[0].text == "Read another book");
-}
-#endif
 
 static void TestCodeEval()
 {
@@ -1576,9 +1509,6 @@ int RunTests()
 	RUN_TEST(FlagTest());
 	RUN_TEST(TestScriptSave());
 	RUN_TEST(TestScriptSaveMutated());
-	//RUN_TEST(TestSave()); FIXME
-	//RUN_TEST(TestLoad()); FIXME
-	//RUN_TEST(TestInventoryScript()); FIXME
 	RUN_TEST(TestWalkabout());
 	RUN_TEST(TestLuaCore());
 	RUN_TEST(TestContainers());

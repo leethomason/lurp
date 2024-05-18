@@ -140,7 +140,7 @@ public:
 private:
 	ScriptRef _zone;
 	ScriptRef _room;
-	ScriptDriver* _scriptDriver = nullptr;
+	std::unique_ptr<ScriptDriver> _scriptDriver;
 	std::string _endGameMsg;
 	int _endGameBias = 0;
 };
