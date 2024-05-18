@@ -42,7 +42,6 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const E
 	_scriptEnv.script = scriptID;
 	_scriptEnv.zone = zoneDriver.currentZone().entityID;
 	_scriptEnv.room = zoneDriver.currentRoom().entityID;
-	//_scriptEnv.player = zoneDriver.getPlayer().entityID;
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
 	_helper->bridge().setIText(this);
