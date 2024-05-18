@@ -25,41 +25,15 @@ bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) co
 	return true;
 }
 
-ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int func)
-	:	_assets(zoneDriver.assets()),
-		_bridge(bridge),
-		_mapData(zoneDriver.mapData),
-		_tree(zoneDriver.assets(), scriptID),
-		_treeIt(_tree)
-{
-	if (scriptID.empty()) {
-		assert(func < 0);	// shouldn't call a func on load
-	}
-	else {
-		assert(_assets.get(scriptID)->getType() == ScriptType::kScript);
-	}
-
-	_scriptEnv.script = scriptID;
-	_scriptEnv.zone = zoneDriver.currentZone().entityID;
-	_scriptEnv.room = zoneDriver.currentRoom().entityID;
-
-	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
-	_helper->bridge().setIText(this);
-	_helper->pushScriptContext();
-	_helper->call(func, 0);
-
-	_tree.log();
-	processTree(false);
-}
-
-ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int func)
-	: _assets(zoneDriver.assets()),
+ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptBridge& bridge, const ScriptEnv& env, int func)
+	: _assets(assets),
 	_bridge(bridge),
-	_mapData(zoneDriver.mapData),
-	_tree(zoneDriver.assets(), env.script),
+	_mapData(mapData),
+	_tree(assets, env.script),
 	_treeIt(_tree)
 {
 	_scriptEnv = env;
+	_bridge.setICore(&mapData.coreData);
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
 	_helper->bridge().setIText(this);
@@ -72,6 +46,7 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const S
 
 ScriptDriver::~ScriptDriver()
 {
+	_bridge.setICore(nullptr);
 	if (_helper.get()) {
 		_helper->popScriptContext();
 		_helper->bridge().setIText(nullptr);

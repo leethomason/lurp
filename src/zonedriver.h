@@ -89,6 +89,7 @@ public:
 	// ------ Internal / Here Be Dragons ------
 	// empty 'room' will return edges for the current room
 	const std::vector<EntityID>& entities(EntityID room = "") const;
+	ScriptEnv getScriptEnv();
 
 	const Interaction* getRequiredInteraction();
 	ScriptEnv getScriptEnv(const Interaction* interaction);

@@ -232,8 +232,15 @@ ScriptEnv ZoneDriver::getScriptEnv(const Interaction* interaction)
 	env.script = interaction->next;
 	env.zone = currentZone().entityID;
 	env.room = currentRoom().entityID;
-	//env.player = _playerID;
 	env.npc = interaction->npc;
+	return env;
+}
+
+ScriptEnv ZoneDriver::getScriptEnv()
+{
+	ScriptEnv env;
+	env.zone = currentZone().entityID;
+	env.room = currentRoom().entityID;
 	return env;
 }
 
@@ -489,7 +496,9 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 	lua_getglobal(L, "ScriptEnv");
 	if (!lua_isnil(L, -1)) {
 		script = loader.getStrField("script", {});
-		_scriptDriver = new ScriptDriver(*this, _bridge, script);
+		ScriptEnv env = this->getScriptEnv();
+		env.script = script;
+		_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env);
 		_scriptDriver->load(loader);
 	}
 	lua_pop(L, 1);
@@ -566,7 +575,7 @@ void ZoneDriver::checkScriptDriver()
 		const Interaction* iact = getRequiredInteraction();
 		if (iact) {
 			ScriptEnv env = getScriptEnv(iact);
-			_scriptDriver = new ScriptDriver(*this, _bridge, env, iact->code);
+			_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env, iact->code);
 		}
 	}
 }
@@ -575,7 +584,7 @@ void ZoneDriver::startInteraction(const Interaction* interaction)
 {
 	assert(_scriptDriver == nullptr);
 	ScriptEnv env = getScriptEnv(interaction);
-	_scriptDriver = new ScriptDriver(*this, _bridge, env, interaction->code);
+	_scriptDriver = new ScriptDriver(this->_assets, this->mapData, _bridge, env, interaction->code);
 	checkScriptDriver();
 }
 

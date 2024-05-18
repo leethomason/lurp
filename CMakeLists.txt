@@ -30,7 +30,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   ionic
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
-  GIT_TAG        397b7d9623179b481c46b10eb7174f903ca67187
+  GIT_TAG        74cc38510f5054d1475530b591351630adacd19a
 )
 FetchContent_Declare(
   plog
