@@ -25,46 +25,18 @@ bool ScriptDriver::parseAction(const std::string& s, Choices::Action& action) co
 	return true;
 }
 
-ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const EntityID& scriptID, int func)
-	:	_assets(zoneDriver.assets()),
-		_bridge(bridge),
-		_mapData(zoneDriver.mapData),
-		_tree(zoneDriver.assets(), scriptID),
-		_treeIt(_tree)
-{
-	if (scriptID.empty()) {
-		assert(func < 0);	// shouldn't call a func on load
-	}
-	else {
-		assert(_assets.get(scriptID)->getType() == ScriptType::kScript);
-	}
-
-	_scriptEnv.script = scriptID;
-	_scriptEnv.zone = zoneDriver.currentZone().entityID;
-	_scriptEnv.room = zoneDriver.currentRoom().entityID;
-	//_scriptEnv.player = zoneDriver.getPlayer().entityID;
-
-	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
-	_helper->bridge().setIText(this);
-	_helper->pushScriptContext();
-	_helper->call(func, 0);
-
-	_tree.log();
-	processTree(false);
-}
-
-ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const ScriptEnv& env, int func)
-	: _assets(zoneDriver.assets()),
+ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptBridge& bridge, const ScriptEnv& env, int func)
+	: _assets(assets),
 	_bridge(bridge),
-	_mapData(zoneDriver.mapData),
-	_tree(zoneDriver.assets(), env.script),
+	_mapData(mapData),
+	_tree(assets, env.script),
 	_treeIt(_tree)
 {
 	_scriptEnv = env;
+	_bridge.setICore(&mapData.coreData);
+	_bridge.setIText(this);
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
-	_helper->bridge().setIText(this);
-	_helper->pushScriptContext();
 	_helper->call(func, 0);
 
 	_tree.log();
@@ -73,11 +45,8 @@ ScriptDriver::ScriptDriver(ZoneDriver& zoneDriver, ScriptBridge& bridge, const S
 
 ScriptDriver::~ScriptDriver()
 {
-	if (_helper.get()) {
-		_helper->popScriptContext();
-		_helper->bridge().setIText(nullptr);
-	}
-	//assert(_choicesStack.empty());
+	_bridge.setICore(nullptr);
+	_bridge.setIText(nullptr);
 }
 
 void ScriptDriver::abort()
@@ -440,7 +409,6 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 	fmt::print(stream, "  script = '{}',\n", env.script);
 	fmt::print(stream, "  zone = '{}',\n", env.zone);
 	fmt::print(stream, "  room = '{}',\n", env.room);
-	//fmt::print(stream, "  player = '{}',\n", env.player);
 	fmt::print(stream, "  npc = '{}',\n", env.npc);
 	fmt::print(stream, "}}\n");
 }
@@ -455,7 +423,6 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 	env.script = loader.getStrField("script", { "" });
 	env.zone = loader.getStrField("zone", { "" });
 	env.room = loader.getStrField("room", { "" });
-	//env.player = loader.getStrField("player", { "" });
 	env.npc = loader.getStrField("npc", { "" });
 	loader.pop();
 
@@ -465,6 +432,10 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 void ScriptDriver::save(std::ostream& stream) const
 {
 	saveScriptEnv(stream, _scriptEnv);
+
+	fmt::print(stream, "--[[\n");
+	_tree.write(stream);
+	fmt::print(stream, "--]]\n");
 
 	// Always true? But needs to be a leading edge
 	// so that when the load occurs, the state is set
@@ -489,6 +460,13 @@ bool ScriptDriver::load(ScriptBridge& loader)
 
 	_scriptEnv = loadScriptEnv(loader);
 
+	// Check if this entire asset got moved / deleted.
+	if (!_assets.isAsset(_scriptEnv.script)) {
+		return false;
+	}
+	_helper.reset(nullptr);
+	_helper.reset(new ScriptHelper(_bridge, _mapData.coreData, _scriptEnv));
+
 	loader.pushGlobal("ScriptDriver");
 
 	EntityID entityID = loader.getStrField("entityID", { "" });
@@ -496,10 +474,13 @@ bool ScriptDriver::load(ScriptBridge& loader)
 	int textSubIndex = loader.getIntField("textSubIndex", { 0 });
 
 	_tree = Tree(_assets, _scriptEnv.script);
-	//_tree.dump(_assets);
+	if (_tree.size() == 0) {
+		// deleted script??
+		assert(false);
+		return false;
+	}
 
 	loader.pushTable("choicesStack");
-
 	for (TableIt it(L, -1); !it.done(); it.next()) {
 		if (it.kType() == LUA_TNUMBER) {
 			int v = (int) lua_tointeger(L, -1);
@@ -509,25 +490,50 @@ bool ScriptDriver::load(ScriptBridge& loader)
 	lua_pop(L, 1);
 	lua_pop(L, 1);
 
+	// Loading a mutated script is fraught with peril.
+	// There's probably more that can be done to track if the Script has changed (hash?)
+	// and make sure the _choicesStack is valid.
+	// Weak spot.
+
 	const NodeRef& nodeRef = _tree.getNode(treeItIndex);
-
-	if (treeItIndex < _tree.size()
-		&& nodeRef.entityID == entityID
-		&& nodeRef.leading)
-	{
+	if (nodeRef.entityID == entityID) {
+		// Assume everything is okay.
 		_treeIt.setIndex(treeItIndex);
-		_textSubIndex = textSubIndex;
-
 		processTree(false);
-
+		if (textSubIndex < int(_mappedText.lines.size())) {
+			_textSubIndex = textSubIndex;
+		}
 		return true;
 	}
-	_treeIt.setIndex(0);
-	_choicesStack.clear();
-	_tree.clear();
 
-	fmt::print("WARNING could not load ScriptDriver. Rolling back to Map.\n");
-	return false;
+	// It has been mutated. What we don't know is if the choicesStack is valid,
+	// and an invalid stack could make a mess of this.
+	if (!_choicesStack.empty()) {
+		// Full roll back.
+		_choicesStack.clear();
+		_treeIt.setIndex(0);
+		_textSubIndex = 0;
+		processTree(false);
+		return true;
+	}
+
+	// If we have a reliable entityID, use that
+	if (entityID.substr(0, 5) != "_GEN_") {
+		int index = _tree.find(entityID);
+		if (index >= 0) {
+			_treeIt.setIndex(index);
+			processTree(false);
+			_textSubIndex = 0;
+			return true;
+		}
+	}
+
+	// Full roll back.
+	_choicesStack.clear();
+	_treeIt.setIndex(0);
+	_textSubIndex = 0;
+	processTree(false);
+	return true;
 }
 
 VarBinder ScriptDriver::varBinder() const

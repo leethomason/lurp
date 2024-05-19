@@ -11,7 +11,7 @@ Item {
 
 Actor {
     entityID = "player",
-    name = "Player"
+    name = "Wor"
 }
 
 Actor {

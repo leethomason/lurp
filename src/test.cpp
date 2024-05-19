@@ -40,14 +40,17 @@ void LogTestResults()
 	}
 }
 
-void BridgeWorkingTest(const ScriptBridge& bridge)
+void BridgeWorkingTest()
 {
+	ScriptBridge bridge;
 	TEST(bridge.getLuaState());
-
 }
 
-void HaveCAssetsTest(const ConstScriptAssets& ca)
+void HaveCAssetsTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
+
 	TEST(ca.zones.size() > 0);
 	TEST(ca.scripts.size() > 0);
 
@@ -55,10 +58,13 @@ void HaveCAssetsTest(const ConstScriptAssets& ca)
 	TEST(assets.getZone("TEST_ZONE_0").name == "TestDungeon");
 }
 
-static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void BasicTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
+
 	ScriptAssets assets(ca);
-	ZoneDriver map(assets, bridge);
+	ZoneDriver map(assets, bridge, "TEST_ZONE_0");
 
 	map.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
 	TEST(map.currentRoom().name == "RoomA");
@@ -110,11 +116,16 @@ static void BasicTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 }
 
 
-static void DialogTest_Bookcase(const ConstScriptAssets& ca, const EntityID& dialog, ScriptBridge& bridge)
+static void DialogTest_Bookcase(const EntityID& dialog)
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
+
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver dd(zoneDriver, bridge, dialog);
+	MapData mapData(56);
+	ScriptEnv env;
+	env.script = dialog;
+	ScriptDriver dd(assets, mapData, bridge, env);
 	VarBinder binder = dd.varBinder();
 
 	TEST(!dd.done());
@@ -190,11 +201,12 @@ static void TestInventory2()
 static void TestScriptAccess()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa= bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
 
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "EMPTY_SCRIPT");
+	ScriptEnv env;
+	MapData mapData(56);
+	ScriptDriver driver(assets, mapData, bridge, env);
 	VarBinder binder = driver.varBinder();
 
 	ScriptRef ref = assets.getScriptRef("player");
@@ -209,84 +221,245 @@ static void TestScriptAccess()
 	TEST(binder.get("player.fighting").num == 4.0);
 }
 
-static void TestLoad()
+static void TestScriptSave()
 {
-	ScriptBridge bridge;
-	ConstScriptAssets ca = bridge.readCSA("");
-	ScriptAssets assets(ca);
-
-	ZoneDriver map(assets, bridge);
-
-	ScriptBridge loader;
 	std::filesystem::path path = SavePath("test", "testsave");
-	loader.loadLUA(path.string());
-	EntityID scriptID = map.load(loader);
 
-	TEST(!scriptID.empty());
+	for (int story = 0; story < 3; story++) {
 
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-	TEST(map.choices().choices[0].text == "Read another book");
+		// SAVE
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(56);
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			if (story >= 0) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			if (story >= 1) {
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+				driver.choose(1);	// dress
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.");
+			}
+			if (story >= 2) {
+				driver.advance();
+				driver.advance();
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "Waitress, I'll have a...");
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+			}
+
+			std::ofstream stream = OpenSaveStream(path);
+			data.coreData.save(stream);	// so filtering will work
+			driver.save(stream);
+		}
+
+		// LOAD
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(48);	// note the change of the random number gen
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			ScriptBridge loader;
+			loader.loadLUA(path.string());
+			data.coreData.load(loader);	 // needed for filtering - must be before the driver.load()
+			bool success = driver.load(loader);
+			TEST(success);
+
+			if (story == 0) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			else if (story == 1) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.")
+			}
+			else if (story == 2) {
+				TEST(driver.type() == ScriptType::kChoices);
+			}
+		}
+	}
 }
 
-static void TestSave(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestScriptSaveMutated()
 {
-	ScriptAssets assets(ca);
-	ZoneDriver map(assets, bridge);
-
-	map.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
-	ContainerVec containerVec = map.getContainers();
-	const Container* chest = map.getContainer(containerVec[0]->entityID);
-	Inventory& chestInventory = assets.inventories.at(chest->entityID);
-
-	const Item& key01 = assets.getItem("KEY_01");
-	TEST(chestInventory.hasItem(key01) == true);
-
-	const Actor& player = assets._csa.actors[assets.getScriptRef("player").index];
-	Inventory& playerInventory = assets.inventories.at(player.entityID);
-
-	Inventory::transfer(key01, chestInventory, playerInventory, 1);
-	TEST(chestInventory.hasItem(key01) == false);
-
-	map.move("TEST_ZONE_0_ROOM_B");
-	TEST(map.currentRoom().name == "RoomB");
-
-	const InteractionVec& interactionVec = map.getInteractions();
-	TEST(interactionVec.size() == 3);
-	const Interaction* interaction = interactionVec[0];
-	map.startInteraction(interaction);
-
-	TEST(map.mode() == ZoneDriver::Mode::kText);
-	map.advance();
-	map.advance();
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-	map.choose(0);
-	TEST(map.mode() == ZoneDriver::Mode::kText);
-	map.advance();
-	TEST(map.mode() == ZoneDriver::Mode::kChoices);
-
 	std::filesystem::path path = SavePath("test", "testsave");
-	std::ofstream stream = OpenSaveStream(path);
 
-	map.save(stream);
-	stream.close();
+	for (int story = 0; story < 3; story++) {
+
+		// SAVE
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(56);
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			if (story >= 0) {
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			if (story >= 1) {
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+				driver.choose(1);	// dress
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.");
+			}
+			if (story >= 2) {
+				driver.advance();
+				driver.advance();
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "Waitress, I'll have a...");
+				driver.advance();
+				TEST(driver.type() == ScriptType::kChoices);
+			}
+
+			std::ofstream stream = OpenSaveStream(path);
+			data.coreData.save(stream);	// so filtering will work
+			driver.save(stream);
+		}
+
+		// LOAD
+		{
+			ScriptBridge bridge;
+			bridge.setGlobal("_STARTING_POOL_ID", 123);
+			ConstScriptAssets csa = bridge.readCSA("game/example-script/example-script.lua");
+			ScriptAssets assets(csa);
+			MapData data(48);	// note the change of the random number gen
+			ScriptEnv env;
+			env.script = "CASINO_SCRIPT";
+			ScriptDriver driver(assets, data, bridge, env);
+
+			ScriptBridge loader;
+			loader.loadLUA(path.string());
+			data.coreData.load(loader);	 // needed for filtering - must be before the driver.load()
+			driver.load(loader);
+
+			if (story == 0) {
+				// This SHOULD work because this is the first thing in the Script - a rollback will land us here.
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+			else if (story == 1) {
+				// This SHOULD work because ENTERING_CASINO_TEXT anchors the script - even though the IDs are mutated, this is stable.
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "...in the mirror and double-check the semi-auto inside your purse.")
+			}
+			else if (story == 2) {
+				// This will not work because Choices doesn't have an ID, and it has to roll back.
+				// TEST(driver.type() == ScriptType::kChoices);
+				// Here's the roll-back:
+				TEST(driver.type() == ScriptType::kText);
+				TEST(driver.line().text == "As the elevator descends from the top floors of the Zephyr Hotel, you adjust your...");
+			}
+		}
+	}
+}
+
+static void TestZoneSave()
+{
+	std::filesystem::path path = SavePath("test", "testsave");
+
+	for (int story = 0; story < 3; story++) {
+
+		// SAVE
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-zone/example-zone.lua");
+			ScriptAssets assets(csa);
+			ZoneDriver zd(assets, bridge, "ZONE");
+
+			if (story >= 0) {
+				TEST(zd.currentRoom().entityID == "FOYER");
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+				TEST(zd.getContainers().size() == 1);
+				const Container* c = zd.getContainers()[0];
+				TEST(c);
+				zd.transferAll(c->entityID, zd.getPlayer().entityID);
+				const Inventory& inv = assets.getInventory(*c);
+				TEST(inv.emtpy());
+			}
+			if (story >= 1) {
+				TEST(zd.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);
+				TEST(zd.getInteractions().size() == 1);
+				zd.startInteraction(zd.getInteractions()[0]);
+				TEST(zd.mode() == ZoneDriver::Mode::kText);
+				TEST(zd.text().text == "Hello there!");
+			}
+			if (story >=2) {
+				zd.advance();
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+			}
+
+			std::ofstream stream = OpenSaveStream(path);
+			zd.save(stream);
+		}
+		// LOAD
+		{
+			ScriptBridge bridge;
+			ConstScriptAssets csa = bridge.readCSA("game/example-zone/example-zone.lua");
+			ScriptAssets assets(csa);
+			ZoneDriver zd(assets, bridge, "ZONE");
+
+			ScriptBridge loader;
+			loader.loadLUA(path.string());
+			zd.load(loader);
+
+			if (story == 0) {
+				TEST(zd.currentRoom().entityID == "FOYER");
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+				TEST(zd.getContainers().size() == 1);
+				const Container* c = zd.getContainers()[0];
+				TEST(c);
+				const Inventory& inv = assets.getInventory(*c);
+				TEST(inv.emtpy());
+			}
+			else if (story == 1) {
+				TEST(zd.currentRoom().entityID == "MAIN_HALL");
+				TEST(zd.mode() == ZoneDriver::Mode::kText);
+				TEST(zd.text().text == "Hello there!");
+			}
+			else if (story == 2) {
+				TEST(zd.currentRoom().entityID == "MAIN_HALL");
+				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
+			}
+		}
+	}
 }
 
 static void TestCodeEval()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa = bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
-	ZoneDriver zoneDriver(assets, bridge);
+	MapData mapData(56);
 	ScriptEnv env = { "TEST_MAGIC_BOOK", NO_ENTITY, NO_ENTITY, NO_ENTITY };
 	
 	{
 		{
-			VarBinder binder(assets, bridge, zoneDriver.mapData.coreData, env);
+			VarBinder binder(assets, bridge, mapData.coreData, env);
 			binder.set("player.class", Variant("fighter"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
 		}
-		ScriptDriver driver(zoneDriver, bridge, "TEST_MAGIC_BOOK");
+		ScriptEnv env2 = env;
+		env2.script = "TEST_MAGIC_BOOK";
+		ScriptDriver driver(assets, mapData, bridge, env2);
 		TEST(driver.type() == ScriptType::kChoices);
 		TEST(driver.choices().choices.size() == 1);
 		driver.choose(0);
@@ -294,27 +467,31 @@ static void TestCodeEval()
 	}
 	{
 		{
-			VarBinder binder(assets, bridge, zoneDriver.mapData.coreData, env);
+			VarBinder binder(assets, bridge, mapData.coreData, env);
 			binder.set("player.class", Variant("druid"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
 		}
 
-		ScriptDriver driver(zoneDriver, bridge, "TEST_MAGIC_BOOK");
+		ScriptEnv env2 = env;
+		env.script = "TEST_MAGIC_BOOK";
+		ScriptDriver driver(assets, mapData, bridge, env2);
 		TEST(driver.type() == ScriptType::kText);
 		driver.advance();
 		TEST(driver.done());
 	}
 	{
 		{
-			VarBinder binder(assets, bridge, zoneDriver.mapData.coreData, env);
+			VarBinder binder(assets, bridge, mapData.coreData, env);
 			// Set up a run
 			binder.set("player.class", Variant("wizard"));
 			binder.set("player.arcaneGlow", Variant());
 			binder.set("player.mystery", Variant());
 		}
 
-		ScriptDriver driver(zoneDriver, bridge, "TEST_MAGIC_BOOK");
+		ScriptEnv env2 = env;
+		env.script = "TEST_MAGIC_BOOK";
+		ScriptDriver driver(assets, mapData, bridge, env2);
 		VarBinder binder = driver.varBinder();
 		TEST(driver.type() == ScriptType::kText);
 		TEST(binder.get("player.mystery").type == LUA_TBOOLEAN);
@@ -384,8 +561,10 @@ static void TestBattle()
 		system.addRegion(r);
 }
 
-static void TestScriptBridge(ScriptBridge& engine)
+static void TestScriptBridge()
 {
+	ScriptBridge engine;
+
 	const std::string gtable = "_TestGlobalTable";
 	const std::vector<std::string> strArr = { "str1", "str2", "str3" };
 	const std::vector<ScriptBridge::StringCount> strCountArr = { { "str1", 1 }, { "str2", 2 }, { "str3", 3 } };
@@ -448,11 +627,15 @@ static void TestScriptBridge(ScriptBridge& engine)
 	}
 }
 
-static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestTextSubstitution()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "_TEST_READING");
+	ScriptEnv env;
+	env.script = "_TEST_READING";
+	MapData mapData(56);
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().text == "Velma is reading a book. She is wearing glasses.");
@@ -466,11 +649,15 @@ static void TestTextSubstitution(const ConstScriptAssets& ca, ScriptBridge& brid
 	TEST(driver.done());
 }
 
-static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestTextTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "_TEST_TEXT_TEST");
+	ScriptEnv env;
+	MapData mapData(56);
+	env.script = "_TEST_TEXT_TEST";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().text == "This is pathA");
@@ -480,11 +667,15 @@ static void TestTextTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void CallScriptTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void CallScriptTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "_OPEN_RED_CHEST");
+	ScriptEnv env;
+	MapData mapData(56);
+	env.script = "_OPEN_RED_CHEST";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().speaker == "narrator");
@@ -493,11 +684,15 @@ static void CallScriptTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void ChoiceMode1RepeatTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode1RepeatTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_1_REPEAT");
+	ScriptEnv env;
+	MapData mapData(56);
+	env.script = "CHOICE_MODE_1_REPEAT";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 	driver.advance();
@@ -535,11 +730,15 @@ static void ChoiceMode1RepeatTest(const ConstScriptAssets& ca, ScriptBridge& bri
 	TEST(driver.done());
 }
 
-static void ChoiceMode1RewindTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode1RewindTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_1_REWIND");
+	ScriptEnv env;
+	MapData mapData(56);
+	env.script = "CHOICE_MODE_1_REWIND";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 	TEST(driver.line().text == "Text before")
@@ -569,11 +768,15 @@ static void ChoiceMode1RewindTest(const ConstScriptAssets& ca, ScriptBridge& bri
 	TEST(driver.done());
 }
 
-static void ChoiceMode1PopTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode1PopTest()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_1_POP");
+	ScriptEnv env;
+	MapData mapData(56);
+	env.script = "CHOICE_MODE_1_POP";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
  	TEST(driver.line().text == "Text before")
@@ -592,11 +795,15 @@ static void ChoiceMode1PopTest(const ConstScriptAssets& ca, ScriptBridge& bridge
 	TEST(driver.done());
 }
 
-static void ChoiceMode2Test(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void ChoiceMode2Test()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "CHOICE_MODE_2_TEST");
+	ScriptEnv env;
+	MapData mapData(56);
+	env.script = "CHOICE_MODE_2_TEST";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kChoices);
 	TEST(driver.choices().choices.size() == 2);
@@ -618,10 +825,12 @@ static void ChoiceMode2Test(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void FlagTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void FlagTest()
 {
 	using Mode = ZoneDriver::Mode;
 
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver driver(assets, bridge, "TEST_ZONE_1");
 
@@ -636,11 +845,17 @@ static void FlagTest(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.mapData.coreData.coreGet("_ScriptEnv", "scriptFlag").second.type == LUA_TNIL);
 }
 
-static void TestInventoryScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
+
+#if 0 // fixme: needs to work on a script & zone example
+static void TestInventoryScript()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
 	ZoneDriver map(assets, bridge);
-	ScriptDriver driver(map, bridge, "KEY_MASTER");
+	ScriptEnv env = map.getScriptEnv();
+	env.script = "KEY_MASTER";
+	ScriptDriver driver(assets, map.mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kChoices);
 	TEST(driver.choices().choices.size() == 2);
@@ -653,11 +868,14 @@ static void TestInventoryScript(const ConstScriptAssets& ca, ScriptBridge& bridg
 
 	TEST(map.numItems("player", "SKELETON_KEY") == 1);
 }
+#endif 
 
-static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestContainers()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zone(assets, bridge);
+	ZoneDriver zone(assets, bridge, "TEST_ZONE_2");
 	zone.setZone("TEST_ZONE_2", "TEST_ROOM_2");
 
 	const Actor& player = zone.getPlayer();
@@ -682,10 +900,12 @@ static void TestContainers(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(zone.mapData.newsQueue.size() == 2);	// unlocked and have gold
 }
 
-static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestWalkabout()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testzones.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zone(assets, bridge);
+	ZoneDriver zone(assets, bridge, "TEST_ZONE_0");
 	zone.setZone("TEST_ZONE_0", "TEST_ZONE_0_ROOM_A");
 	zone.move("TEST_ZONE_0_ROOM_B");
 	// failed:
@@ -701,7 +921,7 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		const Interaction* iAct = zone.getInteractions()[1];
 		TEST(iAct->name == "Move Button");
 		ScriptEnv env = zone.getScriptEnv(iAct);
-		ScriptDriver driver(zone, bridge, env);
+		ScriptDriver driver(assets, zone.mapData, bridge, env);
 		TEST(driver.type() == ScriptType::kText);
 		driver.advance();
 		TEST(driver.done());
@@ -714,7 +934,7 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 		const Interaction* iAct = zone.getInteractions()[2];
 		TEST(iAct->name == "Teleport Button");
 		ScriptEnv env = zone.getScriptEnv(iAct);
-		ScriptDriver driver(zone, bridge, env);
+		ScriptDriver driver(assets, zone.mapData, bridge, env);
 		TEST(driver.type() == ScriptType::kText);
 		driver.advance();
 		TEST(driver.done());
@@ -727,13 +947,15 @@ static void TestWalkabout(const ConstScriptAssets& ca, ScriptBridge& bridge)
 static void TestLuaCore()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa = bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "TEST_LUA_CORE");
+	ScriptEnv env;
+	env.script = "TEST_LUA_CORE";
+	MapData mapData(56);
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
-	CoreData& cd = zoneDriver.mapData.coreData;
+	CoreData& cd = mapData.coreData;
 	TEST(cd.coreGet("ACTOR_01", "STR").second.num == 17.0);
 	TEST(cd.coreGet("ACTOR_01", "attributes").first == false);
 	cd.coreSet("ACTOR_01", "STR", Variant(18.0), false);
@@ -753,14 +975,18 @@ static void TestLuaCore()
 	binder.set("player.name", "Foozle");
 	TEST(binder.get("player.name").str == "Test Player");
 
+	// At this point we can't save the 'driver' because
+	// it is done(). But we can test save/load of the CoreData
+
 	// Save to a file for debugging
 	std::filesystem::path path = SavePath("test", "testluacore");
 	std::ofstream stream = OpenSaveStream(path);
-	zoneDriver.save(stream);
+	cd.save(stream);
 	stream.close();
 
+	// Do the same on a stream to test
 	std::ostringstream buffer;
-	zoneDriver.save(buffer);
+	cd.save(buffer);
 	std::string str = buffer.str();
 
 	TEST(str.find("STR") != std::string::npos);
@@ -801,16 +1027,16 @@ class BattleTest {
 public:
 	static void Read();
 	static void TestSystem();
-	static void TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge);
+	static void TestScript();
 	static void TestExample();
 	static void TestRegionSpells();
-	static void TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge);
+	static void TestBattle2();
 };
 
 void BattleTest::Read()
 {
 	ScriptBridge bridge;
-	ConstScriptAssets csa = bridge.readCSA("");
+	ConstScriptAssets csa = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(csa);
 	CoreData coreData;
 	VarBinder binder(assets, bridge, coreData, ScriptEnv());
@@ -1038,16 +1264,20 @@ void BattleTest::TestSystem()
 
 }
 
-void BattleTest::TestScript(const ConstScriptAssets& ca, ScriptBridge& bridge)
+void BattleTest::TestScript()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "TEST_BATTLE_1");
+	MapData mapData(56);
+	ScriptEnv env;
+	env.script = "TEST_BATTLE_1";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kBattle);
 	{
 		// FIXME: driver.helper()->binder() is not clear
-		BattleSystem battle(assets, driver.varBinder(), driver.battle(), "player", zoneDriver.mapData.random);
+		BattleSystem battle(assets, driver.varBinder(), driver.battle(), "player", mapData.random);
 		TEST(battle.name() == "Cursed Cavern");
 		TEST(battle.combatants().size() == 5);
 		TEST(battle.regions().size() == 4);
@@ -1107,15 +1337,19 @@ void BattleTest::TestExample()
 	TEST(driver.isGameOver() == true);
 }
 
-void BattleTest::TestBattle2(const ConstScriptAssets& ca, ScriptBridge& bridge)
+void BattleTest::TestBattle2()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "TEST_BATTLE_2");
+	MapData mapData(56);
+	ScriptEnv env;
+	env.script = "TEST_BATTLE_2";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kBattle);
 
-	BattleSystem battle(assets, driver.varBinder(), driver.battle(), "player", zoneDriver.mapData.random);
+	BattleSystem battle(assets, driver.varBinder(), driver.battle(), "player", mapData.random);
 	TEST(battle.combatants().size() == 4);
 }
 
@@ -1188,11 +1422,15 @@ static void TestTextParsing()
 	}
 }
 
-static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestInlineText()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_1");
+	MapData mapData(56);
+	ScriptEnv env;
+	env.script = "ALT_TEXT_1";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 
@@ -1219,12 +1457,16 @@ static void TestInlineText(const ConstScriptAssets& ca, ScriptBridge& bridge)
 	TEST(driver.done());
 }
 
-static void TestFormatting(const ConstScriptAssets& ca, ScriptBridge& bridge)
+static void TestFormatting()
 {
+	ScriptBridge bridge;
+	ConstScriptAssets ca = bridge.readCSA("script/testscript.lua");
 	// fixme: More to be done here; mostly now just testing it loads.
 	ScriptAssets assets(ca);
-	ZoneDriver zoneDriver(assets, bridge);
-	ScriptDriver driver(zoneDriver, bridge, "ALT_TEXT_2");
+	MapData mapData(56);
+	ScriptEnv env;
+	env.script = "ALT_TEXT_2";
+	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
 }
@@ -1316,45 +1558,42 @@ static void TestChullu()
 
 int RunTests()
 {
-	ScriptBridge bridge;
-	ConstScriptAssets csassets = bridge.readCSA("");
-
-	RUN_TEST(BridgeWorkingTest(bridge));
-	RUN_TEST(HaveCAssetsTest(csassets));
-	RUN_TEST(BasicTest(csassets, bridge));
-	RUN_TEST(TestScriptBridge(bridge));
-	RUN_TEST(DialogTest_Bookcase(csassets, "DIALOG_BOOKCASE_V1", bridge));
-	RUN_TEST(DialogTest_Bookcase(csassets, "DIALOG_BOOKCASE_V2", bridge));
+	RUN_TEST(BridgeWorkingTest());
+	RUN_TEST(HaveCAssetsTest());
+	RUN_TEST(BasicTest());
+	RUN_TEST(TestScriptBridge());
+	RUN_TEST(DialogTest_Bookcase("DIALOG_BOOKCASE_V1"));
+	RUN_TEST(DialogTest_Bookcase("DIALOG_BOOKCASE_V2"));
 	RUN_TEST(TestInventory1());
 	RUN_TEST(TestInventory2());
 	RUN_TEST(TestScriptAccess());
 	RUN_TEST(TestCodeEval());
 	RUN_TEST(TestBattle());
-	RUN_TEST(TestTextSubstitution(csassets, bridge));
-	RUN_TEST(TestTextTest(csassets, bridge));
-	RUN_TEST(CallScriptTest(csassets, bridge));
-	RUN_TEST(ChoiceMode1RepeatTest(csassets, bridge));
-	RUN_TEST(ChoiceMode1RewindTest(csassets, bridge));
-	RUN_TEST(ChoiceMode1PopTest(csassets, bridge));
-	RUN_TEST(ChoiceMode2Test(csassets, bridge));
-	RUN_TEST(FlagTest(csassets, bridge));
-	RUN_TEST(TestSave(csassets, bridge));
-	RUN_TEST(TestLoad());
-	RUN_TEST(TestInventoryScript(csassets, bridge));
-	RUN_TEST(TestWalkabout(csassets, bridge));
+	RUN_TEST(TestTextSubstitution());
+	RUN_TEST(TestTextTest());
+	RUN_TEST(CallScriptTest());
+	RUN_TEST(ChoiceMode1RepeatTest());
+	RUN_TEST(ChoiceMode1RewindTest());
+	RUN_TEST(ChoiceMode1PopTest());
+	RUN_TEST(ChoiceMode2Test());
+	RUN_TEST(FlagTest());
+	RUN_TEST(TestScriptSave());
+	RUN_TEST(TestScriptSaveMutated());
+	RUN_TEST(TestZoneSave());
+	RUN_TEST(TestWalkabout());
 	RUN_TEST(TestLuaCore());
-	RUN_TEST(TestContainers(csassets, bridge));
+	RUN_TEST(TestContainers());
 	RUN_TEST(TestCombatant());
 	RUN_TEST(BattleTest::Read());
 	RUN_TEST(BattleTest::TestSystem());
-	RUN_TEST(BattleTest::TestScript(csassets, bridge));
+	RUN_TEST(BattleTest::TestScript());
 	RUN_TEST(BattleTest::TestExample());
 	RUN_TEST(BattleTest::TestRegionSpells());
-	RUN_TEST(BattleTest::TestBattle2(csassets, bridge));
+	RUN_TEST(BattleTest::TestBattle2());
 	RUN_TEST(TestExampleZone());
 	RUN_TEST(TestTextParsing());
-	RUN_TEST(TestInlineText(csassets, bridge));
-	RUN_TEST(TestFormatting(csassets, bridge));
+	RUN_TEST(TestInlineText());
+	RUN_TEST(TestFormatting());
 	RUN_TEST(TestChullu());
 
 	assert(gNTestPass > 0);

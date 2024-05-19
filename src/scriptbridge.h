@@ -32,8 +32,22 @@ public:
 	}
 
 	void setICore(ICoreHandler* handler) {
-		assert((handler && !_iCoreHandler) || (!handler && _iCoreHandler));
-		_iCoreHandler = handler;
+		if (handler) {
+			if (_iCoreCount == 0) {
+				assert(!_iCoreHandler);
+				_iCoreHandler = handler;
+			}
+			else {
+				assert(handler == _iCoreHandler);
+			}
+			_iCoreCount++;
+		}
+		else {
+			_iCoreCount--;
+			if (_iCoreCount == 0) {
+				_iCoreHandler = nullptr;
+			}
+		}
 	}
 
 	void setIText(ITextHandler* handler) {
@@ -47,6 +61,7 @@ public:
 	}
 
 	void loadLUA(const std::string& path);
+	// Read the CSAs. 
 	ConstScriptAssets readCSA(const std::string& path);
 
 	lua_State* getLuaState() const { return L; }
@@ -59,6 +74,7 @@ public:
 			return str == rhs.str && count == rhs.count;
 		}
 	};
+	void setGlobal(const std::string& key, const Variant& value);
 	void pushGlobal(const std::string& key);
 	void pushTable(const std::string& key, int index = 0);
 	void pushNewGlobalTable(const std::string& key);
@@ -117,6 +133,7 @@ private:
 	ICoreHandler* _iCoreHandler = nullptr;
 	ITextHandler* _iTextHandler = nullptr;
 	IAssetHandler* _iAssetHandler = nullptr;
+	int _iCoreCount = 0;
 
 	void registerCallbacks();
 
