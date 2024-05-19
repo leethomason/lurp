@@ -38,12 +38,12 @@ public:
 		SDL_Surface* surface = IMG_Load(path.string().c_str());
 		assert(surface);
 		assert(_queue);
-		_texture->_size = Point({ surface->w, surface->h });
+		_texture->_size = Size({ surface->w, surface->h });
 		_texture->_bytes = surface->format->BytesPerPixel;
 
 		TextureUpdate update{ _texture, surface, _generation };
 #if DEBUG_TEXTURES
-		fmt::print("TextureLoadTask -> queue: {} {}\n", _texture->width(), _texture->height());
+		fmt::print("TextureLoadTask -> queue: '{}' {}x{}\n", _texture->path(), _texture->width(), _texture->height());
 #endif
 		_queue->push(update);
 	}
@@ -56,7 +56,7 @@ public:
 Texture::~Texture()
 {
 #if DEBUG_TEXTURES
-	fmt::print("~Texture() delete: {}\n", _name);
+	fmt::print("~Texture() delete: '{}'\n", path());
 #endif
 	SDL_DestroyTexture(_sdlTexture);
 }
@@ -73,11 +73,11 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path
 		return *it;
 	}
 
-#if DEBUG_TEXTURES
-	fmt::print("loadTexture: {}\n", name);
-#endif
 	Texture* texture = new Texture();
 	texture->_path = path.string();
+#if DEBUG_TEXTURES
+	fmt::print("loadTexture: '{}'\n", texture->path());
+#endif
 	auto ptr = std::shared_ptr<Texture>(texture);
 
 	TextureLoadTask* task = new TextureLoadTask();
@@ -92,15 +92,16 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path
 
 std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 {
-#if DEBUG_TEXTURES
-	fmt::print("createTextField: {}\n", name);
-#endif
 	Texture* texture = new Texture();
-	texture->_size = Point{ w, h };
+	texture->_size = Size{ w, h };
 	texture->_bytes = 4;
 	texture->_textField = true;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
+	texture->_path = fmt::format("field:{}x{}", w, h);
 
+#if DEBUG_TEXTURES
+	fmt::print("createTextField: '{}'\n", texture->path());
+#endif
 	auto ptr = std::shared_ptr<Texture>(texture);
 	_textures.push_back(ptr);
 	return ptr;
@@ -122,7 +123,7 @@ void TextureManager::update()
 
 		if (generation < texture->_generation) {
 #if DEBUG_TEXTURES
-			fmt::print("update() discard {} of {} on {}\n", generation, texture->_generation, texture->name());
+			fmt::print("update() discard {} of {} on '{}'\n", generation, texture->_generation, texture->path());
 #endif
 			// This is an old surface. Discard it.
 			SDL_FreeSurface(surface);
@@ -131,7 +132,7 @@ void TextureManager::update()
 
 		if (texture->_textField) {
 #if DEBUG_TEXTURES
-			fmt::print("update() streaming to {}\n", texture->name());
+			fmt::print("update() streaming to '{}'\n", texture->path());
 #endif
 			assert(texture->_sdlTexture);	// fixed size - should always be there.
 			SDL_Surface* target = nullptr;
@@ -153,18 +154,18 @@ void TextureManager::update()
 		else {
 			if (texture->_sdlTexture) {
 #if DEBUG_TEXTURES
-				fmt::print("update() DESTROY {}\n", texture->name());
+				fmt::print("update() DESTROY '{}'\n", texture->path());
 #endif
 				// Don't expect this to happen very often. Keep an eye on it.
 				SDL_DestroyTexture(texture->_sdlTexture);
 			}
 #if DEBUG_TEXTURES
-			fmt::print("update() create {}\n", texture->name());
+			fmt::print("update() create '{}'\n", texture->path());
 #endif
 			texture->_sdlTexture = SDL_CreateTextureFromSurface(_sdlRenderer, surface);
 		}
 		texture->_generation = generation;
-		texture->_surfaceSize = Point{ surface->w, surface->h };
+		texture->_surfaceSize = Size{ surface->w, surface->h };
 		SDL_FreeSurface(surface);
 	}
 	for (auto& t : _textures) {

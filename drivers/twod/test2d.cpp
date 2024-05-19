@@ -168,7 +168,7 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 {
 	// Draw a texture. Confirm sRGB is working.
 	if (portrait11->ready()) {
-		SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->width(), portrait11->height() });
+		SDL_Rect dest = xFormer.t(SDL_Rect{ 0, 0, portrait11->pixelSize().w, portrait11->pixelSize().h});
 		Draw(d.renderer, portrait11, nullptr, &dest, RenderQuality::kBlit);
 	}
 
@@ -195,11 +195,13 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	{
 		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame / 60));
 		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
-		d.fontManager.draw(tf0, 400, 300);
+		Point p0 = xFormer.t(Point{ 400, 300 });
+		d.fontManager.Draw(tf0, p0.x, p0.y);
 
 		tf1->setText("This is some fancy pants hq text.");
 		tf1->setColor(SDL_Color{ 255, 255, 255, 255 });
-		d.fontManager.draw(tf1, 20, 550);
+		Point p1 = xFormer.t(Point{ 20, 550 });
+		d.fontManager.Draw(tf1, p1.x, p1.y);
 	}
 }
 

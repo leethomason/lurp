@@ -1,15 +1,25 @@
 #include "xform.h"
+#include <fmt/format.h>
+
+#define DEBUG_XFORM 1
 
 void XFormer::setRenderSize(int rw, int rh)
 {
 	if (_renderSize.w == rw && _renderSize.h == rh) 
 		return;
-	_renderSize = Rect{0, 0, rw, rh};
+
+	_renderSize = Size{rw, rh};
+#if DEBUG_XFORM
+	fmt::print("setRenderSize {} x {}\n", rw, rh);
+#endif
 
 	// Test for unity
 	if (_virtualSize == _renderSize) {
 		_scale = 1.0;
 		_offset = Point{0, 0};
+#if DEBUG_XFORM
+		fmt::print("unity\n");
+#endif
 		return;
 	}
 
@@ -26,6 +36,9 @@ void XFormer::setRenderSize(int rw, int rh)
 		if (_renderSize.w == _virtualSize.w * scale && _renderSize.h == _virtualSize.h * scale) {
 			_scale = (double)scale;
 			_offset = Point{0, 0};
+#if DEBUG_XFORM
+			fmt::print("integer scale {}\n", scale);
+			#endif
 			return;
 		}
 	}
@@ -34,6 +47,9 @@ void XFormer::setRenderSize(int rw, int rh)
 		if (_virtualSize.w == _renderSize.w * scale && _virtualSize.h == _renderSize.h * scale) {
 			_scale = 1.0f / scale;
 			_offset = Point{0, 0};
+#if DEBUG_XFORM
+			fmt::print("integer scale {}\n", scale);
+#endif
 			return;
 		}
 	}
@@ -49,6 +65,9 @@ void XFormer::setRenderSize(int rw, int rh)
 		_scale = scaleOnHeight;
 		_offset = Point{int((_renderSize.w - _virtualSize.w * _scale) / 2), 0};
 	}
+#if DEBUG_XFORM
+	fmt::print("_offset={},{} _scale={}\n", _offset.x, _offset.y, _scale);
+#endif
 }
 
 SDL_Rect XFormer::sdlClipRect() const
@@ -68,6 +87,14 @@ Point XFormer::t(const Point& in) const
 	p.x = _offset.x + s(in.x);
 	p.y = _offset.y + s(in.y);
 	return p;
+}
+
+Size XFormer::t(const Size& sz) const
+{
+	Size out;
+	out.w = s(sz.w);
+	out.h = s(sz.h);
+	return out;
 }
 
 Rect XFormer::t(const Rect& r) const

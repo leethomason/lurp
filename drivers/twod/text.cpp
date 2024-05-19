@@ -31,14 +31,10 @@ public:
 			}
 
 			if (_hqOpaque) {
-				//if (gQuality == 0)
-				//	surface = TTF_RenderUTF8_Shaded_Wrapped(_font, s, _color, _bg, _texture->width());
-				//else
-				// Lots of fiddling about - liked LCD best in the end.
-				surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->width());
+				surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->pixelSize().w);
 			}
 			else {
-				surface = TTF_RenderUTF8_Blended_Wrapped(_font, s, _color, _texture->width());
+				surface = TTF_RenderUTF8_Blended_Wrapped(_font, s, _color, _texture->pixelSize().w);
 			}
 			assert(surface);
 		}
@@ -121,14 +117,15 @@ void FontManager::update(const XFormer& xf)
 		}
 	}
 
-	// Stage 2: update the text fields if the screen size changed.
-	if (change) {
-		for (auto& tf : _textFields) {
-			// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
-			Point size = xf.s(Point{ tf->_virtualSize });
-			tf->_texture = _textureManager.createTextField(size.x, size.y);
+	// Stage 2: update the text fields to the correct size
+	for (auto& tf : _textFields) {
+		// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
+		Size realSize = xf.t(tf->_virtualSize);
+		if (!tf->_texture || realSize != tf->_texture->pixelSize()) {
+			tf->_texture = _textureManager.createTextField(realSize.w, realSize.h);
 			tf->_needUpdate = true;
 		}
+		tf->_needUpdate |= change;
 	}
 
 	// Stage 3: update the text fields if they need it, because of font, color, or text changes.
@@ -170,8 +167,9 @@ std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int wi
 
 	TextField* tf = new TextField();
 	tf->_font = f;
-	tf->_virtualSize = Point{ width, height };
-	tf->_texture = _textureManager.createTextField(width, height);
+	tf->_virtualSize = Size{ width, height };
+	// No point in creating the texture because we don't know the real size yet.
+	//tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
 	tf->_bg = bg;
 
@@ -184,14 +182,14 @@ TextField::~TextField()
 {
 }
 
-void FontManager::draw(std::shared_ptr<TextField>& tf, int vx, int vy)
+void FontManager::Draw(std::shared_ptr<TextField>& tf, int x, int y)
 {
 	assert(tf->_font);	
 	assert(tf->_font->font); // should be kept up to date in update()
 
 	if (tf->_texture->ready()) {
-		Point p = _xf.t(Point{ vx, vy });
-		SDL_Rect dst = { p.x, p.y, tf->_texture->width(), tf->_texture->height() };
+		//Point p = _xf.t(Point{ vx, vy });
+		SDL_Rect dst = { x, y, tf->_texture->width(), tf->_texture->height() };
 		if (tf->_hqOpaque)
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);
 		else

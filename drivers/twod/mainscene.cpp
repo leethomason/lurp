@@ -28,7 +28,7 @@ void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf
 	const float height = realFontSize * 1.8f;
 	const float realWidth = height * 5.0f;
 	const float realHeight = 1000.0f;
-	const PointF center = xf.tf(0.5f, 0.5f);
+	const PointF center{xf.renderSize().w / 2.f, xf.renderSize().h / 2.f};
 	RectF guiRect{center.x - realWidth / 2, center.y, realWidth, realHeight};
 
 	struct nk_style* s = &ctx->style;

@@ -29,11 +29,12 @@ public:
 
 	bool ready() const { return _sdlTexture != nullptr; }
 	SDL_Texture* sdlTexture() const { _age = 0; return _sdlTexture; }
-	int width() const { return _size.x; }
-	int height() const { return _size.y; }
-	const Point& size() const { return _size; }
-	const Point& surfaceSize() const { return _surfaceSize; }	
+	const Size& pixelSize() const { return _size; }
+	const Size& surfaceSize() const { return _surfaceSize; }	
 	const std::string& path() const { return _path; }
+	int memory() const { return _size.w * _size.h * _bytes; }
+	int width() const { return _size.w; }
+	int height() const { return _size.h; }
 
 	static bool ready(std::vector<const Texture*> textures) {
 		return std::all_of(textures.begin(), textures.end(), [](const Texture* t) { return t->ready(); });
@@ -46,9 +47,9 @@ private:
 	SDL_Texture* _sdlTexture = nullptr;
 	std::string _path;
 	int _generation = 0;
-	Point _size;	// allocated size, and size of the texture
-	Point _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
-	int _bytes = 0;	// 3 or 4
+	Size _size;	// allocated size, and size of the texture
+	Size _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
+	int _bytes = 0;	
 	bool _textField = false;
 	mutable uint32_t _age = 0;
 };
@@ -81,12 +82,12 @@ public:
 
 	uint64_t totalTextureMemory() const {
 		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const auto& t) {
-			return sum + (t->width() * t->height() * t->_bytes);
+			return sum + t->memory();
 		});
 	}
 	uint64_t readyTextureMemory() const {
 		return std::accumulate(_textures.begin(), _textures.end(), 0, [](int sum, const auto& t) {
-			return sum + (t->ready() ? (t->width() * t->height() * t->_bytes) : 0);
+			return sum + (t->ready() ? t->memory() : 0);
 		});
 	}
 
