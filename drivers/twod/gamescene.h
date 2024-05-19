@@ -12,6 +12,10 @@
 #include <string>
 #include <memory>
 
+namespace lurp {
+	class ZoneDriver;
+}
+
 class GameScene : public Scene
 {
 public:
