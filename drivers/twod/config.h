@@ -28,6 +28,7 @@ struct GameRegion {
 
 struct GameConfig {
 	Point virtualSize = { 1920, 1080 };
+	SDL_Color textColor = { 255, 255, 255, 255 };
 	SDL_Color backgroundColor = { 0, 0, 0, 255 };
 
 	std::vector<GameRegion> regions;

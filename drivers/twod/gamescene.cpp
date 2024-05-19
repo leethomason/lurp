@@ -16,12 +16,12 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		}	
 		else if (r.type == GameRegion::Type::kText || r.type == GameRegion::Type::kInfo) {
 			if (r.bgColor.a < 255)
-				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, false, r.bgColor);
+				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, false);
 			else
-				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, true, r.bgColor);
-
-			_data[i].textField->setColor({ 255, 255, 255, 255 });
-			_data[i].textField->setBgColor({ 255, r.bgColor.g, r.bgColor.b, 255 });
+				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, true);
+			
+			_data[i].textField->setColor(d.config.textColor);
+			_data[i].textField->setBgColor(r.bgColor);
 		}
 	}
 
@@ -76,16 +76,15 @@ void GameScene::process(Drawing& d)
 	if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
 		auto[region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
 		if (region && data) {
-			//data->textField->setText(_zoneDriver->text().text);
-			data->textField->setText("Hello there");
+			if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText)
+				data->textField->setText(_zoneDriver->text().text);
 		}
 	}
 	{
 		const std::string& zoneName = _zoneDriver->currentZone().name;
 		auto[region, data] = getRegion(GameRegion::Type::kInfo, d.config.regions);
 		if (region && data) {
-			//data->textField->setText(zoneName);
-			data->textField->setText("This is some text wide enough to wrap so I can tell what is going on. Where is the factor of 2 coming from? Inverse transform?");
+			data->textField->setText(zoneName);
 		}
 	}
 }

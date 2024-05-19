@@ -160,8 +160,9 @@ void AssetsTest::load(Drawing& d, const FrameData&)
 	tree = d.textureManager.loadTexture("assets/tree.png");
 
 	const Font* roboto16 = d.fontManager.loadFont("assets/Roboto-Regular.ttf", 16);
-	tf0 = d.fontManager.createTextField(roboto16, 300, 600);
-	tf1 = d.fontManager.createTextField(roboto16, 300, 300, true, clearColor);
+	tf0 = d.fontManager.createTextField(roboto16, 300, 600, false);
+	tf1 = d.fontManager.createTextField(roboto16, 300, 300, true);
+	tf1->setBgColor(clearColor);
 }
 
 void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)

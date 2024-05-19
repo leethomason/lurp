@@ -147,8 +147,10 @@ void TextureManager::update()
 			else {
 				memset(target->pixels, 0, target->pitch * target->h);
 			}
-			SDL_Rect r{ 0, 0, std::min(surface->w, texture->width()), std::min(surface->h, texture->height())};
-			SDL_BlitSurface(surface, &r, target, &r);
+			if (surface) {
+				SDL_Rect r{ 0, 0, std::min(surface->w, texture->width()), std::min(surface->h, texture->height()) };
+				SDL_BlitSurface(surface, &r, target, &r);
+			}
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}
 		else {
@@ -165,7 +167,7 @@ void TextureManager::update()
 			texture->_sdlTexture = SDL_CreateTextureFromSurface(_sdlRenderer, surface);
 		}
 		texture->_generation = generation;
-		texture->_surfaceSize = Size{ surface->w, surface->h };
+		texture->_surfaceSize = surface ? Size{ surface->w, surface->h } : Size{ 0, 0 };
 		SDL_FreeSurface(surface);
 	}
 	for (auto& t : _textures) {

@@ -75,9 +75,9 @@ private:
 	Size _renderedSize;	// size of the rendered text; usually a little smaller than _size
 
 	bool _hqOpaque = false;
-	SDL_Color _bg = SDL_Color{ 0, 0, 0, 0 };
+	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
 	std::string _text;
-	SDL_Color _color = SDL_Color{ 0, 0, 0, 0 };
+	SDL_Color _color = SDL_Color{ 255, 255, 255, 255 };
 };
 
 class FontManager {
@@ -92,7 +92,7 @@ public:
 
 	void update(const XFormer& xf);
 
-	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ = false, SDL_Color bg = SDL_Color{0, 0, 0, 255});
+	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ);
 
 	// Note it draws in real pixels (like ::Draw)
 	void Draw(std::shared_ptr<TextField>& tf, int x, int y);

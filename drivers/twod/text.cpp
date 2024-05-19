@@ -23,32 +23,28 @@ public:
 	{
 		static std::mutex gTTFMutex;
 		SDL_Surface* surface = nullptr;
-		{
+		if (!_text.empty()) {
 			// TTF, it turns out, is not thread safe.
 			std::lock_guard<std::mutex> lock(gTTFMutex);
-			const char* s = _text.c_str();
-			if (!*s) {
-				s = " "; // TTF doesn't like empty strings
-				// fixme: return null and clear the texture
-			}
 
 			if (_hqOpaque) {
 				if (gQuality == 0)
-					surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->pixelSize().w);
+					surface = TTF_RenderUTF8_LCD_Wrapped(_font, _text.c_str(), _color, _bg, _texture->pixelSize().w);
 				else
-					surface = TTF_RenderUTF8_Shaded_Wrapped(_font, s, _color, _bg, _texture->pixelSize().w);
+					surface = TTF_RenderUTF8_Shaded_Wrapped(_font, _text.c_str(), _color, _bg, _texture->pixelSize().w);
 			}
 			else {
-				surface = TTF_RenderUTF8_Blended_Wrapped(_font, s, _color, _texture->pixelSize().w);
+				surface = TTF_RenderUTF8_Blended_Wrapped(_font, _text.c_str(), _color, _texture->pixelSize().w);
 			}
 			assert(surface);
 		}
-
 #if DEBUG_TEXT
+		if (surface) {
 #	if	DEBUG_TEXT_SAVE
-		SDL_SaveBMP(surface, "surface.bmp");
+			SDL_SaveBMP(surface, "surface.bmp");
 #	endif
-		fmt::print("Rendered text: '{}' {} chars at {}x{} hq={}\n", _text.substr(0, 20), _text.size(), surface->w, surface->h, _hqOpaque ? 1 : 0);
+			fmt::print("Rendered text: '{}' {} chars at {}x{} hq={}\n", _text.substr(0, 20), _text.size(), surface->w, surface->h, _hqOpaque ? 1 : 0);
+		}
 #endif
 		TextureUpdate update{ _texture, surface, _generation, _hqOpaque, _bg };
 		_queue->push(update);
@@ -177,7 +173,7 @@ Font* FontManager::getFont(const Font* font)
 }
 
 
-std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int width, int height, bool useOpaqueHQ, SDL_Color bg)
+std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int width, int height, bool useOpaqueHQ)
 {
 	Font* f = getFont(font);
 	assert(f);
@@ -189,7 +185,6 @@ std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int wi
 	// No point in creating the texture because we don't know the real size yet.
 	//tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
-	tf->_bg = bg;
 
 	std::shared_ptr<TextField> ptr(tf);
 	_textFields.push_back(ptr);
