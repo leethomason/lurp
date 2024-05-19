@@ -175,6 +175,7 @@ target_link_libraries(lurp2d SDL2_image::SDL2_image)
 target_link_libraries(lurp2d SDL2_ttf::SDL2_ttf)
 
 set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
+set_target_properties(lurp2d PROPERTIES VS_DPI_AWARE "PerMonitor")
 
 # FIXME: windws & MSVC only
 # copy the dll to the working directory

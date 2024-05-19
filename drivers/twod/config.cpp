@@ -33,18 +33,18 @@
 	image.type = GameRegion::Type::kImage;
 	c.regions.push_back(image);
 
-	GameRegion text;
+	/*GameRegion text;
 	text.name = "text";
 	text.position = { 620, 50, 760, 980 };
 	text.type = GameRegion::Type::kText;
 	text.bgColor = { 64, 64, 64, 255 };
 	c.regions.push_back(text);
-
+	*/
 	GameRegion info;
 	info.name = "info";
 	info.position = { 1422, 50, 448, 980 };
 	info.type = GameRegion::Type::kInfo;
-	text.bgColor = { 64, 64, 64, 255 };
+	info.bgColor = { 64, 64, 64, 255 };
 	c.regions.push_back(info);
 
 	return c;

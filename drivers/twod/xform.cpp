@@ -1,7 +1,7 @@
 #include "xform.h"
 #include <fmt/format.h>
 
-#define DEBUG_XFORM 1
+#define DEBUG_XFORM 0
 
 void XFormer::setRenderSize(int rw, int rh)
 {

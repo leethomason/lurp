@@ -29,9 +29,11 @@ public:
 
 	bool ready() const { return _sdlTexture != nullptr; }
 	SDL_Texture* sdlTexture() const { _age = 0; return _sdlTexture; }
+
 	const Size& pixelSize() const { return _size; }
 	const Size& surfaceSize() const { return _surfaceSize; }	
 	const std::string& path() const { return _path; }
+
 	int memory() const { return _size.w * _size.h * _bytes; }
 	int width() const { return _size.w; }
 	int height() const { return _size.h; }
@@ -47,7 +49,7 @@ private:
 	SDL_Texture* _sdlTexture = nullptr;
 	std::string _path;
 	int _generation = 0;
-	Size _size;	// allocated size, and size of the texture
+	Size _size;			// allocated size, and size of the texture
 	Size _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
 	int _bytes = 0;	
 	bool _textField = false;

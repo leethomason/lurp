@@ -73,13 +73,54 @@ int main(int argc, char* argv[])
 		FATAL_INTERNAL_ERROR();
 	}
 
+	// Get the display info...but it doesn't work.
+	// On a modern high dpi display (at least on windows) the UI scale is getting applied
+	// before any of these numbers. Only the GetDisplayMode() is correct. And even working around
+	// all that isn't what I want - I want to address in actual pixels.
+	// The upshot of all this is that text looks fuzzy - all the code to render things 1:1 is
+	// getting bypassed, and it's really rendering 1:1.75. (Which is my display scale, not coincidentally.)
+#if 0
+	SDL_Rect displayBounds;
+	int nDisplay = SDL_GetNumVideoDisplays();
+	for (int i = 0; i < nDisplay; i++) {
+		const char* name = SDL_GetDisplayName(i);
+		SDL_GetDisplayBounds(0, &displayBounds);
+		float dpi, hdpi, vdpi;
+		SDL_GetDisplayDPI(i, &dpi, &hdpi, &vdpi);
+		fmt::print("Display {} {}: {}x{} at {},{} dpi = {} {} {}\n", i, name, displayBounds.w, displayBounds.h, displayBounds.x, displayBounds.y, dpi, hdpi, vdpi);
+
+		int nModes = 1;	// first is all that matters
+		for (int j = 0; j < nModes; j++) {
+			SDL_DisplayMode mode;
+			SDL_GetDisplayMode(i, j, &mode);
+			fmt::print("  Mode {}: {}x{} {}Hz\n", j, mode.w, mode.h, mode.refresh_rate);
+		}
+	}
+#endif
+#ifdef _WIN32
+	{
+		SDL_DisplayMode desktop;
+		SDL_GetDesktopDisplayMode(0, &desktop);
+
+		SDL_DisplayMode mode;
+		SDL_GetDisplayMode(0, 0, &mode);
+		fmt::print("Desktop: {}x{}  Display: {}x{}\n", desktop.w, desktop.h, mode.w, mode.h);
+		if (mode.w != desktop.w || mode.h != desktop.h) {
+			fmt::print("WARNING: Virtual pixels. HDPI not 1:1\n");
+		}
+		else {
+			fmt::print("HDPI is 1:1\n");
+		}
+	}
+#endif
+
 	SDL_Rect displayBounds;
 	SDL_GetDisplayBounds(0, &displayBounds);
 
 	SDL_Window* window = SDL_CreateWindow(
 		"LuRP",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		3 * displayBounds.w/4, 3 * displayBounds.h/4,
+		3 * displayBounds.w / 4, 3 * displayBounds.h / 4,
 		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE //| SDL_WINDOW_ALLOW_HIGHDPI //| SDL_WINDOW_FULLSCREEN_DESKTOP
 	);
 	if (!window) {
@@ -95,7 +136,7 @@ int main(int argc, char* argv[])
 	int windowW, windowH, renderW, renderH;
 	SDL_GetWindowSize(window, &windowW, &windowH);
 	SDL_GetRendererOutputSize(sdlRenderer, &renderW, &renderH);
-	fmt::print("SDL window = {}x{} renderer= {}x{}\n", windowW, windowH, renderW, renderH);
+	fmt::print("SDL display = {}x{} window = {}x{} renderer= {}x{}\n", displayBounds.w, displayBounds.h, windowW, windowH, renderW, renderH);
 
 	PLOG(plog::info) << "LuRP2D starting up.";
 	SDL_version compiled;
@@ -183,9 +224,8 @@ int main(int argc, char* argv[])
 			iAssetsTests->load(drawing, frameData);
 		}
 		else {
-			gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 20);	// fixme: hardcode. should be in config.
+			gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 24);	// fixme: hardcode. should be in config.
 		}
-
 
 		bool done = false;
 		SDL_Event e;

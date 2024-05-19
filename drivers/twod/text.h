@@ -17,8 +17,8 @@ class FontManager;
 
 struct Font {
 	TTF_Font* font = nullptr;	// this is kept current on the main thread and is always valid (the pool will be flushed before this changes)
-	int size = 0;				// virtual size
-	int realSize = 0;			// render size
+	int pointSize = 0;
+	int realSize = 0;
 	std::string path;			// for reload, which has to be done on resize (keeping fonts 1:1)
 };
 

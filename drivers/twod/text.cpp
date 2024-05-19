@@ -8,9 +8,11 @@
 #include <fmt/core.h>
 #include <plog/Log.h>
 
-#define DEBUG_TEXT 1
+#define DEBUG_TEXT 0
+#define DEBUG_TEXT_SAVE 0	// set to 1 to write "surface.bmp" and "font.bmp" to disk to compare pixel quality
 
-static int gQuality = 0;
+static int gQuality = 1;
+static constexpr int kScale = 1;
 
 class RenderFontTask : public lurp::SelfDeletingTask
 {
@@ -31,7 +33,10 @@ public:
 			}
 
 			if (_hqOpaque) {
-				surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->pixelSize().w);
+				if (gQuality == 0)
+					surface = TTF_RenderUTF8_LCD_Wrapped(_font, s, _color, _bg, _texture->pixelSize().w);
+				else
+					surface = TTF_RenderUTF8_Shaded_Wrapped(_font, s, _color, _bg, _texture->pixelSize().w);
 			}
 			else {
 				surface = TTF_RenderUTF8_Blended_Wrapped(_font, s, _color, _texture->pixelSize().w);
@@ -40,6 +45,9 @@ public:
 		}
 
 #if DEBUG_TEXT
+#	if	DEBUG_TEXT_SAVE
+		SDL_SaveBMP(surface, "surface.bmp");
+#	endif
 		fmt::print("Rendered text: '{}' {} chars at {}x{} hq={}\n", _text.substr(0, 20), _text.size(), surface->w, surface->h, _hqOpaque ? 1 : 0);
 #endif
 		TextureUpdate update{ _texture, surface, _generation, _hqOpaque, _bg };
@@ -65,22 +73,23 @@ FontManager::~FontManager()
 	}
 }
 
-const Font* FontManager::loadFont(const std::string& path, int virtualSize)
+const Font* FontManager::loadFont(const std::string& path, int pointSize)
 {
 	for (Font* f : _fonts) {
-		if (f->path == path && f->size == virtualSize) {
+		if (f->path == path && f->pointSize == pointSize) {
 			return f;
 		}
 	}
 
 	Font* font = new Font();
-	font->size = virtualSize;
+	font->pointSize = pointSize;
+	font->realSize = pointSize * kScale;
 	font->path = path;
-	font->font = TTF_OpenFont(path.c_str(), virtualSize);
+	font->font = TTF_OpenFont(path.c_str(), pointSize * kScale);
 	assert(font->font);	
 	_fonts.push_back(font);
 
-	PLOG(plog::info) << "Loaded font '" << path << "' at size " << virtualSize;
+	PLOG(plog::info) << "Loaded font '" << path << "' at size " << pointSize;
 	return font;
 }
 
@@ -96,7 +105,7 @@ void FontManager::update(const XFormer& xf)
 
 	// Stage 1: update the fonts if the screen size changed.
 	for (Font* f : _fonts) {
-		int realSize = xf.s(f->size);
+		int realSize = xf.s(f->pointSize);
 		if (realSize != f->realSize) {
 			// Flush the open tasks:
 			_pool.WaitforAll();
@@ -106,12 +115,17 @@ void FontManager::update(const XFormer& xf)
 			fmt::print("Loading font {} at size {}...", f->path, realSize);
 #endif
 
-			TTF_SetFontSize(f->font, realSize);
+			//int points = realSize * 133 / 100;
+			TTF_SetFontSize(f->font, realSize * kScale);
 
 #if DEBUG_TEXT
+#	if DEBUG_TEXT_SAVE
+			SDL_Surface* ts = TTF_RenderUTF8_LCD_Wrapped(f->font, "The quick brown fox jumped over the lazy dog", { 255, 255, 255, 255 }, { 0, 0, 0, 255 }, 512);
+			SDL_SaveBMP(ts, "font.bmp");
+			SDL_FreeSurface(ts);
+#	endif
 			fmt::print("done\n");
 #endif
-
 			assert(f->font);
 			f->realSize = realSize;
 		}
@@ -121,7 +135,11 @@ void FontManager::update(const XFormer& xf)
 	for (auto& tf : _textFields) {
 		// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
 		Size realSize = xf.t(tf->_virtualSize);
-		if (!tf->_texture || realSize != tf->_texture->pixelSize()) {
+		realSize.w *= kScale;
+		realSize.h *= kScale;
+		Size texSize = tf->_texture ? tf->_texture->pixelSize() : Size{ 0, 0};
+
+		if (!tf->_texture || realSize != texSize) {
 			tf->_texture = _textureManager.createTextField(realSize.w, realSize.h);
 			tf->_needUpdate = true;
 		}
@@ -189,13 +207,13 @@ void FontManager::Draw(std::shared_ptr<TextField>& tf, int x, int y)
 
 	if (tf->_texture->ready()) {
 		//Point p = _xf.t(Point{ vx, vy });
-		SDL_Rect dst = { x, y, tf->_texture->width(), tf->_texture->height() };
+		SDL_Rect dst = { x, y, tf->_texture->width() / kScale, tf->_texture->height() / kScale };
 		if (tf->_hqOpaque)
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);
 		else
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_BLEND);
 
-		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);	// straight copy: shouldn't matter
+		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
 		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), nullptr, &dst);
 	}
 }

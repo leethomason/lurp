@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_TEXTURES 1
+#define DEBUG_TEXTURES 0
 
 class TextureLoadTask : public lurp::SelfDeletingTask
 {

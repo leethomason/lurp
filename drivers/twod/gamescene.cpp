@@ -84,7 +84,8 @@ void GameScene::process(Drawing& d)
 		const std::string& zoneName = _zoneDriver->currentZone().name;
 		auto[region, data] = getRegion(GameRegion::Type::kInfo, d.config.regions);
 		if (region && data) {
-			data->textField->setText(zoneName);
+			//data->textField->setText(zoneName);
+			data->textField->setText("This is some text wide enough to wrap so I can tell what is going on. Where is the factor of 2 coming from? Inverse transform?");
 		}
 	}
 }
