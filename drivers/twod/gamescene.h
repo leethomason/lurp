@@ -30,7 +30,7 @@ private:
 	// Grapics ----------------
 	struct GSData {
 		std::shared_ptr<Texture> texture;
-		std::shared_ptr<TextField> textField;
+		std::shared_ptr<TextBox> textField;
 	};
 	std::vector<GSData> _data;
 

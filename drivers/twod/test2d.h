@@ -25,5 +25,6 @@ private:
 	const SDL_Color clearColor = { 0, 179, 228, 255 };
 
 	std::shared_ptr<Texture> portrait11, ps0, ps1, ps2, ps3, ps4, ps5, tree;
-	std::shared_ptr<TextField> tf0, tf1;
+	std::shared_ptr<TextBox> tf0, tf1;
+	std::shared_ptr<VBox> vbox;
 };

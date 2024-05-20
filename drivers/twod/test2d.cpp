@@ -160,9 +160,21 @@ void AssetsTest::load(Drawing& d, const FrameData&)
 	tree = d.textureManager.loadTexture("assets/tree.png");
 
 	const Font* roboto16 = d.fontManager.loadFont("assets/Roboto-Regular.ttf", 16);
-	tf0 = d.fontManager.createTextField(roboto16, 300, 600, false);
-	tf1 = d.fontManager.createTextField(roboto16, 300, 300, true);
+	tf0 = d.fontManager.createTextBox(roboto16, 300, 600, false);
+	tf1 = d.fontManager.createTextBox(roboto16, 300, 300, true);
 	tf1->setBgColor(clearColor);
+
+	vbox = d.fontManager.createVBox(300, 600, false);
+	vbox->add(roboto16);
+	vbox->add(roboto16);
+	vbox->add(roboto16);
+
+	vbox->setText(0, "Red");
+	vbox->setColor(0, SDL_Color{ 255, 0, 0, 255 });
+	vbox->setText(1, "Green");
+	vbox->setColor(1, SDL_Color{ 0, 255, 0, 255 });
+	vbox->setText(2, "Blue");
+	vbox->setColor(2, SDL_Color{ 0, 0, 255, 255 });
 }
 
 void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
@@ -198,6 +210,8 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
 		Point p0 = xFormer.t(Point{ 400, 300 });
 		d.fontManager.Draw(tf0, p0.x, p0.y);
+
+		d.fontManager.Draw(vbox, xFormer.t(Point{ 400, 500 }));
 
 		tf1->setText("This is some fancy pants hq text.");
 		tf1->setColor(SDL_Color{ 255, 255, 255, 255 });

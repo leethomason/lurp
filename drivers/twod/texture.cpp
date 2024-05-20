@@ -155,6 +155,7 @@ void TextureManager::update()
 		}
 		else {
 			if (texture->_sdlTexture) {
+				assert(surface);
 #if DEBUG_TEXTURES
 				fmt::print("update() DESTROY '{}'\n", texture->path());
 #endif

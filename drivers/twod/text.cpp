@@ -12,7 +12,6 @@
 #define DEBUG_TEXT_SAVE 0	// set to 1 to write "surface.bmp" and "font.bmp" to disk to compare pixel quality
 
 static int gQuality = 1;
-static constexpr int kScale = 1;
 
 class RenderFontTask : public lurp::SelfDeletingTask
 {
@@ -79,9 +78,9 @@ const Font* FontManager::loadFont(const std::string& path, int pointSize)
 
 	Font* font = new Font();
 	font->pointSize = pointSize;
-	font->realSize = pointSize * kScale;
+	font->realSize = pointSize;
 	font->path = path;
-	font->font = TTF_OpenFont(path.c_str(), pointSize * kScale);
+	font->font = TTF_OpenFont(path.c_str(), pointSize);
 	assert(font->font);	
 	_fonts.push_back(font);
 
@@ -112,7 +111,7 @@ void FontManager::update(const XFormer& xf)
 #endif
 
 			//int points = realSize * 133 / 100;
-			TTF_SetFontSize(f->font, realSize * kScale);
+			TTF_SetFontSize(f->font, realSize);
 
 #if DEBUG_TEXT
 #	if DEBUG_TEXT_SAVE
@@ -131,8 +130,6 @@ void FontManager::update(const XFormer& xf)
 	for (auto& tf : _textFields) {
 		// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
 		Size realSize = xf.t(tf->_virtualSize);
-		realSize.w *= kScale;
-		realSize.h *= kScale;
 		Size texSize = tf->_texture ? tf->_texture->pixelSize() : Size{ 0, 0};
 
 		if (!tf->_texture || realSize != texSize) {
@@ -173,43 +170,66 @@ Font* FontManager::getFont(const Font* font)
 }
 
 
-std::shared_ptr<TextField> FontManager::createTextField(const Font* font, int width, int height, bool useOpaqueHQ)
+std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width, int height, bool useOpaqueHQ)
 {
 	Font* f = getFont(font);
 	assert(f);
 	if (!f) return nullptr;
 
-	TextField* tf = new TextField();
+	TextBox* tf = new TextBox();
 	tf->_font = f;
 	tf->_virtualSize = Size{ width, height };
 	// No point in creating the texture because we don't know the real size yet.
 	//tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
 
-	std::shared_ptr<TextField> ptr(tf);
+	std::shared_ptr<TextBox> ptr(tf);
 	_textFields.push_back(ptr);
 	return ptr;	
 }
 
-TextField::~TextField()
+std::shared_ptr<VBox> FontManager::createVBox(int vWidth, int maxVHeightOfBox, bool useOpaqueHQ)
+{
+	VBox* vbox = new VBox();
+	vbox->_fontManager = this;
+	vbox->_virtualSize = Size{ vWidth, maxVHeightOfBox };
+	vbox->_opaqueHQ = useOpaqueHQ;
+	std::shared_ptr<VBox> ptr(vbox);
+	_vBoxes.push_back(ptr);
+	return ptr;
+}
+
+TextBox::~TextBox()
 {
 }
 
-void FontManager::Draw(std::shared_ptr<TextField>& tf, int x, int y)
+void FontManager::Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const
 {
 	assert(tf->_font);	
 	assert(tf->_font->font); // should be kept up to date in update()
 
 	if (tf->_texture->ready()) {
-		//Point p = _xf.t(Point{ vx, vy });
-		SDL_Rect dst = { x, y, tf->_texture->width() / kScale, tf->_texture->height() / kScale };
+		const Texture* tex = tf->_texture.get();
+
+		// Do a little bit of smart clipping so we are filling pixels that aren't used.
+		SDL_Rect src = {0, 0, tex->_surfaceSize.w, tex->_surfaceSize.h};
+		SDL_Rect dst = { x, y, tex->_surfaceSize.w, tex->_surfaceSize.h };
+
 		if (tf->_hqOpaque)
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);
 		else
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_BLEND);
 
 		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
-		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), nullptr, &dst);
+		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), &src, &dst);
+	}
+}
+
+void FontManager::Draw(const std::shared_ptr<VBox>& vbox, int x, int y) const
+{
+	for (auto& tf : vbox->_textBoxes) {
+		Draw(tf, x, y);
+		y += tf->_texture->_surfaceSize.h;
 	}
 }
 
@@ -224,6 +244,37 @@ void FontManager::toggleQuality()
 	else if (gQuality == 1) fmt::print("LCD font\n");
 }
 
+void VBox::add(const Font* font)
+{
+	std::shared_ptr<TextBox> tf = _fontManager->createTextBox(font, _virtualSize.w, _virtualSize.h, _opaqueHQ);
+	_textBoxes.push_back(tf);
+}
+
+void VBox::clear()
+{
+	_textBoxes.clear();
+}
+
+void VBox::setText(int i, const std::string& text)
+{
+	if (i < _textBoxes.size()) {
+		_textBoxes[i]->setText(text);
+	}
+}
+
+void VBox::setColor(int i, SDL_Color color)
+{
+	if (i < _textBoxes.size()) {
+		_textBoxes[i]->setColor(color);
+	}
+}
+
+void VBox::setBgColor(SDL_Color color)
+{
+	for (auto& tf : _textBoxes) {
+		tf->setBgColor(color);
+	}
+}
 
 void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf)
 {

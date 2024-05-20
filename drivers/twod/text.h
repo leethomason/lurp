@@ -22,12 +22,12 @@ struct Font {
 	std::string path;			// for reload, which has to be done on resize (keeping fonts 1:1)
 };
 
-class TextField {
+class TextBox {
 	friend class FontManager;
 
 public:
-	TextField() {}
-	~TextField();
+	TextBox() {}
+	~TextBox();
 
 	void setText(const std::string& text) {
 		if (text != _text) {
@@ -52,9 +52,6 @@ public:
 		return _virtualSize;
 	}
 
-	Size renderedSize() const {
-		return _renderedSize; 
-	}
 	SDL_Color color() const { return _color; }
 	SDL_Color bgColor() const { return _bg; }
 	const std::string& text() const { return _text; }
@@ -72,12 +69,32 @@ private:
 	std::shared_ptr<Texture> _texture;
 	const Font* _font = nullptr;
 	Size _virtualSize;
-	Size _renderedSize;	// size of the rendered text; usually a little smaller than _size
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
 	std::string _text;
 	SDL_Color _color = SDL_Color{ 255, 255, 255, 255 };
+};
+
+class VBox {
+	friend class FontManager;
+public:
+	VBox() = default;
+	~VBox() = default;
+
+	size_t size() const { return _textBoxes.size(); }
+	void add(const Font*);
+	void clear();
+
+	void setText(int i, const std::string& text);
+	void setColor(int i, SDL_Color color);
+	void setBgColor(SDL_Color color);
+
+private:
+	FontManager* _fontManager = nullptr;
+	Size _virtualSize;
+	bool _opaqueHQ = false;
+	std::vector<std::shared_ptr<TextBox>> _textBoxes;
 };
 
 class FontManager {
@@ -92,10 +109,15 @@ public:
 
 	void update(const XFormer& xf);
 
-	std::shared_ptr<TextField> createTextField(const Font*, int width, int height, bool useOpaqueHQ);
+	std::shared_ptr<TextBox> createTextBox(const Font*, int vWidth, int vHeight, bool useOpaqueHQ);
+	std::shared_ptr<VBox> createVBox(int vWidth, int maxVHeightOfBox, bool useOpaqueHQ);
 
 	// Note it draws in real pixels (like ::Draw)
-	void Draw(std::shared_ptr<TextField>& tf, int x, int y);
+	void Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const;
+	void Draw(const std::shared_ptr<TextBox>& tf, const Point& p) const { Draw(tf, p.x, p.y); }
+
+	void Draw(const std::shared_ptr<VBox>& vbox, int x, int y) const;
+	void Draw(const std::shared_ptr<VBox>& vbox, const Point& p) const { Draw(vbox, p.x, p.y); }
 
 	void toggleQuality();
 
@@ -107,7 +129,8 @@ private:
 	enki::TaskScheduler& _pool;
 	TextureManager& _textureManager;
 	std::vector<Font*> _fonts;
-	std::vector<std::shared_ptr<TextField>> _textFields;
+	std::vector<std::shared_ptr<TextBox>> _textFields;
+	std::vector<std::shared_ptr<VBox>> _vBoxes;
 	XFormer _xf;
 };
 

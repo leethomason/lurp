@@ -99,6 +99,9 @@ int main(int argc, char* argv[])
 #endif
 #ifdef _WIN32
 	{
+		// Finally solved the HDPI issue on windows.
+		// To get real 1:1 pixels, need this in cmake: set_target_properties(lurp2d PROPERTIES VS_DPI_AWARE "PerMonitor")
+
 		SDL_DisplayMode desktop;
 		SDL_GetDesktopDisplayMode(0, &desktop);
 

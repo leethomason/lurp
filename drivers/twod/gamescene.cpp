@@ -16,9 +16,9 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		}	
 		else if (r.type == GameRegion::Type::kText || r.type == GameRegion::Type::kInfo) {
 			if (r.bgColor.a < 255)
-				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, false);
+				_data[i].textField = d.fontManager.createTextBox(d.config.font, r.position.w, r.position.h, false);
 			else
-				_data[i].textField = d.fontManager.createTextField(d.config.font, r.position.w, r.position.h, true);
+				_data[i].textField = d.fontManager.createTextBox(d.config.font, r.position.w, r.position.h, true);
 			
 			_data[i].textField->setColor(d.config.textColor);
 			_data[i].textField->setBgColor(r.bgColor);
