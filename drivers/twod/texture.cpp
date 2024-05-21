@@ -15,7 +15,7 @@ public:
 	virtual ~TextureLoadTask() {}
 
 	virtual void ExecuteRange(enki::TaskSetPartition /*range_*/, uint32_t /*threadnum_*/) override {
-		assert(!_texture->_textField);
+		assert(_texture->_type == Texture::Type::texture);
 
 		// This path stuff is here just to get it off the main thread.
 		std::filesystem::path path = _texture->_path;
@@ -39,7 +39,7 @@ public:
 		assert(surface);
 		assert(_queue);
 		_texture->_size = Size({ surface->w, surface->h });
-		_texture->_bytes = surface->format->BytesPerPixel;
+		//_texture->_bytes = surface->format->BytesPerPixel;
 
 		TextureUpdate update{ _texture, surface, _generation };
 #if DEBUG_TEXTURES
@@ -94,8 +94,7 @@ std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 {
 	Texture* texture = new Texture();
 	texture->_size = Size{ w, h };
-	texture->_bytes = 4;
-	texture->_textField = true;
+	texture->_type = Texture::Type::textfield;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
 	texture->_path = fmt::format("field:{}x{}", w, h);
 
@@ -113,27 +112,29 @@ TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer
 }
 
 void TextureManager::update()
-{ 
+{
 	TextureUpdate update;
-	while(_loadQueue.tryPop(update))
+	while (_loadQueue.tryPop(update))
 	{
 		std::shared_ptr<Texture> texture = update.texture;
-		SDL_Surface* surface = update.surface;
 		int generation = update.generation;
 
 		if (generation < texture->_generation) {
-#if DEBUG_TEXTURES
+#			if DEBUG_TEXTURES
 			fmt::print("update() discard {} of {} on '{}'\n", generation, texture->_generation, texture->path());
-#endif
+#			endif
 			// This is an old surface. Discard it.
-			SDL_FreeSurface(surface);
+			SDL_FreeSurface(update.surface);
+			for(size_t i=0; i<update.surfaceVec.size(); i++) {
+				SDL_FreeSurface(update.surfaceVec[i]);
+			}
 			continue;
 		}
 
-		if (texture->_textField) {
-#if DEBUG_TEXTURES
+		if (texture->_type == Texture::Type::textfield) {
+#			if DEBUG_TEXTURES
 			fmt::print("update() streaming to '{}'\n", texture->path());
-#endif
+#			endif
 			assert(texture->_sdlTexture);	// fixed size - should always be there.
 			SDL_Surface* target = nullptr;
 			// Do not free 'target`: done by the unlock
@@ -147,37 +148,56 @@ void TextureManager::update()
 			else {
 				memset(target->pixels, 0, target->pitch * target->h);
 			}
-			if (surface) {
-				SDL_Rect r{ 0, 0, std::min(surface->w, texture->width()), std::min(surface->h, texture->height()) };
-				SDL_BlitSurface(surface, &r, target, &r);
+			SDL_Rect surfaceSize{ 0, 0, 0, 0 };
+			int y = 0;
+			for (size_t i = 0; i < update.surfaceVec.size(); i++) {
+				SDL_Surface* surface = update.surfaceVec[i];
+				if (surface) {
+					SDL_Rect src{ 0, 0, surface->w, surface->h };
+					SDL_Rect dst{ 0, y, surface->w, surface->h };
+
+					src = IntersectRect(src, SDL_Rect{ 0, 0, texture->width(), texture->height() });
+					dst = IntersectRect(dst, SDL_Rect{ 0, 0, texture->width(), texture->height() });
+					src.w = dst.w;
+					src.h = dst.h;
+
+					int e = SDL_BlitSurface(surface, &src, target, &dst);
+					assert(e == 0);
+					surfaceSize = UnionRect(surfaceSize, dst);
+					y += surface->h;
+
+					SDL_FreeSurface(surface);
+				}
 			}
+			texture->_surfaceSize = Size{surfaceSize.w, surfaceSize.h};
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}
 		else {
+			SDL_Surface* surface = update.surface;
 			if (texture->_sdlTexture) {
 				assert(surface);
-#if DEBUG_TEXTURES
+#				if DEBUG_TEXTURES
 				fmt::print("update() DESTROY '{}'\n", texture->path());
-#endif
+#				endif
 				// Don't expect this to happen very often. Keep an eye on it.
 				SDL_DestroyTexture(texture->_sdlTexture);
 			}
-#if DEBUG_TEXTURES
+#			if DEBUG_TEXTURES
 			fmt::print("update() create '{}'\n", texture->path());
-#endif
+#			endif
 			texture->_sdlTexture = SDL_CreateTextureFromSurface(_sdlRenderer, surface);
+			texture->_surfaceSize = { surface->w, surface->h };
+			SDL_FreeSurface(surface);
 		}
 		texture->_generation = generation;
-		texture->_surfaceSize = surface ? Size{ surface->w, surface->h } : Size{ 0, 0 };
-		SDL_FreeSurface(surface);
 	}
 	for (auto& t : _textures) {
 		t->_age++;
 	}
 
 	// If only this has a reference, and it's old, free it.
-	_textures.erase(std::remove_if(_textures.begin(), _textures.end(), [](auto& t) 
-		{ 
+	_textures.erase(std::remove_if(_textures.begin(), _textures.end(), [](auto& t)
+		{
 			return t->_age > kMaxAge && t.use_count() == 1;
 		}),
 		_textures.end());

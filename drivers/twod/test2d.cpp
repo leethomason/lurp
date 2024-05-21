@@ -164,10 +164,13 @@ void AssetsTest::load(Drawing& d, const FrameData&)
 	tf1 = d.fontManager.createTextBox(roboto16, 300, 300, true);
 	tf1->setBgColor(clearColor);
 
-	vbox = d.fontManager.createVBox(300, 600, false);
-	vbox->add(roboto16);
-	vbox->add(roboto16);
-	vbox->add(roboto16);
+	//vbox = d.fontManager.createVBox(300, 600, false);
+	//vbox->add(roboto16);
+	//vbox->add(roboto16);
+	//vbox->add(roboto16);
+
+	vbox = d.fontManager.createTextBox(roboto16, 300, 600, false);
+	vbox->resize(3);
 
 	vbox->setText(0, "Red");
 	vbox->setColor(0, SDL_Color{ 255, 0, 0, 255 });

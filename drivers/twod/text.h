@@ -26,54 +26,41 @@ class TextBox {
 	friend class FontManager;
 
 public:
-	TextBox() {}
+	TextBox();
 	~TextBox();
 
-	void setText(const std::string& text) {
-		if (text != _text) {
-			_text = text;
-			_needUpdate = true;
-		}
-	}
-	void setColor(SDL_Color color) {
-		if (color.r != _color.r || color.g != _color.g || color.b != _color.b || color.a != _color.a) {
-			_color = color;
-			_needUpdate = true;
-		}
-	}
-	void setBgColor(SDL_Color color) {
-		if (color.r != _bg.r || color.g != _bg.g || color.b != _bg.b || color.a != _bg.a) {
-			_bg = color;
-			_needUpdate = true;
-		}
-	}
+	size_t size() const { return _text.size(); }
+	void resize(size_t s);
 
-	Size virtualSize() const {
-		return _virtualSize;
-	}
+	void setFont(const Font* font) { setFont(0, font);  }
+	void setText(const std::string& text) { setText(0, text); }
+	void setColor(SDL_Color color) { setColor(0, color); }
+	void setBgColor(SDL_Color color);
 
-	SDL_Color color() const { return _color; }
+	void setFont(size_t i, const Font* font);
+	void setText(size_t i, const std::string& text);
+	void setColor(size_t i, SDL_Color color);
+	void setBgColor(size_t i, SDL_Color color);
+
+	const Font* font(size_t i = 0) const { return _font[i]; }
+	const std::string& text(size_t i = 0) const { return _text[i]; }
+	SDL_Color color(size_t i = 0) const { return _color[i]; }
 	SDL_Color bgColor() const { return _bg; }
-	const std::string& text() const { return _text; }
+
+	Size virtualSize() const { return _virtualSize;	}
 
 private:
-	void update() {
-		_needUpdate = true;
-		// Not sure about this. Need to think through when the renderedSize
-		// can be correct and incorrect.
-		//_renderedSize = Point{ 0, 0 };
-	}
-
 	bool _needUpdate = false;
 
 	std::shared_ptr<Texture> _texture;
-	const Font* _font = nullptr;
 	Size _virtualSize;
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
-	std::string _text;
-	SDL_Color _color = SDL_Color{ 255, 255, 255, 255 };
+
+	std::vector<const Font*> _font;
+	std::vector<std::string> _text;
+	std::vector<SDL_Color> _color;
 };
 
 class VBox {
@@ -110,7 +97,7 @@ public:
 	void update(const XFormer& xf);
 
 	std::shared_ptr<TextBox> createTextBox(const Font*, int vWidth, int vHeight, bool useOpaqueHQ);
-	std::shared_ptr<VBox> createVBox(int vWidth, int maxVHeightOfBox, bool useOpaqueHQ);
+	std::shared_ptr<VBox> createVBox(int vWidth, int vHeight, bool useOpaqueHQ);
 
 	// Note it draws in real pixels (like ::Draw)
 	void Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const;

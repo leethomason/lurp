@@ -19,6 +19,30 @@ inline bool ColorEqual(const SDL_Color& c1, const SDL_Color& c2) {
 	return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a;
 }
 
+inline SDL_Rect IntersectRect(const SDL_Rect& a, const SDL_Rect& b)
+{
+	SDL_Rect r;
+	r.x = std::max(a.x, b.x);
+	r.y = std::max(a.y, b.y);
+	r.w = std::min(a.x + a.w, b.x + b.w) - r.x;
+	r.h = std::min(a.y + a.h, b.y + b.h) - r.y;
+	return r;
+}
+
+inline SDL_Rect UnionRect(const SDL_Rect& a, const SDL_Rect& b)
+{
+	SDL_Rect r;
+	r.x = std::min(a.x, b.x);
+	r.y = std::min(a.y, b.y);
+	r.w = std::max(a.x + a.w, b.x + b.w) - r.x;
+	r.h = std::max(a.y + a.h, b.y + b.h) - r.y;
+
+	if (r.w <= 0 || r.h <= 0) {
+		r = { 0, 0, 0, 0 };
+	}
+	return r;
+}
+
 class Texture {
 	friend class TextureManager;
 	friend class FontManager;
@@ -34,7 +58,7 @@ public:
 	const Size& surfaceSize() const { return _surfaceSize; }	
 	const std::string& path() const { return _path; }
 
-	int memory() const { return _size.w * _size.h * _bytes; }
+	int memory() const { return _size.w * _size.h * 4; }	// 4 bytes per pixel? now sure how SDL stores these things
 	int width() const { return _size.w; }
 	int height() const { return _size.h; }
 
@@ -51,8 +75,14 @@ private:
 	int _generation = 0;
 	Size _size;			// allocated size, and size of the texture
 	Size _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
-	int _bytes = 0;	
-	bool _textField = false;
+
+	enum class Type {
+		texture,		// simple texture reference
+		textfield,		// has a _surfaceSize set
+		vbox			// update loop managed separately
+	};
+	Type _type = Type::texture;
+
 	mutable uint32_t _age = 0;
 };
 

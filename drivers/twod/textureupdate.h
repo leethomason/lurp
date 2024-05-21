@@ -12,6 +12,7 @@ struct TextureUpdate {
 	int generation = 0;
 	bool hqOpaque = false;
 	SDL_Color bg = SDL_Color{ 0, 0, 0, 0 };
+	std::vector<SDL_Surface*> surfaceVec;
 };
 using TextureLoadQueue = lurp::QueueMT<TextureUpdate>;
 
