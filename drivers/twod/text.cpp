@@ -244,17 +244,6 @@ std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width,
 	return ptr;	
 }
 
-std::shared_ptr<VBox> FontManager::createVBox(int vWidth, int maxVHeightOfBox, bool useOpaqueHQ)
-{
-	VBox* vbox = new VBox();
-	vbox->_fontManager = this;
-	vbox->_virtualSize = Size{ vWidth, maxVHeightOfBox };
-	vbox->_opaqueHQ = useOpaqueHQ;
-	std::shared_ptr<VBox> ptr(vbox);
-	_vBoxes.push_back(ptr);
-	return ptr;
-}
-
 TextBox::~TextBox()
 {
 }
@@ -278,14 +267,6 @@ void FontManager::Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const
 	}
 }
 
-void FontManager::Draw(const std::shared_ptr<VBox>& vbox, int x, int y) const
-{
-	for (auto& tf : vbox->_textBoxes) {
-		Draw(tf, x, y);
-		y += tf->_texture->_surfaceSize.h;
-	}
-}
-
 void FontManager::toggleQuality()
 {
 	static constexpr int kQuality = 2;
@@ -295,38 +276,6 @@ void FontManager::toggleQuality()
 	}
 	if (gQuality == 0) fmt::print("Shaded font\n");
 	else if (gQuality == 1) fmt::print("LCD font\n");
-}
-
-void VBox::add(const Font* font)
-{
-	std::shared_ptr<TextBox> tf = _fontManager->createTextBox(font, _virtualSize.w, _virtualSize.h, _opaqueHQ);
-	_textBoxes.push_back(tf);
-}
-
-void VBox::clear()
-{
-	_textBoxes.clear();
-}
-
-void VBox::setText(int i, const std::string& text)
-{
-	if (i < _textBoxes.size()) {
-		_textBoxes[i]->setText(text);
-	}
-}
-
-void VBox::setColor(int i, SDL_Color color)
-{
-	if (i < _textBoxes.size()) {
-		_textBoxes[i]->setColor(color);
-	}
-}
-
-void VBox::setBgColor(SDL_Color color)
-{
-	for (auto& tf : _textBoxes) {
-		tf->setBgColor(color);
-	}
 }
 
 void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf)

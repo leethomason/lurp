@@ -214,6 +214,7 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 		Point p0 = xFormer.t(Point{ 400, 300 });
 		d.fontManager.Draw(tf0, p0.x, p0.y);
 
+		vbox->setText(1, fmt::format("Green frame/60={}", f.frame/60));
 		d.fontManager.Draw(vbox, xFormer.t(Point{ 400, 500 }));
 
 		tf1->setText("This is some fancy pants hq text.");

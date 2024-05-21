@@ -63,27 +63,6 @@ private:
 	std::vector<SDL_Color> _color;
 };
 
-class VBox {
-	friend class FontManager;
-public:
-	VBox() = default;
-	~VBox() = default;
-
-	size_t size() const { return _textBoxes.size(); }
-	void add(const Font*);
-	void clear();
-
-	void setText(int i, const std::string& text);
-	void setColor(int i, SDL_Color color);
-	void setBgColor(SDL_Color color);
-
-private:
-	FontManager* _fontManager = nullptr;
-	Size _virtualSize;
-	bool _opaqueHQ = false;
-	std::vector<std::shared_ptr<TextBox>> _textBoxes;
-};
-
 class FontManager {
 public:
 	FontManager(SDL_Renderer* renderer, enki::TaskScheduler& pool, TextureManager& textureManager, int virtualW, int virtualH) : _renderer(renderer), _pool(pool), _textureManager(textureManager), _xf(virtualW, virtualH) {}
@@ -97,14 +76,10 @@ public:
 	void update(const XFormer& xf);
 
 	std::shared_ptr<TextBox> createTextBox(const Font*, int vWidth, int vHeight, bool useOpaqueHQ);
-	std::shared_ptr<VBox> createVBox(int vWidth, int vHeight, bool useOpaqueHQ);
 
 	// Note it draws in real pixels (like ::Draw)
 	void Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const;
 	void Draw(const std::shared_ptr<TextBox>& tf, const Point& p) const { Draw(tf, p.x, p.y); }
-
-	void Draw(const std::shared_ptr<VBox>& vbox, int x, int y) const;
-	void Draw(const std::shared_ptr<VBox>& vbox, const Point& p) const { Draw(vbox, p.x, p.y); }
 
 	void toggleQuality();
 
@@ -117,7 +92,6 @@ private:
 	TextureManager& _textureManager;
 	std::vector<Font*> _fonts;
 	std::vector<std::shared_ptr<TextBox>> _textFields;
-	std::vector<std::shared_ptr<VBox>> _vBoxes;
 	XFormer _xf;
 };
 
