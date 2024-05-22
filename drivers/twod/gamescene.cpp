@@ -81,10 +81,21 @@ void GameScene::process(Drawing& d)
 		}
 	}
 	{
-		const std::string& zoneName = _zoneDriver->currentZone().name;
 		auto[region, data] = getRegion(GameRegion::Type::kInfo, d.config.regions);
 		if (region && data) {
-			data->textField->setText(zoneName);
+			const lurp::Zone& zone = _zoneDriver->currentZone();
+			const lurp::Room& room = _zoneDriver->currentRoom();
+
+			data->textField->resize(3);
+
+			data->textField->setText(0, zone.name);
+			data->textField->setColor(0, {192, 192, 192, 255});
+
+			data->textField->setText(1, room.name);
+			data->textField->setColor(1, { 255, 255, 255, 255 });
+
+			data->textField->setText(2, room.desc);
+			data->textField->setColor(2, { 192, 192, 192, 255 });
 		}
 	}
 }

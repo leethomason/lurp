@@ -8,8 +8,8 @@
 #include <fmt/core.h>
 #include <plog/Log.h>
 
-#define DEBUG_TEXT 1
-#define DEBUG_TEXT_SAVE 1	// set to 1 to write "surface.bmp" and "font.bmp" to disk to compare pixel quality
+#define DEBUG_TEXT 0
+#define DEBUG_TEXT_SAVE 0	// set to 1 to write "surface.bmp" and "font.bmp" to disk to compare pixel quality
 
 static int gQuality = 1;
 
