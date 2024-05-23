@@ -81,7 +81,7 @@ void TextBox::resize(size_t s)
 		_needUpdate = true;
 	}
 	else if (s > _font.size()) {
-		const Font* font = _font[0];
+		const Font* font = _font.empty() ? nullptr : _font[0];
 		_font.resize(s, font);
 		_text.resize(s, "");
 		_color.resize(s, { 255, 255, 255, 255 });
@@ -264,6 +264,15 @@ void FontManager::Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const
 
 		SDL_SetTextureScaleMode(tf->_texture->sdlTexture(), SDL_ScaleMode::SDL_ScaleModeNearest);
 		SDL_RenderCopy(_renderer, tf->_texture->sdlTexture(), &src, &dst);
+	}
+}
+
+void FontManager::Draw(const VBox& vbox, const Point& p) const
+{
+	int y = p.y;
+	for (const auto& tf : vbox.boxes) {
+		Draw(tf, p.x, y);
+		y += tf->surfaceSize().h;
 	}
 }
 

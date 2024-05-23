@@ -48,6 +48,7 @@ public:
 	SDL_Color bgColor() const { return _bg; }
 
 	Size virtualSize() const { return _virtualSize;	}
+	Size surfaceSize() const { return _texture->surfaceSize(); }
 
 private:
 	bool _needUpdate = false;
@@ -61,6 +62,16 @@ private:
 	std::vector<const Font*> _font;
 	std::vector<std::string> _text;
 	std::vector<SDL_Color> _color;
+};
+
+class VBox {
+	friend class FontManager;
+
+public:
+	VBox() = default;
+	~VBox() = default;
+
+	std::vector<std::shared_ptr<TextBox>> boxes;
 };
 
 class FontManager {
@@ -80,6 +91,7 @@ public:
 	// Note it draws in real pixels (like ::Draw)
 	void Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const;
 	void Draw(const std::shared_ptr<TextBox>& tf, const Point& p) const { Draw(tf, p.x, p.y); }
+	void Draw(const VBox& vbox, const Point& p) const;
 
 	void toggleQuality();
 

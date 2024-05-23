@@ -28,6 +28,7 @@ void GameScene::load(Drawing& d, const FrameData& f)
 	_csassets = _bridge.readCSA(d.config.scriptFile);
 	_assets = new lurp::ScriptAssets(_csassets);
 	_zoneDriver = new lurp::ZoneDriver(*_assets, _bridge, d.config.startingZone);
+	_needProcess = true;
 }
 
 GameScene::~GameScene()
@@ -38,7 +39,10 @@ GameScene::~GameScene()
 
 void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 {
-	process(d);
+	if (_needProcess) {
+		process(d);
+		_needProcess = false;
+	}
 
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
@@ -73,13 +77,39 @@ std::pair<const GameRegion*, GameScene::GSData*> GameScene::getRegion(GameRegion
 
 void GameScene::process(Drawing& d)
 {
-	if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
-		auto[region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
+	lurp::ZoneDriver::Mode mode = _zoneDriver->mode();
+
+	if (mode == lurp::ZoneDriver::Mode::kNavigation) {
+		auto [region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
 		if (region && data) {
-			if (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText)
-				data->textField->setText(_zoneDriver->text().text);
+			std::shared_ptr<TextBox> tb = data->textField;
+
+			std::vector<lurp::DirEdge> dirEdges = _zoneDriver->dirEdges();
+			tb->resize(dirEdges.size());
+
+			std::string text;
+			for (size_t i = 0; i < dirEdges.size(); ++i) {
+				const lurp::DirEdge& de = dirEdges[i];
+				if (de.dir == lurp::Edge::Dir::kUnknown)
+					text = fmt::format("{}", de.name);
+				else
+					text = fmt::format("{}:\t{}", de.dirLong, de.name);
+				tb->setText(i, text);
+				tb->setColor(i, { 0, 255, 255, 255 });
+				tb->setFont(i, d.config.font);
+			}
 		}
 	}
+	else if (mode == lurp::ZoneDriver::Mode::kText) {
+		auto [region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
+		if (region && data) {
+			std::shared_ptr<TextBox> tb = data->textField;
+			tb->resize(1);
+			tb->setText(_zoneDriver->text().text);
+		}
+	}
+
+	// Side panel
 	{
 		auto[region, data] = getRegion(GameRegion::Type::kInfo, d.config.regions);
 		if (region && data) {
