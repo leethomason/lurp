@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "mainscene.h"
 #include "gamescene.h"
+#include "test2d.h"
 
 #include "nuk.h"
 
@@ -13,13 +14,24 @@ StateMachine::StateMachine(const GameConfig& gameConfig) : _gameConfig(gameConfi
 {
 }
 
+void StateMachine::doTest()
+{
+	_type = Type::kTest;
+	_currentScene = nullptr;
+}
+
 std::shared_ptr<Scene> StateMachine::tick(FrameData* frameData)
 {
 	bool newScene = false;
 	if (!_currentScene) {
 		newScene = true;
-		_currentScene = std::make_shared<TitleScene>();
-		_type = Type::kTitle;
+		if (_type == Type::kTest) {
+			_currentScene = std::make_shared<AssetsTest>();
+		}
+		else {
+			_currentScene = std::make_shared<TitleScene>();
+			_type = Type::kTitle;
+		}
 		if (frameData) {
 			frameData->sceneFrame = 0;
 			frameData->sceneTime = 0;

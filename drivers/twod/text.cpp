@@ -10,6 +10,7 @@
 
 #define DEBUG_TEXT 0
 #define DEBUG_TEXT_SAVE 0	// set to 1 to write "surface.bmp" and "font.bmp" to disk to compare pixel quality
+#define DEBUG_MOUSE 0
 
 static int gQuality = 1;
 
@@ -126,7 +127,7 @@ bool TextBox::hitTest(const Point& screen) const
 	if (!_texture->ready())
 		return false;
 
-	Rect rect = { 0, 0, _texture->surfaceSize().w, _texture->surfaceSize().h };
+	Rect rect = { pos.x, pos.y, _texture->surfaceSize().w, _texture->surfaceSize().h };
 	if (rect.contains(screen))
 		return true;
 	return false;
@@ -181,8 +182,6 @@ void FontManager::update(const XFormer& xf)
 #if DEBUG_TEXT
 			fmt::print("Loading font {} at size {}...", f->path, realSize);
 #endif
-
-			//int points = realSize * 133 / 100;
 			TTF_SetFontSize(f->font, realSize);
 
 #if DEBUG_TEXT
@@ -260,14 +259,14 @@ std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width,
 	return ptr;	
 }
 
-void FontManager::Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const
+void FontManager::Draw(const std::shared_ptr<TextBox>& tf) const
 {
 	if (tf->_texture->ready()) {
 		const Texture* tex = tf->_texture.get();
 
 		// Do a little bit of smart clipping so we are filling pixels that aren't used.
 		SDL_Rect src = {0, 0, tex->_surfaceSize.w, tex->_surfaceSize.h};
-		SDL_Rect dst = { x, y, tex->_surfaceSize.w, tex->_surfaceSize.h };
+		SDL_Rect dst = { tf->pos.x, tf->pos.y, tex->_surfaceSize.w, tex->_surfaceSize.h };
 
 		if (tf->_hqOpaque)
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);
@@ -298,7 +297,8 @@ void FontManager::Draw(const VBox& vbox, const Point& p) const
 		case MouseState::down:
 			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), 192, 192, 192);
 		}
-		Draw(tf, p.x, y);
+		tf->pos = Point{ p.x, y };
+		Draw(tf);
 		y += tf->surfaceSize().h;
 	}
 }
@@ -318,7 +318,13 @@ void FontManager::doMove(const Point& screen, const Point&)
 {
 	for (auto& tf : _textFields) {
 		tf->_mouseState = MouseState::none;
+		if (!tf->_interactive)
+			continue;
 		if (tf->hitTest(screen)) {
+#			if DEBUG_MOUSE
+			fmt::print("Mouse over: {}\n", tf->_text[0]);
+#			endif 
+
 			if (_mouseBox == tf)
 				tf->_mouseState = MouseState::none;
 			else if (!_mouseBox)
@@ -327,22 +333,34 @@ void FontManager::doMove(const Point& screen, const Point&)
 	}
 }
 
-void FontManager::doButton(const Point& screen, const Point&, bool down)
+std::shared_ptr<TextBox> FontManager::doButton(const Point& screen, const Point&, bool down)
 {
+	std::shared_ptr<TextBox> clicked;
 	for (auto& tf : _textFields) {
+		if (!tf->_interactive)
+			continue;
 		if (tf->hitTest(screen)) {
 			if (down) {
 				_mouseBox = tf;
+#			if DEBUG_MOUSE
+				fmt::print("Captured: {}\n", tf->_text[0]);
+#			endif 
 			}
 			else {
 				if (_mouseBox == tf) {
-					// clicked!
+					fmt::print("Clicked: {}\n", tf->_text[0]);
+					clicked = tf;
+#			if DEBUG_MOUSE
+					fmt::print("Clicked: {}\n", tf->_text[0]);
+#			endif 
 				}
-				_mouseBox = nullptr;
 			}
 		}
 	}
+	if (!down)
+		_mouseBox = nullptr;
 	doMove(screen, Point());
+	return clicked;
 }
 
 void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf)

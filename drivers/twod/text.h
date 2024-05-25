@@ -39,6 +39,8 @@ public:
 	TextBox();
 	~TextBox();
 
+	Point pos = Point{ 0, 0 };	// in screen!
+
 	size_t size() const { return _text.size(); }
 	void resize(size_t s);
 
@@ -61,11 +63,13 @@ public:
 	// Note that surface is in screen, not virtual.
 	Size surfaceSize() const { return _texture->surfaceSize(); }
 
+	void setEnableInteraction(bool enable) { _interactive = enable; }
 	bool hitTest(const Point& screen) const;
 	MouseState mouseState() const { return _mouseState; }
 
 private:
 	bool _needUpdate = false;
+	bool _interactive = false;
 
 	std::shared_ptr<Texture> _texture;
 	Size _virtualSize;
@@ -117,12 +121,11 @@ public:
 	std::shared_ptr<TextBox> createTextBox(const Font*, int vWidth, int vHeight, bool useOpaqueHQ);
 
 	// Note it draws in real pixels (like ::Draw)
-	void Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const;
-	void Draw(const std::shared_ptr<TextBox>& tf, const Point& p) const { Draw(tf, p.x, p.y); }
+	void Draw(const std::shared_ptr<TextBox>& tf) const;
 	void Draw(const VBox& vbox, const Point& p) const;
 
 	void doMove(const Point& screen, const Point& virt);
-	void doButton(const Point& screen, const Point& virt, bool down);
+	std::shared_ptr<TextBox> doButton(const Point& screen, const Point& virt, bool down);
 
 	void toggleQuality();
 

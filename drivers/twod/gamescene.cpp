@@ -53,8 +53,8 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 			Draw(d.renderer, _data[i].texture, nullptr, &dst, RenderQuality::kBlit);
 		}
 		if (_data[i].textField) {
-			Point pDst = x.t(Point{ r.position.x, r.position.y });
-			d.fontManager.Draw(_data[i].textField, pDst.x, pDst.y);
+			_data[i].textField->pos = x.t(Point{r.position.x, r.position.y});
+			d.fontManager.Draw(_data[i].textField);
 		}
 	}
 }

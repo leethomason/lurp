@@ -189,6 +189,7 @@ int main(int argc, char* argv[])
 
 		if (doAssetsTest) {
 			gameConfig.virtualSize = { 800, 600 };
+			machine.doTest();
 		}
 
 		XFormer xFormer(gameConfig.virtualSize.x, gameConfig.virtualSize.y);
@@ -208,8 +209,8 @@ int main(int argc, char* argv[])
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-		AssetsTest assetsTest;
-		IDrawable* iAssetsTests = &assetsTest;
+		//AssetsTest assetsTest;
+		//IDrawable* iAssetsTests = &assetsTest;
 
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
 		const float nukFontBaseSize = 16.0f;
@@ -223,12 +224,12 @@ int main(int argc, char* argv[])
 		FrameData frameData;
 		Drawing drawing(sdlRenderer, textureManager, fontManager, gameConfig);
 
-		if (doAssetsTest) {
-			iAssetsTests->load(drawing, frameData);
-		}
-		else {
+		//if (doAssetsTest) {
+		//	iAssetsTests->load(drawing, frameData);
+		//}
+		//else {
 			gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 24);	// fixme: hardcode. should be in config.
-		}
+		//}
 
 		bool done = false;
 		SDL_Event e;
@@ -293,10 +294,10 @@ int main(int argc, char* argv[])
 					scene->mouseMotion(fontManager, screen, virt);
 				}
 				else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
-					if (e.button.button == 0) {
+					if (e.button.button == 1) {
 						Point screen = { e.button.x, e.button.y };
 						Point virt = xFormer.screenToVirtual(screen);
-						scene->mouseButton(fontManager, screen, virt, e.button.state == SDL_PRESSED);
+						scene->mouseButton(fontManager, screen, virt, e.type == SDL_MOUSEBUTTONDOWN);
 					}
 				}
 				nk_sdl_handle_event(&e);
@@ -306,11 +307,12 @@ int main(int argc, char* argv[])
 
 			/* GUI */
 
+			// FIXME: figure out the gui font size
 			if (doAssetsTest) {
 				float realFontSize = 0;
 				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
 				nk_style_set_font(nukCtx, &nukFontBest->handle);
-				iAssetsTests->layoutGUI(nukCtx, realFontSize, xFormer);
+				scene->layoutGUI(nukCtx, realFontSize, xFormer);
 			}
 			else {
 				float realFontSize = 0;
@@ -328,11 +330,8 @@ int main(int argc, char* argv[])
 					800, SCREEN_HEIGHT, 16,
 					SDL_Color{ 192, 192, 192, 255 }, SDL_Color{ 128, 128, 128, 255 },
 					xFormer);
-				iAssetsTests->draw(drawing, frameData, xFormer);
 			}
-			else {
-				scene->draw(drawing, frameData, xFormer);
-			}
+			scene->draw(drawing, frameData, xFormer);
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t endFrameTime = SDL_GetPerformanceCounter();

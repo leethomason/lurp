@@ -11,13 +11,15 @@ public:
 	std::shared_ptr<Scene> tick(FrameData* frameData);
 
 	bool done() const { return _done; }
+	void doTest();
 
 private:
 	enum class Type {
 		kNone,
 		kTitle,
 		kMain,
-		kGame
+		kGame,
+		kTest
 	};
 	bool _done = false;
 	GameConfig _gameConfig;

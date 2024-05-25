@@ -148,8 +148,10 @@ void RunTests2D()
 	RUN_TEST(XFormerAlignment());
 }
 
-void AssetsTest::load(Drawing& d, const FrameData&)
+void AssetsTest::load(Drawing& d, const FrameData& f)
 {
+	if (f.sceneFrame != 0) return;
+
 	portrait11 = d.textureManager.loadTexture("assets/portraitTest11.png");
 	ps0 = d.textureManager.loadTexture("assets/back.png");
 	ps1 = d.textureManager.loadTexture("assets/layer1_100.png");
@@ -179,14 +181,17 @@ void AssetsTest::load(Drawing& d, const FrameData&)
 	vbox.boxes[0] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
 	vbox.boxes[0]->setText("Red");
 	vbox.boxes[0]->setColor(SDL_Color{ 255, 0, 0, 255 });
+	vbox.boxes[0]->setEnableInteraction(true);
 
 	vbox.boxes[1] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
 	vbox.boxes[1]->setText("Green");
 	vbox.boxes[1]->setColor(SDL_Color{ 0, 255, 0, 255 });
+	vbox.boxes[1]->setEnableInteraction(true);
 
 	vbox.boxes[2] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
 	vbox.boxes[2]->setText("Blue");
 	vbox.boxes[2]->setColor(SDL_Color{ 0, 64, 255, 255 });
+	vbox.boxes[2]->setEnableInteraction(true);
 }
 
 void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
@@ -220,18 +225,19 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	{
 		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame / 60));
 		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
-		Point p0 = xFormer.t(Point{ 400, 300 });
-		d.fontManager.Draw(tf0, p0.x, p0.y);
+		tf0->pos = xFormer.t(Point{ 400, 300 });
+		d.fontManager.Draw(tf0);
 
 		tf2->setText(1, fmt::format("Green frame/60={}", f.frame/60));
-		d.fontManager.Draw(tf2, xFormer.t(Point{ 400, 500 }));
+		tf2->pos = xFormer.t(Point{ 400, 500 });
+		d.fontManager.Draw(tf2);
 
 		d.fontManager.Draw(vbox, xFormer.t(Point{ 600, 500 }));
 
 		tf1->setText("This is some fancy pants hq text.");
 		tf1->setColor(SDL_Color{ 255, 255, 255, 255 });
-		Point p1 = xFormer.t(Point{ 20, 550 });
-		d.fontManager.Draw(tf1, p1.x, p1.y);
+		tf1->pos = xFormer.t(Point{ 20, 550 });
+		d.fontManager.Draw(tf1);
 	}
 }
 
