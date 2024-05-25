@@ -14,24 +14,33 @@ StateMachine::StateMachine(const GameConfig& gameConfig) : _gameConfig(gameConfi
 {
 }
 
-void StateMachine::doTest()
+void StateMachine::setStart(StateMachine::Type t)
 {
-	_type = Type::kTest;
+	_type = t;
 	_currentScene = nullptr;
+}
+
+std::shared_ptr<Scene> StateMachine::makeNewScene(Type t)
+{
+	switch (t) {
+	case Type::kNone: FATAL_INTERNAL_ERROR(); break;
+	case Type::kTitle: _type = Type::kTitle;  return std::make_shared<TitleScene>();
+	case Type::kMain: _type = Type::kMain;  return std::make_shared<MainScene>();
+	case Type::kGame: _type = Type::kGame;  return std::make_shared<GameScene>();
+	case Type::kTest: _type = Type::kTest;  return std::make_shared<AssetsTest>();
+	}
+	FATAL_INTERNAL_ERROR();
+	return nullptr;
 }
 
 std::shared_ptr<Scene> StateMachine::tick(FrameData* frameData)
 {
 	bool newScene = false;
 	if (!_currentScene) {
-		newScene = true;
-		if (_type == Type::kTest) {
-			_currentScene = std::make_shared<AssetsTest>();
-		}
-		else {
-			_currentScene = std::make_shared<TitleScene>();
+		if (_type == Type::kNone)
 			_type = Type::kTitle;
-		}
+		newScene = true;
+		_currentScene = makeNewScene(_type);
 		if (frameData) {
 			frameData->sceneFrame = 0;
 			frameData->sceneTime = 0;
@@ -47,8 +56,7 @@ std::shared_ptr<Scene> StateMachine::tick(FrameData* frameData)
 
 	if(_type == Type::kTitle) {
 		if (state == Scene::State::kDone) {
-			_currentScene = std::make_shared<MainScene>();
-			_type = Type::kMain;
+			_currentScene = makeNewScene(Type::kMain);
 			newScene = true;
 		}
 		else {
@@ -60,8 +68,7 @@ std::shared_ptr<Scene> StateMachine::tick(FrameData* frameData)
 			_done = true;
 		}
 		else if (state == Scene::State::kNewGame) {
-			_currentScene = std::make_shared<GameScene>();
-			_type = Type::kGame;
+			_currentScene = makeNewScene(Type::kGame);
 			newScene = true;
 		}
 		// FIXME: add other states

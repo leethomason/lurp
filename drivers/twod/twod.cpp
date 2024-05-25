@@ -32,11 +32,12 @@ int main(int argc, char* argv[])
 	fmt::print("LuRP2D\n");
 	fmt::print("Usage: lurp2d <path/to/lua/file> <starting-zone>\n");
 	fmt::print("Options:\n");
-	fmt::print("  -l, --log         Set log level: 'error', 'warning', 'info', 'debug'. Default: 'warning'\n");
-	fmt::print("  --assets          Run assets test\n");
+	fmt::print("  -l, --log <level>      Set log level: 'error', 'warning', 'info', 'debug'. Default: 'warning'\n");
+	fmt::print("  --assets               Run assets test\n");
+	fmt::print("  --start <where>        Start at 'continue' or 'new'");
 
 	argh::parser cmdl;
-	cmdl.add_params({ "-l", "--log" });
+	cmdl.add_params({ "-l", "--log", "--start"});
 	cmdl.parse(argc, argv);
 	std::string scriptFile = cmdl[1];
 	std::string startingZone = cmdl[2];
@@ -49,6 +50,8 @@ int main(int argc, char* argv[])
 	}
 
 	bool doAssetsTest = cmdl[{"--assets" }];
+	std::string startWhere;
+	cmdl({"--start"}, "") >> startWhere;
 
 	std::string dir = lurp::GameFileToDir(scriptFile);
 	std::filesystem::path savePath = lurp::SavePath(dir, "saves");
@@ -189,7 +192,11 @@ int main(int argc, char* argv[])
 
 		if (doAssetsTest) {
 			gameConfig.virtualSize = { 800, 600 };
-			machine.doTest();
+			machine.setStart(StateMachine::Type::kTest);
+		}
+		else {
+			if (startWhere == "new")
+				machine.setStart(StateMachine::Type::kGame);
 		}
 
 		XFormer xFormer(gameConfig.virtualSize.x, gameConfig.virtualSize.y);
@@ -209,9 +216,6 @@ int main(int argc, char* argv[])
 
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-		//AssetsTest assetsTest;
-		//IDrawable* iAssetsTests = &assetsTest;
-
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
 		const float nukFontBaseSize = 16.0f;
 		NukFontAtlas nukFontAtlas(nukCtx);
@@ -224,12 +228,7 @@ int main(int argc, char* argv[])
 		FrameData frameData;
 		Drawing drawing(sdlRenderer, textureManager, fontManager, gameConfig);
 
-		//if (doAssetsTest) {
-		//	iAssetsTests->load(drawing, frameData);
-		//}
-		//else {
-			gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 24);	// fixme: hardcode. should be in config.
-		//}
+		gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 24);	// fixme: hardcode. should be in config.
 
 		bool done = false;
 		SDL_Event e;

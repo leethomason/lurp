@@ -11,9 +11,7 @@ public:
 	std::shared_ptr<Scene> tick(FrameData* frameData);
 
 	bool done() const { return _done; }
-	void doTest();
 
-private:
 	enum class Type {
 		kNone,
 		kTitle,
@@ -21,6 +19,11 @@ private:
 		kGame,
 		kTest
 	};
+	void setStart(Type t);
+
+private:
+	std::shared_ptr<Scene> makeNewScene(Type t);
+
 	bool _done = false;
 	GameConfig _gameConfig;
 	std::shared_ptr<Scene> _currentScene;
