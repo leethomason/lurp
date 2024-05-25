@@ -7,21 +7,23 @@ void GameScene::load(Drawing& d, const FrameData& f)
 {
 	if (f.sceneFrame != 0) return;
 
-	_data.resize(d.config.regions.size());
+	//_data.resize(d.config.regions.size());
 
 	for (size_t i = 0; i < d.config.regions.size(); ++i) {
 		const GameRegion& r = d.config.regions[i];
 		if (r.type == GameRegion::Type::kImage && !r.imagePath.empty()) {
-			_data[i].texture = d.textureManager.loadTexture(d.config.assetsDir / r.imagePath);
+			_imageTexture = d.textureManager.loadTexture(d.config.assetsDir / r.imagePath);
 		}	
 		else if (r.type == GameRegion::Type::kText || r.type == GameRegion::Type::kInfo) {
+			std::shared_ptr<TextBox>& tb = r.type == GameRegion::Type::kText ? _mainText : _infoText;
+
 			if (r.bgColor.a < 255)
-				_data[i].textField = d.fontManager.createTextBox(d.config.font, r.position.w, r.position.h, false);
+				tb = d.fontManager.createTextBox(d.config.font, r.position.w, r.position.h, false);
 			else
-				_data[i].textField = d.fontManager.createTextBox(d.config.font, r.position.w, r.position.h, true);
+				tb = d.fontManager.createTextBox(d.config.font, r.position.w, r.position.h, true);
 			
-			_data[i].textField->setColor(d.config.textColor);
-			_data[i].textField->setBgColor(r.bgColor);
+			tb->setColor(d.config.textColor);
+			tb->setBgColor(r.bgColor);
 		}
 	}
 
@@ -44,19 +46,25 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 		_needProcess = false;
 	}
 
-	for (size_t i = 0; i < d.config.regions.size(); ++i) {
-		const GameRegion& r = d.config.regions[i];
-
-		if (_data[i].texture) {
-			Rect rDst = x.t(r.position);
-			SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
-			Draw(d.renderer, _data[i].texture, nullptr, &dst, RenderQuality::kBlit);
-		}
-		if (_data[i].textField) {
-			_data[i].textField->pos = x.t(Point{r.position.x, r.position.y});
-			d.fontManager.Draw(_data[i].textField);
-		}
+	const GameRegion* imageRegion = getRegion(GameRegion::Type::kImage, d.config.regions);
+	if (imageRegion) {
+		Rect rDst = x.t(imageRegion->position);
+		SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
+		Draw(d.renderer, _imageTexture, nullptr, &dst, RenderQuality::kBlit);
 	}
+
+	const GameRegion* textRegion = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (textRegion) {
+		_mainText->pos = x.t(Point{ textRegion->position.x, textRegion->position.y });
+		d.fontManager.Draw(_mainText);
+	}
+
+	const GameRegion* infoRegion = getRegion(GameRegion::Type::kInfo, d.config.regions);
+	if (infoRegion) {
+		_infoText->pos = x.t(Point{ infoRegion->position.x, infoRegion->position.y });
+		d.fontManager.Draw(_infoText);
+	}
+
 }
 
 void GameScene::layoutGUI(nk_context*, float, const XFormer&)
@@ -64,15 +72,15 @@ void GameScene::layoutGUI(nk_context*, float, const XFormer&)
 
 }
 
-std::pair<const GameRegion*, GameScene::GSData*> GameScene::getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions)
+const GameRegion* GameScene::getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions)
 {
 	for (size_t i = 0; i < regions.size(); ++i) {
 		const GameRegion& r = regions[i];
 		if (r.type == type) {
-			return { &r, &_data[i] };
+			return &r;
 		}
 	}
-	return { nullptr, nullptr };
+	return nullptr;
 }
 
 void GameScene::process(Drawing& d)
@@ -80,10 +88,9 @@ void GameScene::process(Drawing& d)
 	lurp::ZoneDriver::Mode mode = _zoneDriver->mode();
 
 	if (mode == lurp::ZoneDriver::Mode::kNavigation) {
-		auto [region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
-		if (region && data) {
-			std::shared_ptr<TextBox> tb = data->textField;
-
+		const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+		if (region) {
+			std::shared_ptr<TextBox>& tb = _mainText;
 			std::vector<lurp::DirEdge> dirEdges = _zoneDriver->dirEdges();
 			tb->resize(dirEdges.size());
 
@@ -101,9 +108,9 @@ void GameScene::process(Drawing& d)
 		}
 	}
 	else if (mode == lurp::ZoneDriver::Mode::kText) {
-		auto [region, data] = getRegion(GameRegion::Type::kText, d.config.regions);
-		if (region && data) {
-			std::shared_ptr<TextBox> tb = data->textField;
+		const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+		if (region) {
+			std::shared_ptr<TextBox>& tb = _mainText;
 			tb->resize(1);
 			tb->setText(_zoneDriver->text().text);
 		}
@@ -111,21 +118,22 @@ void GameScene::process(Drawing& d)
 
 	// Side panel
 	{
-		auto[region, data] = getRegion(GameRegion::Type::kInfo, d.config.regions);
-		if (region && data) {
+		const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
+		if (region) {
 			const lurp::Zone& zone = _zoneDriver->currentZone();
 			const lurp::Room& room = _zoneDriver->currentRoom();
 
-			data->textField->resize(3);
+			std::shared_ptr<TextBox>& tb = _infoText;
+			tb->resize(3);
 
-			data->textField->setText(0, zone.name);
-			data->textField->setColor(0, {192, 192, 192, 255});
+			tb->setText(0, zone.name);
+			tb->setColor(0, {192, 192, 192, 255});
 
-			data->textField->setText(1, room.name);
-			data->textField->setColor(1, { 255, 255, 255, 255 });
+			tb->setText(1, room.name);
+			tb->setColor(1, { 255, 255, 255, 255 });
 
-			data->textField->setText(2, room.desc);
-			data->textField->setColor(2, { 192, 192, 192, 255 });
+			tb->setText(2, room.desc);
+			tb->setColor(2, { 192, 192, 192, 255 });
 		}
 	}
 }

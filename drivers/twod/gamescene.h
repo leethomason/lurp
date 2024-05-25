@@ -27,14 +27,16 @@ public:
 	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
 private:
-	// Grapics ----------------
-	struct GSData {
-		std::shared_ptr<Texture> texture;
-		std::shared_ptr<TextBox> textField;
-	};
-	std::vector<GSData> _data;
+	// Image region
+	std::shared_ptr<Texture> _imageTexture;
 
-	std::pair<const GameRegion*, GSData*> getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
+	// Text region (main i/o)
+	std::shared_ptr<TextBox> _mainText;
+
+	// Auxillary info region
+	std::shared_ptr<TextBox> _infoText;
+
+	const GameRegion* getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
 
 	// Game -------------------
 	lurp::ScriptBridge _bridge;
