@@ -62,6 +62,9 @@ struct Rect {
 	SDL_Rect toSDLRect() const {
 		return SDL_Rect{ x, y, w, h };
 	}
+	bool contains(const Point& p) const {
+		return p.x >= x && p.x < x + w && p.y >= y && p.y < y + h;
+	}
 };
 
 struct RectF {
@@ -120,6 +123,8 @@ public:
 	}
 	PointF t(const PointF& p) const;
 	RectF t(const RectF& r) const;
+
+	Point screenToVirtual(const Point& p) const;
 
 private:
 	Size _renderSize;

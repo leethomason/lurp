@@ -72,6 +72,11 @@ TextBox::TextBox()
 	_color.push_back({ 255, 255, 255, 255 });
 }
 
+
+TextBox::~TextBox()
+{
+}
+
 void TextBox::resize(size_t s)
 {
 	if (s < _font.size()) {
@@ -114,6 +119,17 @@ void TextBox::setBgColor(SDL_Color color) {
 		_bg = color;
 		_needUpdate = true;
 	}
+}
+
+bool TextBox::hitTest(const Point& screen) const
+{
+	if (!_texture->ready())
+		return false;
+
+	Rect rect = { 0, 0, _texture->surfaceSize().w, _texture->surfaceSize().h };
+	if (rect.contains(screen))
+		return true;
+	return false;
 }
 
 FontManager::~FontManager()
@@ -244,10 +260,6 @@ std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width,
 	return ptr;	
 }
 
-TextBox::~TextBox()
-{
-}
-
 void FontManager::Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const
 {
 	if (tf->_texture->ready()) {
@@ -270,7 +282,22 @@ void FontManager::Draw(const std::shared_ptr<TextBox>& tf, int x, int y) const
 void FontManager::Draw(const VBox& vbox, const Point& p) const
 {
 	int y = p.y;
-	for (const auto& tf : vbox.boxes) {
+	for (size_t i = 0; i < vbox.boxes.size(); i++) {
+		static constexpr SDL_Color white{ 255, 255, 255, 255 };
+
+		const std::shared_ptr<TextBox>& tf = vbox.boxes[i];
+		MouseState state = tf->mouseState();
+
+		switch (state) {
+		case MouseState::none:
+			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), vbox._upColor.r, vbox._upColor.g, vbox._upColor.b);
+			break;
+		case MouseState::over:
+			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), 255, 255, 255);
+			break;
+		case MouseState::down:
+			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), 192, 192, 192);
+		}
 		Draw(tf, p.x, y);
 		y += tf->surfaceSize().h;
 	}
@@ -285,6 +312,37 @@ void FontManager::toggleQuality()
 	}
 	if (gQuality == 0) fmt::print("Shaded font\n");
 	else if (gQuality == 1) fmt::print("LCD font\n");
+}
+
+void FontManager::doMove(const Point& screen, const Point&)
+{
+	for (auto& tf : _textFields) {
+		tf->_mouseState = MouseState::none;
+		if (tf->hitTest(screen)) {
+			if (_mouseBox == tf)
+				tf->_mouseState = MouseState::none;
+			else if (!_mouseBox)
+				tf->_mouseState = MouseState::over;
+		}
+	}
+}
+
+void FontManager::doButton(const Point& screen, const Point&, bool down)
+{
+	for (auto& tf : _textFields) {
+		if (tf->hitTest(screen)) {
+			if (down) {
+				_mouseBox = tf;
+			}
+			else {
+				if (_mouseBox == tf) {
+					// clicked!
+				}
+				_mouseBox = nullptr;
+			}
+		}
+	}
+	doMove(screen, Point());
 }
 
 void DrawDebugText(const std::string& text, SDL_Renderer* renderer, const Texture* tex, int x, int y, int fontSize, const XFormer& xf)

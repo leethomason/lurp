@@ -137,3 +137,11 @@ RectF XFormer::t(const RectF& r) const
 	out.h = p1.y - p0.y;
 	return out;
 }
+
+Point XFormer::screenToVirtual(const Point& p) const
+{
+	Point out;
+	out.x = (p.x - _offset.x) / _scale;
+	out.y = (p.y - _offset.y) / _scale;
+	return out;
+}

@@ -135,15 +135,15 @@ void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, SDL_Color c
 
 struct PreserveColor {
 	PreserveColor(SDL_Renderer* renderer) : _renderer(renderer) {
-		SDL_GetRenderDrawColor(_renderer, &r, &g, &b, &a);
+		SDL_GetRenderDrawColor(_renderer, &_draw.r, &_draw.g, &_draw.b, &_draw.a);
 	}
 
 	~PreserveColor() {
-		SDL_SetRenderDrawColor(_renderer, r, g, b, a);
+		SDL_SetRenderDrawColor(_renderer, _draw.r, _draw.g, _draw.b, _draw.a);
 	}
 
 	SDL_Renderer* _renderer;
-	Uint8 r, g, b, a;
+	SDL_Color _draw;
 };
 
 enum class RenderQuality {

@@ -164,20 +164,29 @@ void AssetsTest::load(Drawing& d, const FrameData&)
 	tf1 = d.fontManager.createTextBox(roboto16, 300, 300, true);
 	tf1->setBgColor(clearColor);
 
-	//vbox = d.fontManager.createVBox(300, 600, false);
-	//vbox->add(roboto16);
-	//vbox->add(roboto16);
-	//vbox->add(roboto16);
+	tf2 = d.fontManager.createTextBox(roboto16, 300, 600, false);
+	tf2->resize(3);
 
-	vbox = d.fontManager.createTextBox(roboto16, 300, 600, false);
-	vbox->resize(3);
+	tf2->setText(0, "Red");
+	tf2->setColor(0, SDL_Color{ 255, 0, 0, 255 });
+	tf2->setText(1, "Green");
+	tf2->setColor(1, SDL_Color{ 0, 255, 0, 255 });
+	tf2->setText(2, "Blue");
+	tf2->setColor(2, SDL_Color{ 0, 64, 255, 255 });
 
-	vbox->setText(0, "Red");
-	vbox->setColor(0, SDL_Color{ 255, 0, 0, 255 });
-	vbox->setText(1, "Green");
-	vbox->setColor(1, SDL_Color{ 0, 255, 0, 255 });
-	vbox->setText(2, "Blue");
-	vbox->setColor(2, SDL_Color{ 0, 0, 255, 255 });
+	vbox.setState({ 128, 128, 128, 255 }, { 128, 128, 128, 255 });
+	vbox.boxes.resize(3);
+	vbox.boxes[0] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
+	vbox.boxes[0]->setText("Red");
+	vbox.boxes[0]->setColor(SDL_Color{ 255, 0, 0, 255 });
+
+	vbox.boxes[1] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
+	vbox.boxes[1]->setText("Green");
+	vbox.boxes[1]->setColor(SDL_Color{ 0, 255, 0, 255 });
+
+	vbox.boxes[2] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
+	vbox.boxes[2]->setText("Blue");
+	vbox.boxes[2]->setColor(SDL_Color{ 0, 64, 255, 255 });
 }
 
 void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
@@ -214,8 +223,10 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 		Point p0 = xFormer.t(Point{ 400, 300 });
 		d.fontManager.Draw(tf0, p0.x, p0.y);
 
-		vbox->setText(1, fmt::format("Green frame/60={}", f.frame/60));
-		d.fontManager.Draw(vbox, xFormer.t(Point{ 400, 500 }));
+		tf2->setText(1, fmt::format("Green frame/60={}", f.frame/60));
+		d.fontManager.Draw(tf2, xFormer.t(Point{ 400, 500 }));
+
+		d.fontManager.Draw(vbox, xFormer.t(Point{ 600, 500 }));
 
 		tf1->setText("This is some fancy pants hq text.");
 		tf1->setColor(SDL_Color{ 255, 255, 255, 255 });
@@ -248,4 +259,14 @@ void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer)
 		nk_property_int(nukCtx, "Compression:", 0, &property, 100, 10, 1.0f);
 	}
 	nk_end(nukCtx);
+}
+
+void AssetsTest::mouseMotion(FontManager& fman, const Point& screen, const Point& virt)
+{
+	fman.doMove(screen, virt);
+}
+
+void AssetsTest::mouseButton(FontManager& fman, const Point& screen, const Point& virt, bool down)
+{
+	fman.doButton(screen, virt, down);
 }

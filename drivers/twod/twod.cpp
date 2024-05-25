@@ -287,6 +287,18 @@ int main(int argc, char* argv[])
 						break;
 					}
 				}
+				else if (e.type == SDL_MOUSEMOTION) {
+					Point screen = { e.motion.x, e.motion.y };
+					Point virt = xFormer.screenToVirtual(screen);
+					scene->mouseMotion(fontManager, screen, virt);
+				}
+				else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
+					if (e.button.button == 0) {
+						Point screen = { e.button.x, e.button.y };
+						Point virt = xFormer.screenToVirtual(screen);
+						scene->mouseButton(fontManager, screen, virt, e.button.state == SDL_PRESSED);
+					}
+				}
 				nk_sdl_handle_event(&e);
 			}
 			//nk_sdl_handle_grab();	// FIXME: do we want grab? why isn't it defined?

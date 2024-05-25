@@ -22,6 +22,16 @@ struct Font {
 	std::string path;			// for reload, which has to be done on resize (keeping fonts 1:1)
 };
 
+enum class MouseState {
+	none,
+	over,
+	down,
+};
+
+/*
+* A TextBox is one texture, to which there can be any number of strings, fonts, and colors.
+* All the text must by HQ or blended. It uses memory as efficiently as possible.
+*/
 class TextBox {
 	friend class FontManager;
 
@@ -48,7 +58,11 @@ public:
 	SDL_Color bgColor() const { return _bg; }
 
 	Size virtualSize() const { return _virtualSize;	}
+	// Note that surface is in screen, not virtual.
 	Size surfaceSize() const { return _texture->surfaceSize(); }
+
+	bool hitTest(const Point& screen) const;
+	MouseState mouseState() const { return _mouseState; }
 
 private:
 	bool _needUpdate = false;
@@ -58,12 +72,18 @@ private:
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
+	MouseState _mouseState = MouseState::none;
 
 	std::vector<const Font*> _font;
 	std::vector<std::string> _text;
 	std::vector<SDL_Color> _color;
 };
 
+/*
+* A VBox is a collection of TextBoxes, and does the same layout.
+* The advantage is that a VBox can be hit tested for individual TextBoxes.
+* The disadvantage is that it uses more memory.
+*/
 class VBox {
 	friend class FontManager;
 
@@ -72,6 +92,14 @@ public:
 	~VBox() = default;
 
 	std::vector<std::shared_ptr<TextBox>> boxes;
+
+	void setState(SDL_Color disabled, SDL_Color up) {
+		_disabledColor = disabled;
+		_upColor = up;
+	}
+
+private:
+	SDL_Color _disabledColor{ 255, 255, 255, 255 }, _upColor{ 255, 255, 255, 255 };
 };
 
 class FontManager {
@@ -93,8 +121,10 @@ public:
 	void Draw(const std::shared_ptr<TextBox>& tf, const Point& p) const { Draw(tf, p.x, p.y); }
 	void Draw(const VBox& vbox, const Point& p) const;
 
-	void toggleQuality();
+	void doMove(const Point& screen, const Point& virt);
+	void doButton(const Point& screen, const Point& virt, bool down);
 
+	void toggleQuality();
 
 private:
 	Font* getFont(const Font*);
@@ -104,6 +134,7 @@ private:
 	TextureManager& _textureManager;
 	std::vector<Font*> _fonts;
 	std::vector<std::shared_ptr<TextBox>> _textFields;
+	std::shared_ptr<TextBox> _mouseBox;
 	XFormer _xf;
 };
 
