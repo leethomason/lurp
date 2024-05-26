@@ -420,8 +420,10 @@ ZoneDriver::MoveResult ZoneDriver::move(const EntityID& roomEntityID)
 	if (isLocked(*it))
 		tryUnlock(*it);
 
-	if (isLocked(*it))
+	if (isLocked(*it)) {
+		mapData.newsQueue.push(NewsItem::edgeLocked(*it));
 		return MoveResult::kLocked;
+	}
 
 	teleport(roomEntityID);
 	checkScriptDriver();
@@ -639,8 +641,14 @@ ZoneDriver::TransferResult ZoneDriver::transferAll(const EntityID& srcEntity, co
 	if (isLocked(srcEntity))
 		tryUnlock(srcEntity);
 
-	if (isLocked(srcEntity) || isLocked(dstEntity))
+	if (isLocked(srcEntity)) {
+		mapData.newsQueue.push(NewsItem::containerLocked(_assets.getContainer(srcEntity)));
 		return TransferResult::kLocked;
+	}
+	if (isLocked(dstEntity)) {
+		mapData.newsQueue.push(NewsItem::containerLocked(_assets.getContainer(dstEntity)));
+		return TransferResult::kLocked;
+	}
 
 	Inventory& src = _assets.getInventory(*_assets.get(srcEntity));
 	while (!src.emtpy()) {
@@ -649,9 +657,16 @@ ZoneDriver::TransferResult ZoneDriver::transferAll(const EntityID& srcEntity, co
 	return TransferResult::kSuccess;
 }
 
-ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const EntityID& srcEntity, const EntityID& dstEntity, int n) {
-	if (isLocked(srcEntity) || isLocked(dstEntity))
+ZoneDriver::TransferResult ZoneDriver::transfer(const Item& item, const EntityID& srcEntity, const EntityID& dstEntity, int n) 
+{
+	if (isLocked(srcEntity)) {
+		mapData.newsQueue.push(NewsItem::containerLocked(_assets.getContainer(srcEntity)));
 		return TransferResult::kLocked;
+	}
+	if (isLocked(dstEntity)) {
+		mapData.newsQueue.push(NewsItem::containerLocked(_assets.getContainer(dstEntity)));
+		return TransferResult::kLocked;
+	}
 
 	Inventory& src = _assets.getInventory(*_assets.get(srcEntity));
 	Inventory& dst = _assets.getInventory(*_assets.get(dstEntity));

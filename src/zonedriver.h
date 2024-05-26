@@ -43,6 +43,7 @@ public:
 	// ------ Driver ------
 	enum class Mode { kText, kChoices, kNavigation, kBattle };
 	Mode mode() const;
+	NewsQueue& news() { return mapData.newsQueue; }
 
 	// Mode: Text
 	TextLine text() const;
