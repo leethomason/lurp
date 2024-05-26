@@ -26,12 +26,25 @@ public:
 	virtual void draw(Drawing&, const FrameData& f, const XFormer& xformer) override;
 	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
+	virtual void mouseMotion(FontManager&, const Point& /*screen*/, const Point& /*virt*/) override;
+	virtual void mouseButton(FontManager&, const Point& /*screen*/, const Point& /*virt*/, bool /*down*/) override;
+
 private:
 	// Image region
 	std::shared_ptr<Texture> _imageTexture;
 
 	// Text region (main i/o)
+	static constexpr int kMaxOptions = 16;
 	std::shared_ptr<TextBox> _mainText;
+	VBox _mainOptions;
+
+	struct Option {
+		enum class Type { kDir };
+		Type type = Type::kDir;
+		int index = 0;
+		std::string entityID;
+	};
+	std::vector<Option> _options;
 
 	// Auxillary info region
 	std::shared_ptr<TextBox> _infoText;
@@ -46,4 +59,6 @@ private:
 
 	bool _needProcess = false;
 	void process(Drawing& d);
+	void processNavigation(Drawing& d);
+	void addNews(Drawing& d);
 };

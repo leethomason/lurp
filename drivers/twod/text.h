@@ -63,7 +63,7 @@ public:
 	// Note that surface is in screen, not virtual.
 	Size surfaceSize() const { return _texture->surfaceSize(); }
 
-	void setEnableInteraction(bool enable) { _interactive = enable; }
+	void enableInteraction(bool enable) { _interactive = enable; }
 	bool hitTest(const Point& screen) const;
 	MouseState mouseState() const { return _mouseState; }
 

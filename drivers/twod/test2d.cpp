@@ -181,17 +181,17 @@ void AssetsTest::load(Drawing& d, const FrameData& f)
 	vbox.boxes[0] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
 	vbox.boxes[0]->setText("Red");
 	vbox.boxes[0]->setColor(SDL_Color{ 255, 0, 0, 255 });
-	vbox.boxes[0]->setEnableInteraction(true);
+	vbox.boxes[0]->enableInteraction(true);
 
 	vbox.boxes[1] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
 	vbox.boxes[1]->setText("Green");
 	vbox.boxes[1]->setColor(SDL_Color{ 0, 255, 0, 255 });
-	vbox.boxes[1]->setEnableInteraction(true);
+	vbox.boxes[1]->enableInteraction(true);
 
 	vbox.boxes[2] = d.fontManager.createTextBox(roboto16, 300, roboto16->pointSize * 2, false);
 	vbox.boxes[2]->setText("Blue");
 	vbox.boxes[2]->setColor(SDL_Color{ 0, 64, 255, 255 });
-	vbox.boxes[2]->setEnableInteraction(true);
+	vbox.boxes[2]->enableInteraction(true);
 }
 
 void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
