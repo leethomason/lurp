@@ -15,9 +15,11 @@ struct Edge;
 struct Container;
 
 enum class NewsType {
-	kItemDelta,		// You gained/lost 'delta' 'item'. For a total of 'count'.
-	kLocked,		// The 'edge/container' was locked by 'null/item'
-	kUnlocked,		// The 'edge/container' was unlocked by 'null/item'
+	kItemDelta,			// You gained/lost 'delta' 'item'. For a total of 'count'.
+	kLocked,			// The 'edge/container' was locked by 'null/item'
+	kUnlocked,			// The 'edge/container' was unlocked by 'null/item'
+	kEdgeLocked,		// The path is locked (also reflected in the return code)
+	kContainerLocked,	// The container is locked (also reflected in the return code)
 };
 
 struct NewsItem {
@@ -52,6 +54,18 @@ struct NewsItem {
 		ni.type = lock ? NewsType::kLocked : NewsType::kUnlocked;
 		ni.edge = &e;
 		ni.item = item;
+		return ni;
+	}
+	static NewsItem edgeLocked(const Edge& e) {
+		NewsItem ni;
+		ni.type = NewsType::kEdgeLocked;
+		ni.edge = &e;
+		return ni;
+	}
+	static NewsItem containerLocked(const Container& c) {
+		NewsItem ni;
+		ni.type = NewsType::kContainerLocked;
+		ni.container = &c;
 		return ni;
 	}
 };

@@ -96,6 +96,19 @@ static void PrintNews(NewsQueue& queue)
 			fmt::print("{}\n",
 				ionic::Table::colorize(ionic::Color::green, s));
 		}
+		else if (ni.type == NewsType::kEdgeLocked) {
+			fmt::print("{}\n",
+				ionic::Table::colorize(ionic::Color::red,
+					fmt::format("The {} is locked.", ni.edge->name)));
+		}
+		else if (ni.type == NewsType::kContainerLocked) {
+			fmt::print("{}\n",
+				ionic::Table::colorize(ionic::Color::red,
+					fmt::format("The {} is locked.", ni.container->name)));
+		}
+		else {
+			assert(false);
+		}
 	}
 }
 
@@ -290,11 +303,9 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			}
 			else if (v.charIntInRange('c', (int)containerVec.size())) {
 				const Container* c = driver.getContainer(containerVec[v.intVal]->entityID);
-				
-				ZoneDriver::TransferResult tr = driver.transferAll(c->entityID, player.entityID);
-				if (tr == ZoneDriver::TransferResult::kLocked)
-					fmt::print("{}",
-						ionic::Table::colorize(ionic::Color::red, "The container is locked.\n"));
+
+				// If locked, will be reported by the news.
+				driver.transferAll(c->entityID, player.entityID);
 			}
 			else if (v.charIntInRange('i', (int)interactionVec.size())) {
 				driver.startInteraction(interactionVec[v.intVal]);
@@ -302,9 +313,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			else {
 				int dirIdx = SelectEdge(v, edges);
 				if (dirIdx >= 0) {
-					if (driver.move(edges[dirIdx].dstRoom) == ZoneDriver::MoveResult::kLocked)
-						fmt::print("{}",
-							ionic::Table::colorize(ionic::Color::red, "That way is locked.\n"));
+					// If locked, will be reported by the news.
+					driver.move(edges[dirIdx].dstRoom);
 				}
 			}
 			if (driver.mode() == ZoneDriver::Mode::kNavigation) {
