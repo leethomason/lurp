@@ -139,6 +139,7 @@ void GameScene::process(Drawing& d)
 	lurp::ZoneDriver::Mode mode = _zoneDriver->mode();
 
 	if (mode == lurp::ZoneDriver::Mode::kNavigation) {
+		_mainText->resize(0);
 		addNews(d);
 		processNavigation(d);
 	}
@@ -175,11 +176,16 @@ void GameScene::process(Drawing& d)
 
 void GameScene::addNews(Drawing& d)
 {
-	//const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
-	//if (region) {
-	//	while(_zoneDriver->qu)
-	//	
-	//}
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region)
+		return;
+
+	while (!_zoneDriver->news().empty()) {
+		lurp::NewsItem news = _zoneDriver->news().pop();
+		size_t idx = _mainText->size();
+		_mainText->resize(idx + 1);
+		_mainText->setText(idx, news.text);
+	}
 }
 
 void GameScene::mouseMotion(FontManager& fm, const Point& screen, const Point& virt)

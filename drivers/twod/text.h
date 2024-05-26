@@ -78,6 +78,7 @@ private:
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
 	MouseState _mouseState = MouseState::none;
 
+	const Font* _font0 = nullptr;
 	std::vector<const Font*> _font;
 	std::vector<std::string> _text;
 	std::vector<SDL_Color> _color;

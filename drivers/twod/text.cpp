@@ -87,8 +87,8 @@ void TextBox::resize(size_t s)
 		_needUpdate = true;
 	}
 	else if (s > _font.size()) {
-		const Font* font = _font.empty() ? nullptr : _font[0];
-		_font.resize(s, font);
+		assert(_font0);
+		_font.resize(s, _font0);
 		_text.resize(s, "");
 		_color.resize(s, { 255, 255, 255, 255 });
 	}
@@ -98,6 +98,8 @@ void TextBox::setFont(size_t i, const Font* font) {
 	if (font != _font[i]) {
 		_font[i] = font;
 		_needUpdate = true;
+		if (i == 0)
+			_font0 = font;
 	}
 }
 
@@ -248,6 +250,7 @@ std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width,
 	if (!f) return nullptr;
 
 	TextBox* tf = new TextBox();
+	tf->_font0 = f;
 	tf->_font[0] = f;
 	tf->_virtualSize = Size{ width, height };
 	// No point in creating the texture because we don't know the real size yet.
