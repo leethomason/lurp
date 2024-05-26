@@ -83,7 +83,8 @@ static void BasicTest()
 	auto moveResult = map.move("TEST_ZONE_0_ROOM_B");
 	TEST(moveResult == ZoneDriver::MoveResult::kLocked);
 	TEST(map.currentRoom().name == "RoomA");
-	TEST(map.mapData.newsQueue.empty());
+	TEST(map.news().size() == 1);
+	map.news().clear();
 
 	// 2. open the chest and get the key
 	ContainerVec containerVec = map.getContainers();
@@ -889,7 +890,8 @@ static void TestContainers()
 	const Container& chestB = *containerVec[1];
 
 	TEST(zone.transferAll(chestA.entityID, player.entityID) == ZoneDriver::TransferResult::kLocked);
-	TEST(zone.mapData.newsQueue.empty());
+	TEST(zone.news().size() == 1);
+	zone.news().clear();
 
 	TEST(zone.transferAll(chestB.entityID, player.entityID) == ZoneDriver::TransferResult::kSuccess);
 	TEST(zone.mapData.newsQueue.size() == 1); // got a key
