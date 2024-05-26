@@ -83,34 +83,23 @@ static void PrintNews(NewsQueue& queue)
 		NewsItem ni = queue.pop();
 		if (ni.type == NewsType::kItemDelta) {
 			assert(ni.item);
-			int bias = ni.delta < 0 ? -1 : 1;
 			ionic::Color color = ni.delta < 0 ? ionic::Color::red : ionic::Color::green;
-			fmt::print("{}\n",
-				ionic::Table::colorize(color,
-					fmt::format("You {} {} {}", ni.verb(), ni.delta * bias, ni.item->name)));
+			fmt::print("{}\n", ionic::Table::colorize(color, ni.text));
 		}
 		else if (ni.type == NewsType::kLocked || ni.type == NewsType::kUnlocked) {
-			std::string s = fmt::format("The {} was {}", ni.noun(), ni.verb());
-			if (ni.item)
-				s += fmt::format(" by the {}", ni.item->name);
-			fmt::print("{}\n",
-				ionic::Table::colorize(ionic::Color::green, s));
+			fmt::print("{}\n", ionic::Table::colorize(ionic::Color::green, ni.text));
 		}
 		else if (ni.type == NewsType::kEdgeLocked) {
-			fmt::print("{}\n",
-				ionic::Table::colorize(ionic::Color::red,
-					fmt::format("The {} is locked.", ni.edge->name)));
+			fmt::print("{}\n", ionic::Table::colorize(ionic::Color::red, ni.text));
 		}
 		else if (ni.type == NewsType::kContainerLocked) {
-			fmt::print("{}\n",
-				ionic::Table::colorize(ionic::Color::red,
-					fmt::format("The {} is locked.", ni.container->name)));
+			fmt::print("{}\n", ionic::Table::colorize(ionic::Color::red, ni.text));
 		}
 		else {
 			assert(false);
 		}
 	}
-}
+} 
 
 static void PrintInventory(const Inventory& inv)
 {
