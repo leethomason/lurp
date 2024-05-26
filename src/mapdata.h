@@ -29,45 +29,13 @@ struct NewsItem {
 	const Container* container = nullptr;
 	int delta = 0;
 	int count = 0;
+	std::string text;
 
-	std::string noun() const;
-	std::string verb() const;
-	std::string object() const;
-
-	static NewsItem itemDelta(const Item& item, int delta, int count) {
-		NewsItem ni;
-		ni.type = NewsType::kItemDelta;
-		ni.item = &item;
-		ni.delta = delta;
-		ni.count = count;
-		return ni;
-	}
-	static NewsItem lock(bool lock, const Container& c, const Item* item) {
-		NewsItem ni;
-		ni.type = lock ? NewsType::kLocked : NewsType::kUnlocked;
-		ni.container = &c;
-		ni.item = item;
-		return ni;
-	}
-	static NewsItem lock(bool lock, const Edge& e, const Item* item) {
-		NewsItem ni;
-		ni.type = lock ? NewsType::kLocked : NewsType::kUnlocked;
-		ni.edge = &e;
-		ni.item = item;
-		return ni;
-	}
-	static NewsItem edgeLocked(const Edge& e) {
-		NewsItem ni;
-		ni.type = NewsType::kEdgeLocked;
-		ni.edge = &e;
-		return ni;
-	}
-	static NewsItem containerLocked(const Container& c) {
-		NewsItem ni;
-		ni.type = NewsType::kContainerLocked;
-		ni.container = &c;
-		return ni;
-	}
+	static NewsItem itemDelta(const Item& item, int delta, int count);
+	static NewsItem lock(bool lock, const Container& c, const Item* item);
+	static NewsItem lock(bool lock, const Edge& e, const Item* item);
+	static NewsItem edgeLocked(const Edge& e);
+	static NewsItem containerLocked(const Container& c);
 };
 
 using NewsQueue  = Queue<NewsItem>;
