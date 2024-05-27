@@ -209,10 +209,6 @@ struct Battle : Entity {
 	std::vector<lurp::swbattle::Region> regions;
 	std::vector<EntityID> combatants;
 
-	std::pair<bool, Variant> get(const std::string&) const {
-		return { false, Variant() };
-	}
-
 	static constexpr ScriptType type{ ScriptType::kBattle };
 
 	virtual std::string description() const override {

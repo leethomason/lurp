@@ -18,12 +18,6 @@ struct Container : Entity {
 	EntityID key;
 	Inventory inventory;
 
-	std::pair<bool, Variant> get(const std::string& k) const {
-		if (k == "locked") return { true, Variant(locked) };
-		if (k == "name") return { true, Variant(name) };
-		if (k == "key") return { true, Variant(key) };
-		return { false, Variant() };
-	}
 	static constexpr ScriptType type{ ScriptType::kContainer };
 	
 	virtual std::string description() const override {
