@@ -61,4 +61,5 @@ private:
 	void process(Drawing& d);
 	void addNavigation(Drawing& d);
 	void addNews(Drawing& d);
+	void addContainers(Drawing& d);
 };

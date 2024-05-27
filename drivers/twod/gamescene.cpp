@@ -106,8 +106,7 @@ void GameScene::addNavigation(Drawing& d)
 		std::vector<lurp::DirEdge> dirEdges = _zoneDriver->dirEdges();
 
 		std::string text;
-		int optIdx = 0;
-		for (size_t i = 0; i < dirEdges.size() && optIdx < _mainOptions.boxes.size(); ++i) {
+		for (size_t i = 0; i < dirEdges.size() && _options.size() < _mainOptions.boxes.size(); ++i) {
 			const lurp::DirEdge& de = dirEdges[i];
 			if (de.dir == lurp::Edge::Dir::kUnknown)
 				text = fmt::format("{}", de.name);
@@ -118,15 +117,38 @@ void GameScene::addNavigation(Drawing& d)
 			opt.type = Option::Type::kDir;
 			opt.index = static_cast<int>(i);
 			opt.entityID = de.dstRoom;
-
-			_options[optIdx] = opt;
-			auto& tb = _mainOptions.boxes[optIdx];
+			
+			auto& tb = _mainOptions.boxes[_options.size()];
 			tb->setText(i, text);
 			tb->setColor(i, { 0, 255, 255, 255 });
 			tb->setFont(i, d.config.font);
 
-			optIdx++;
+			_options.push_back(opt);
 		}
+	}
+}
+
+void GameScene::addNews(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region) return;
+
+	while (!_zoneDriver->news().empty()) {
+		lurp::NewsItem news = _zoneDriver->news().pop();
+		size_t idx = _mainText->size();
+		_mainText->resize(idx + 1);
+		_mainText->setText(idx, news.text);
+	}
+}
+
+void GameScene::addContainers(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region) return;
+
+	lurp::ContainerVec vec = _zoneDriver->getContainers();
+	for (const lurp::Container* c : vec) {
+
 	}
 }
 
@@ -138,9 +160,10 @@ void GameScene::process(Drawing& d)
 		_mainText->resize(0);
 		for (auto& tb : _mainOptions.boxes)
 			tb->setText("");
-		_options.assign(_mainOptions.boxes.size(), Option{});
+		_options.clear();
 
 		addNews(d);
+		addContainers(d);
 		addNavigation(d);
 	}
 	else if (mode == lurp::ZoneDriver::Mode::kText) {
@@ -171,20 +194,6 @@ void GameScene::process(Drawing& d)
 			tb->setText(2, room.desc);
 			tb->setColor(2, { 192, 192, 192, 255 });
 		}
-	}
-}
-
-void GameScene::addNews(Drawing& d)
-{
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
-	if (!region)
-		return;
-
-	while (!_zoneDriver->news().empty()) {
-		lurp::NewsItem news = _zoneDriver->news().pop();
-		size_t idx = _mainText->size();
-		_mainText->resize(idx + 1);
-		_mainText->setText(idx, news.text);
 	}
 }
 
