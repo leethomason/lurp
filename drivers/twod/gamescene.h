@@ -59,6 +59,6 @@ private:
 
 	bool _needProcess = false;
 	void process(Drawing& d);
-	void processNavigation(Drawing& d);
+	void addNavigation(Drawing& d);
 	void addNews(Drawing& d);
 };

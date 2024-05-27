@@ -99,14 +99,10 @@ const GameRegion* GameScene::getRegion(GameRegion::Type type, const std::vector<
 	return nullptr;
 }
 
-void GameScene::processNavigation(Drawing& d)
+void GameScene::addNavigation(Drawing& d)
 {
 	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
 	if (region) {
-		for (auto& tb : _mainOptions.boxes)
-			tb->setText("");
-		_options.assign(_mainOptions.boxes.size(), Option{});
-
 		std::vector<lurp::DirEdge> dirEdges = _zoneDriver->dirEdges();
 
 		std::string text;
@@ -140,8 +136,12 @@ void GameScene::process(Drawing& d)
 
 	if (mode == lurp::ZoneDriver::Mode::kNavigation) {
 		_mainText->resize(0);
+		for (auto& tb : _mainOptions.boxes)
+			tb->setText("");
+		_options.assign(_mainOptions.boxes.size(), Option{});
+
 		addNews(d);
-		processNavigation(d);
+		addNavigation(d);
 	}
 	else if (mode == lurp::ZoneDriver::Mode::kText) {
 		const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
