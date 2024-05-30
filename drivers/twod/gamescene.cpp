@@ -119,12 +119,48 @@ void GameScene::addNavigation(Drawing& d)
 			opt.entityID = de.dstRoom;
 			
 			auto& tb = _mainOptions.boxes[_options.size()];
-			tb->setText(i, text);
-			tb->setColor(i, { 0, 255, 255, 255 });
-			tb->setFont(i, d.config.font);
+			tb->setText(text);
+			tb->setColor({ 0, 255, 255, 255 });
+			tb->setFont(d.config.font);
 
 			_options.push_back(opt);
 		}
+	}
+}
+
+void GameScene::addContainers(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region) return;
+
+	lurp::ContainerVec vec = _zoneDriver->getContainers();
+	int i = 0;
+	for (const lurp::Container* c : vec) {
+		if (_options.size() >= _mainOptions.boxes.size()) break;
+
+		bool locked = _zoneDriver->isLocked(c->entityID);
+		std::string text;
+		if (locked) {
+			text = fmt::format("{} (locked)", c->name);
+		}
+		else {
+			const lurp::Inventory& inv = _zoneDriver->getInventory(*c);
+			std::string istr = inventoryString(inv);
+			text = fmt::format("{} ({})", c->name, istr);
+		}
+
+		Option opt;
+		opt.type = Option::Type::kContainer;
+		opt.index = i;
+		opt.entityID = c->entityID;
+
+		auto& tb = _mainOptions.boxes[_options.size()];
+		tb->setText(text);
+		tb->setColor({ 0, 255, 255, 255 });
+		tb->setFont(d.config.font);
+
+		_options.push_back(opt);
+		i++;
 	}
 }
 
@@ -138,17 +174,6 @@ void GameScene::addNews(Drawing& d)
 		size_t idx = _mainText->size();
 		_mainText->resize(idx + 1);
 		_mainText->setText(idx, news.text);
-	}
-}
-
-void GameScene::addContainers(Drawing& d)
-{
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
-	if (!region) return;
-
-	lurp::ContainerVec vec = _zoneDriver->getContainers();
-	for (const lurp::Container* c : vec) {
-
 	}
 }
 
@@ -212,8 +237,25 @@ void GameScene::mouseButton(FontManager& fm, const Point& screen, const Point& v
 					_zoneDriver->move(_options[i].entityID);
 					_needProcess = true;
 				}
+				if (_options[i].type == Option::Type::kContainer) {
+					_zoneDriver->transferAll(_options[i].entityID, "player");
+					_needProcess = true;
+				}
 				break;
 			}
 		}
 	}
+}
+
+std::string GameScene::inventoryString(const lurp::Inventory& inv)
+{
+	std::string text;
+	for (const auto& item : inv.items()) {
+		if (!text.empty()) text += " | ";
+		if (item.count == 1)
+			text += item.pItem->name;
+		else
+			text += fmt::format("{} x{}", item.pItem->name, item.count);
+	}
+	return text;
 }

@@ -14,6 +14,7 @@
 
 namespace lurp {
 	class ZoneDriver;
+	class Inventory;
 }
 
 class GameScene : public Scene
@@ -39,7 +40,7 @@ private:
 	VBox _mainOptions;
 
 	struct Option {
-		enum class Type { kDir };
+		enum class Type { kDir, kContainer, kChoice };
 		Type type = Type::kDir;
 		int index = 0;
 		std::string entityID;
@@ -62,4 +63,6 @@ private:
 	void addNavigation(Drawing& d);
 	void addNews(Drawing& d);
 	void addContainers(Drawing& d);
+
+	std::string inventoryString(const lurp::Inventory& inv);
 };
