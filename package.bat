@@ -6,8 +6,7 @@ cmake --build build --config Release
 
 mkdir %1
 
-copy /Y README.md %1
-copy /Y script.md %1
+copy /Y *.md %1
 copy /Y LICENSE %1
 
 copy /Y build\Release\lurp.exe %1
@@ -15,7 +14,7 @@ mkdir %1\script
 copy /Y script %1\script
 
 mkdir %1\game
-xcopy /E /Y game\*.* lurp_r1\game
+xcopy /E /Y game\*.* %1\game
 
 cd %1
 lurp.exe --noScan
@@ -24,5 +23,3 @@ cd ..
 
 git status
 echo %1 is ready for zipping if git status is clean
-
-
