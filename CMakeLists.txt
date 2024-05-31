@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 include(FetchContent)
+cmake_policy(SET CMP0091 NEW)
 
 project(lurp)
 
@@ -75,6 +76,7 @@ target_include_directories(lurp PUBLIC src
   ${md4c_SOURCE_DIR}/src
 )
 set_target_properties(lurp PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
+set_target_properties(lurp PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_test(
   NAME lurp
