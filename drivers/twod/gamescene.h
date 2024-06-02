@@ -40,7 +40,7 @@ private:
 	VBox _mainOptions;
 
 	struct Option {
-		enum class Type { kDir, kContainer, kChoice };
+		enum class Type { kDir, kContainer, kChoice, kInteraction };
 		Type type = Type::kDir;
 		int index = 0;
 		std::string entityID;
@@ -60,9 +60,16 @@ private:
 
 	bool _needProcess = false;
 	void process(Drawing& d);
+
 	void addNavigation(Drawing& d);
 	void addNews(Drawing& d);
 	void addContainers(Drawing& d);
+	void addChoices(Drawing& d);
+	void addInteractions(Drawing& d);
 
+	void addRoom(Drawing& d);
+	void addInventory(Drawing& d);
+
+	std::string itemString(const lurp::ItemRef& itemRef);
 	std::string inventoryString(const lurp::Inventory& inv);
 };

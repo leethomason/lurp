@@ -164,6 +164,49 @@ void GameScene::addContainers(Drawing& d)
 	}
 }
 
+void GameScene::addChoices(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region) return;
+
+	const lurp::Choices& choices = _zoneDriver->choices();
+	for (size_t i = 0; i < choices.choices.size() && _options.size() < _mainOptions.boxes.size(); ++i) {
+		const lurp::Choices::Choice& c = choices.choices[i];
+		Option opt;
+		opt.type = Option::Type::kChoice;
+		opt.index = static_cast<int>(i);
+
+		auto& tb = _mainOptions.boxes[_options.size()];
+		tb->setText(c.text);
+		tb->setColor({ 0, 255, 255, 255 });
+		tb->setFont(d.config.font);
+
+		_options.push_back(opt);
+	}
+}
+
+void GameScene::addInteractions(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region) return;
+
+	lurp::InteractionVec vec = _zoneDriver->getInteractions();
+	for (size_t i = 0; i < vec.size(); i++) {
+		const lurp::Interaction* iact = vec[i];
+
+		Option opt;
+		opt.type = Option::Type::kInteraction;
+		opt.index = static_cast<int>(i);
+
+		auto& tb = _mainOptions.boxes[_options.size()];
+		tb->setText(iact->name);
+		tb->setColor({ 0, 255, 255, 255 });
+		tb->setFont(d.config.font);
+
+		_options.push_back(opt);
+	}
+}
+
 void GameScene::addNews(Drawing& d)
 {
 	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
@@ -177,21 +220,62 @@ void GameScene::addNews(Drawing& d)
 	}
 }
 
+void GameScene::addRoom(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
+	if (!region) return;
+
+	const lurp::Zone& zone = _zoneDriver->currentZone();
+	const lurp::Room& room = _zoneDriver->currentRoom();
+
+	std::shared_ptr<TextBox>& tb = _infoText;
+	size_t start = tb->size();
+	tb->resize(start + 3);
+
+	tb->setText(start + 0, zone.name);
+	tb->setColor(start + 0, { 192, 192, 192, 255 });
+
+	tb->setText(start + 1, room.name);
+	tb->setColor(start + 1, { 255, 255, 255, 255 });
+
+	tb->setText(start + 2, room.desc);
+	tb->setColor(start + 2, { 192, 192, 192, 255 });
+}
+
+void GameScene::addInventory(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
+	if (!region) return;
+
+	const lurp::Actor& player = _zoneDriver->getPlayer();
+	const lurp::Inventory& inv = _zoneDriver->getInventory(player);
+
+	for (const auto& item : inv.items()) {
+		size_t idx = _infoText->size();
+		_infoText->resize(idx + 1);
+		std::string t = itemString(item);
+		_infoText->setText(idx, t);
+	}
+}
+
 void GameScene::process(Drawing& d)
 {
 	lurp::ZoneDriver::Mode mode = _zoneDriver->mode();
+	_mainText->resize(0);
+	for (auto& tb : _mainOptions.boxes)
+		tb->setText("");
+	_options.clear();
+	_infoText->resize(0);
+
+	addNews(d);
 
 	if (mode == lurp::ZoneDriver::Mode::kNavigation) {
-		_mainText->resize(0);
-		for (auto& tb : _mainOptions.boxes)
-			tb->setText("");
-		_options.clear();
-
-		addNews(d);
+		addInteractions(d);
 		addContainers(d);
 		addNavigation(d);
 	}
 	else if (mode == lurp::ZoneDriver::Mode::kText) {
+		// fixme: should be "while text" with option to continue
 		const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
 		if (region) {
 			std::shared_ptr<TextBox>& tb = _mainText;
@@ -199,27 +283,13 @@ void GameScene::process(Drawing& d)
 			tb->setText(_zoneDriver->text().text);
 		}
 	}
+	else if (mode == lurp::ZoneDriver::Mode::kChoices) {
+		addChoices(d);
+	}
 
 	// Side panel
-	{
-		const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
-		if (region) {
-			const lurp::Zone& zone = _zoneDriver->currentZone();
-			const lurp::Room& room = _zoneDriver->currentRoom();
-
-			std::shared_ptr<TextBox>& tb = _infoText;
-			tb->resize(3);
-
-			tb->setText(0, zone.name);
-			tb->setColor(0, {192, 192, 192, 255});
-
-			tb->setText(1, room.name);
-			tb->setColor(1, { 255, 255, 255, 255 });
-
-			tb->setText(2, room.desc);
-			tb->setColor(2, { 192, 192, 192, 255 });
-		}
-	}
+	addRoom(d);
+	addInventory(d);
 }
 
 void GameScene::mouseMotion(FontManager& fm, const Point& screen, const Point& virt)
@@ -237,8 +307,16 @@ void GameScene::mouseButton(FontManager& fm, const Point& screen, const Point& v
 					_zoneDriver->move(_options[i].entityID);
 					_needProcess = true;
 				}
-				if (_options[i].type == Option::Type::kContainer) {
+				else if (_options[i].type == Option::Type::kContainer) {
 					_zoneDriver->transferAll(_options[i].entityID, "player");
+					_needProcess = true;
+				}
+				else if (_options[i].type == Option::Type::kChoice) {
+					_zoneDriver->choose(_options[i].index);
+					_needProcess = true;
+				}
+				else if (_options[i].type == Option::Type::kInteraction) {
+					_zoneDriver->startInteraction(_zoneDriver->getInteractions()[_options[i].index]);
 					_needProcess = true;
 				}
 				break;
@@ -247,15 +325,22 @@ void GameScene::mouseButton(FontManager& fm, const Point& screen, const Point& v
 	}
 }
 
+std::string GameScene::itemString(const lurp::ItemRef& ref)
+{
+	std::string text;
+	if (ref.count == 1)
+		text = ref.pItem->name;
+	else
+		text = fmt::format("{} x{}", ref.pItem->name, ref.count);
+	return text;
+}
+
 std::string GameScene::inventoryString(const lurp::Inventory& inv)
 {
 	std::string text;
 	for (const auto& item : inv.items()) {
 		if (!text.empty()) text += " | ";
-		if (item.count == 1)
-			text += item.pItem->name;
-		else
-			text += fmt::format("{} x{}", item.pItem->name, item.count);
+		text += itemString(item);
 	}
 	return text;
 }
