@@ -12,6 +12,11 @@ ScriptAssets::ScriptAssets(const ConstScriptAssets& csa) :
 	_csa(csa)
 {
 	scan();
+
+	bool hasPlayer = isAsset("player");
+	if (!hasPlayer) {
+		PLOG(plog::error) << "No player entity found";
+	}
 }
 
 std::pair<bool, Variant> ScriptAssets::assetGet(const std::string& entity, const std::string& path) const

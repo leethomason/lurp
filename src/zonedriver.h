@@ -38,7 +38,7 @@ public:
 	// ------ Queries ------
 	const Room& currentRoom() const;
 	const Zone& currentZone() const;
-	const Actor& getPlayer();
+	const Actor& getPlayer() const;
 
 	// ------ Driver ------
 	enum class Mode { kText, kChoices, kNavigation, kBattle };
@@ -62,6 +62,9 @@ public:
 	const Container* getContainer(const EntityID& id);
 	void startInteraction(const Interaction* interaction);
 
+	// checks for locks and connections
+	MoveResult move(const EntityID& roomID);
+	MoveResult move(const Edge& edge);
 	void setZone(const EntityID& zone, EntityID room);
 
 	const Inventory& getInventory(const Entity& e) const {
@@ -89,10 +92,6 @@ public:
 	ScriptEnv getScriptEnv(const Interaction* interaction);
 	void markRequiredInteractionComplete(const Interaction*);
 	void markRequiredInteractionComplete(const EntityID& scriptID);
-
-	// checks for locks and connections
-	MoveResult move(const EntityID& roomID);
-	MoveResult move(const Edge& edge);
 
 	// go anywhere; don't check for locks
 	void teleport(const EntityID& roomID);

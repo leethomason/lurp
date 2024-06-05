@@ -36,7 +36,6 @@ Zone {
     Room {
         entityID = "TEST_ZONE_0_ROOM_B",
         name = "RoomB",
-        Interaction { name = "Bookcase", next = "DIALOG_BOOKCASE_V1" },
         Interaction { name = "Move Button", next = Script {
             Text { "You push the button.", 
                     code = function() MovePlayer("TEST_ZONE_0_ROOM_A", false) end },
@@ -76,7 +75,7 @@ Zone {
                     room.roomFlag = true
                 end,
                 Text {
-                    s="narrator", "This is a test script in the '{zone.name}' zone's '{room.name}'."
+                    s="narrator", "This is a test script in the '{zone.name}' zone's '{room.name}'. There is no exit."
                 }
             }
         }

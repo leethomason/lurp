@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <queue>
+#include <mutex>
 
 namespace lurp {
 
@@ -106,12 +107,17 @@ public:
 	template<typename T>
 	void shuffle(T begin, T end) {
 		for (T it = begin; it != end; ++it) {
-			std::swap(*it, *(begin + rand(int(end - begin))));
+			std::swap(*it, *(begin + rand(uint32_t(end - begin))));
 		}
 	}
 
+	// Tricky
+	// Want [0.0, 1.0]
+	// double (64 bits) has 52 bits of mantissa, which is huge. Might as well use a 
+	// full 32-bit random number. There's tricks to pack the bits, but they usually
+	// are over the range [0.0, 1.0) and I doubt it makes a difference.
 	double uniform() {
-		return rand(10'001) / 10'000.0f;
+		return rand() / double(std::numeric_limits<uint32_t>::max());
 	}
 
 private:
@@ -175,5 +181,52 @@ struct Queue {
 	std::queue<T> queue;
 };
 
+// Thread safe, multi-reader multi-writer queue
+// Not very efficient, but fine for small queues
+template<typename T>
+struct QueueMT {
+
+	void push(const T& t) {
+		std::lock_guard<std::mutex> lock(mutex);
+		queue.push(t);
+	}
+
+	bool tryPop(T& t) {
+		std::lock_guard<std::mutex> lock(mutex);
+		if (queue.empty())
+			return false;
+		t = queue.front();
+		queue.pop();
+		return true;
+	}
+
+private:
+	std::queue<T> queue;
+	std::mutex mutex;
+};
+
+template<typename T, size_t N>
+class RollingAverage {
+public:
+	RollingAverage() {
+		for (size_t i = 0; i < N; ++i)
+			values[i] = 0;
+	}
+
+	void add(T value) {
+		sum -= values[index];
+		values[index] = value;
+		sum += value;
+		index = (index + 1) % N;
+	}
+
+	T average() const {
+		return sum / N;
+	}
+private:
+	T values[N];
+	T sum = 0;
+	size_t index = 0;
+};
 
 } // namespace lurp

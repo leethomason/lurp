@@ -7,6 +7,7 @@
 #include "../drivers/platform.h"
 
 #include <ionic/ionic.h>
+#include <plog/Log.h>
 
 #include <fmt/core.h>
 #include <vector>
@@ -19,7 +20,7 @@ namespace lurp {
 template<typename T>
 void FatalReadError(const std::string& msg, const T& t)
 {
-	fmt::print("[ERROR] reading {}: '{}' {}\n", scriptTypeName(T::type), msg, t.description());
+	PLOG(plog::error) << fmt::format("Error reading {}: '{}' {}", scriptTypeName(T::type), msg, t.description());
 	exit(1);
 }
 
@@ -1110,25 +1111,9 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	for (auto& i : csa.combatants) i.inventory.convert(csa);
 	for (auto& i : csa.containers) i.inventory.convert(csa);
 
-	/*
-	for (const auto& i : assets.scripts) i.dump(0);
-	for (const auto& i : assets.texts) i.dump(0);
-	for (const auto& i : assets.choices) i.dump(0);
-	for (const auto& i : assets.items) i.dump(0);
-	for (const auto& i : assets.interactions) i.dump(0);
+	int kbytes = lua_gc(L, LUA_GCCOUNT);
+	PLOG(plog::info) << fmt::format("LUA memory usage: {} KB", kbytes);
 
-	for (const auto& i : assets.containers) i.dump(0);
-	for (const auto& i : assets.edges) i.dump(0);
-	for (const auto& i : assets.rooms) i.dump(0);
-	for (const auto& i : assets.zones) i.dump(0);
-
-	for (const auto& i : assets.actors) i.dump(0);
-	for (const auto& i : assets.battles) i.dump(0);
-	for (const auto& i : assets.callScripts) i.dump(0);
-	*/
-
-	//int kbytes = lua_gc(L, LUA_GCCOUNT);
-	//fmt::print("LUA memory usage: {} KB\n", kbytes);
 	return csa;
 }
 
