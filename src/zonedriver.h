@@ -46,6 +46,7 @@ public:
 	NewsQueue& news() { return mapData.newsQueue; }
 
 	// Mode: Text
+	bool hasText() const { return mode() == Mode::kText; }
 	TextLine text() const;
 	void advance();
 

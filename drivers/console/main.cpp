@@ -252,17 +252,15 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 	driver.mapData.random.setSeed(seed);
 
 	while (!driver.isGameOver()) {
-		ZoneDriver::Mode mode = driver.mode();
 
-		if (mode == ZoneDriver::Mode::kText) {
-			while (driver.mode() == ZoneDriver::Mode::kText) {
-				TextLine tl = driver.text();
-				PrintText(tl.speaker, tl.text);
-				driver.advance();
-			}
-			PrintNews(driver.mapData.newsQueue);
+		while (driver.hasText()) {
+			TextLine tl = driver.text();
+			PrintText(tl.speaker, tl.text);
+			PrintNews(driver.news());
+			driver.advance();
 		}
-		else if (mode == ZoneDriver::Mode::kChoices)
+
+		if (driver.mode()  == ZoneDriver::Mode::kChoices)
 		{
 			const Choices& choices = driver.choices();
 			PrintChoices(choices);
@@ -270,15 +268,14 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			Value v2 = Value::ParseValue(ReadString());
 			if (v2.intInRange((int)choices.choices.size()))
 				driver.choose(v2.intVal);
-			PrintNews(driver.mapData.newsQueue);
 		}
-		else if (mode == ZoneDriver::Mode::kNavigation) {
-			PrintRoomDesc(driver.currentZone(), driver.currentRoom());
+		else if (driver.mode() == ZoneDriver::Mode::kNavigation) {
 			const Actor& player = driver.getPlayer();
 			const ContainerVec& containerVec = driver.getContainers();
 			const InteractionVec& interactionVec = driver.getInteractions();
 			std::vector<DirEdge> edges = driver.dirEdges();
 
+			PrintRoomDesc(driver.currentZone(), driver.currentRoom());
 			PrintInventory(assets.getInventory(player));
 			PrintContainers(driver, containerVec);
 			PrintInteractions(interactionVec, assets);
@@ -306,11 +303,8 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 					driver.move(edges[dirIdx].dstRoom);
 				}
 			}
-			if (driver.mode() == ZoneDriver::Mode::kNavigation) {
-				PrintNews(driver.mapData.newsQueue);
-			}
 		}
-		else if (mode == ZoneDriver::Mode::kBattle) {
+		else if (driver.mode() == ZoneDriver::Mode::kBattle) {
 			const Battle& battle = driver.battle();
 			VarBinder binder = driver.battleVarBinder();
 #if 1
@@ -329,6 +323,7 @@ static void ConsoleZoneDriver(ScriptAssets& assets, ScriptBridge& bridge, Entity
 			assert(false);
 			break;
 		}
+		PrintNews(driver.mapData.newsQueue);
 	}
 	if (!driver.endGameMsg().empty()) {
 		ionic::Color color = ionic::Color::white;
