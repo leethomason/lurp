@@ -31,7 +31,6 @@ FetchContent_Declare(
 )
 FetchContent_Declare(
   ionic
-  EXCLUDE_FROM_ALL
   GIT_REPOSITORY https://github.com/leethomason/ionic.git
   GIT_TAG        74cc38510f5054d1475530b591351630adacd19a
 )
