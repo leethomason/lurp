@@ -75,7 +75,7 @@ Zone {
                     room.roomFlag = true
                 end,
                 Text {
-                    s="narrator", "This is a test script in the '{zone.name}' zone's '{room.name}'."
+                    s="narrator", "This is a test script in the '{zone.name}' zone's '{room.name}'. There is no exit."
                 }
             }
         }

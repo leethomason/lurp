@@ -220,6 +220,21 @@ void GameScene::addNews(Drawing& d)
 	}
 }
 
+void GameScene::addText(Drawing& d)
+{
+	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	if (!region) return;
+
+	while (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
+		lurp::TextLine text = _zoneDriver->text();
+		size_t idx = _mainText->size();
+		_mainText->resize(idx + 1);
+		// FIXME speaker variant
+		_mainText->setText(idx, text.text);
+		_zoneDriver->advance();
+	}
+}
+
 void GameScene::addRoom(Drawing& d)
 {
 	const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
@@ -260,7 +275,6 @@ void GameScene::addInventory(Drawing& d)
 
 void GameScene::process(Drawing& d)
 {
-	lurp::ZoneDriver::Mode mode = _zoneDriver->mode();
 	_mainText->resize(0);
 	for (auto& tb : _mainOptions.boxes)
 		tb->setText("");
@@ -268,23 +282,28 @@ void GameScene::process(Drawing& d)
 	_infoText->resize(0);
 
 	addNews(d);
+	addText(d);
 
+	lurp::ZoneDriver::Mode mode = _zoneDriver->mode();
 	if (mode == lurp::ZoneDriver::Mode::kNavigation) {
 		addInteractions(d);
 		addContainers(d);
 		addNavigation(d);
 	}
-	else if (mode == lurp::ZoneDriver::Mode::kText) {
-		// fixme: should be "while text" with option to continue
-		const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
-		if (region) {
-			std::shared_ptr<TextBox>& tb = _mainText;
-			tb->resize(1);
-			tb->setText(_zoneDriver->text().text);
-		}
-	}
+	//else if (mode == lurp::ZoneDriver::Mode::kText) {
+	//	// fixme: should be "while text" with option to continue
+	//	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	//	if (region) {
+	//		std::shared_ptr<TextBox>& tb = _mainText;
+	//		tb->resize(1);
+	//		tb->setText(_zoneDriver->text().text);
+	//	}
+	//}
 	else if (mode == lurp::ZoneDriver::Mode::kChoices) {
 		addChoices(d);
+	}
+	else {
+		assert(false);
 	}
 
 	// Side panel

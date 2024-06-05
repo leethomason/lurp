@@ -66,6 +66,7 @@ private:
 	void addContainers(Drawing& d);
 	void addChoices(Drawing& d);
 	void addInteractions(Drawing& d);
+	void addText(Drawing& d);
 
 	void addRoom(Drawing& d);
 	void addInventory(Drawing& d);

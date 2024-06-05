@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 include(FetchContent)
+cmake_policy(SET CMP0135 NEW)
 
 project(lurp)
 
@@ -118,73 +119,70 @@ add_test(
 set_tests_properties(lurp PROPERTIES PASS_REGULAR_EXPRESSION "LuRP tests run successfully")
 
 # ------- Lua ---------------
-
 if (MSVC)
   add_executable(lua ${LUA_SOURCES} ${lua_SOURCE_DIR}/src/lua.c)
   target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
 endif()
 
 # ------- LuRP2D ---------------
-file(GLOB TWOD_SRC "drivers/twod/*.cpp" "drivers/twod/*.h" "drivers/*.cpp" "drivers/*.h")
-source_group("twoD" FILES ${TWOD_SRC})
+if (MSVC)
+  file(GLOB TWOD_SRC "drivers/twod/*.cpp" "drivers/twod/*.h" "drivers/*.cpp" "drivers/*.h")
+  source_group("twoD" FILES ${TWOD_SRC})
 
-list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake ${sdl2_image_SOURCE_DIR}/cmake ${sdl2_ttf_SOURCE_DIR}/cmake)
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_ttf REQUIRED)
+  list(APPEND CMAKE_PREFIX_PATH ${sdl2_SOURCE_DIR}/cmake ${sdl2_image_SOURCE_DIR}/cmake ${sdl2_ttf_SOURCE_DIR}/cmake)
+  find_package(SDL2 REQUIRED)
+  find_package(SDL2_image REQUIRED)
+  find_package(SDL2_ttf REQUIRED)
 
-# https://stackoverflow.com/questions/28395833/using-sdl2-with-cmake
-#find_file(SDL2_INCLUDE_DIR NAME SDL.h HINTS SDL2)
-#find_library(SDL2_LIBRARY NAME SDL2)
+  add_executable(lurp2d 
+    ${SOURCES} 
+    ${HEADERS} 
+    ${fmt_SOURCE_DIR}/src/format.cc 
+    ${LUA_SOURCES} 
+    ${MD4C_SOURCES}
+    ${TWOD_SRC}
+    ${ENKITS_SOURCES}
+    ${NUKLEAR_SOURCES}
+  )
 
-add_executable(lurp2d 
-  ${SOURCES} 
-  ${HEADERS} 
-  ${fmt_SOURCE_DIR}/src/format.cc 
-  ${LUA_SOURCES} 
-  ${MD4C_SOURCES}
-  ${TWOD_SRC}
-  ${ENKITS_SOURCES}
-  ${NUKLEAR_SOURCES}
-)
+  #FIXME: windws & MSVC only
+  # Gettnig the SDL2/SDL.h working is a giant PITA. I don't see how to do that at all
+  # with the given directory structure. Create a duplicate header directory that can
+  # be included in the project.
+  file(COPY ${SDL2_INCLUDE_DIRS}/SDL.h DESTINATION ${FETCHCONTENT_BASE_DIR}/SDL2/SDL2)
 
-#FIXME: windws & MSVC only
-# Gettnig the SDL2/SDL.h working is a giant PITA. I don't see how to do that at all
-# with the given directory structure. Create a duplicate header directory that can
-# be included in the project.
-file(COPY ${SDL2_INCLUDE_DIRS}/SDL.h DESTINATION ${FETCHCONTENT_BASE_DIR}/SDL2/SDL2)
+  target_include_directories(lurp2d PUBLIC src 
+    ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include 
+    ${ionic_SOURCE_DIR}/include 
+    ${lua_SOURCE_DIR}/src 
+    ${plog_SOURCE_DIR}/include
+    ${md4c_SOURCE_DIR}/src
+    ${SDL2_INCLUDE_DIRS}              # Reasonable place
+    ${FETCHCONTENT_BASE_DIR}/SDL2     # Duplicate of SDL2_INCLUDE_DIRS in a weird but required place
+    ${SDL2_image_SOURCE_DIR}/include
+    ${SDL2_ttf_SOURCE_DIR}/include
+    ${enkiTS_SOURCE_DIR}/src
+    ${nuklear_SOURCE_DIR}
+    ${nuklear_SOURCE_DIR}/demo/sdl_renderer
+  )
 
-target_include_directories(lurp2d PUBLIC src 
-  ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include 
-  ${ionic_SOURCE_DIR}/include 
-  ${lua_SOURCE_DIR}/src 
-  ${plog_SOURCE_DIR}/include
-  ${md4c_SOURCE_DIR}/src
-  ${SDL2_INCLUDE_DIRS}              # Reasonable place
-  ${FETCHCONTENT_BASE_DIR}/SDL2     # Duplicate of SDL2_INCLUDE_DIRS in a weird but required place
-  ${SDL2_image_SOURCE_DIR}/include
-  ${SDL2_ttf_SOURCE_DIR}/include
-  ${enkiTS_SOURCE_DIR}/src
-  ${nuklear_SOURCE_DIR}
-  ${nuklear_SOURCE_DIR}/demo/sdl_renderer
-)
+  target_link_libraries(lurp2d SDL2::SDL2main)
+  target_link_libraries(lurp2d SDL2::SDL2)
+  target_link_libraries(lurp2d SDL2_image::SDL2_image)
+  target_link_libraries(lurp2d SDL2_ttf::SDL2_ttf)
 
-target_link_libraries(lurp2d SDL2::SDL2main)
-target_link_libraries(lurp2d SDL2::SDL2)
-target_link_libraries(lurp2d SDL2_image::SDL2_image)
-target_link_libraries(lurp2d SDL2_ttf::SDL2_ttf)
+  set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
+  set_target_properties(lurp2d PROPERTIES VS_DPI_AWARE "PerMonitor")
 
-set_target_properties(lurp2d PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "..")
-set_target_properties(lurp2d PROPERTIES VS_DPI_AWARE "PerMonitor")
+  # FIXME: windws & MSVC only
+  # copy the dll to the working directory
+  file(COPY ${sdl2_SOURCE_DIR}/lib/x64/SDL2.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
+  file(COPY ${sdl2_image_SOURCE_DIR}/lib/x64/SDL2_image.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
+  file(COPY ${sdl2_ttf_SOURCE_DIR}/lib/x64/SDL2_ttf.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
 
-# FIXME: windws & MSVC only
-# copy the dll to the working directory
-file(COPY ${sdl2_SOURCE_DIR}/lib/x64/SDL2.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
-file(COPY ${sdl2_image_SOURCE_DIR}/lib/x64/SDL2_image.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
-file(COPY ${sdl2_ttf_SOURCE_DIR}/lib/x64/SDL2_ttf.dll DESTINATION ${CMAKE_HOME_DIRECTORY})
-
-#get_cmake_property(_variableNames VARIABLES)
-#list (SORT _variableNames)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
+  #get_cmake_property(_variableNames VARIABLES)
+  #list (SORT _variableNames)
+  #foreach (_variableName ${_variableNames})
+  #    message(STATUS "${_variableName}=${${_variableName}}")
+  #endforeach()
+endif()
