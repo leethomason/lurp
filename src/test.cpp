@@ -920,7 +920,9 @@ static void TestWalkabout()
 
 	// Push the move button:
 	{
-		const Interaction* iAct = zone.getInteractions()[1];
+		InteractionVec interactions = zone.getInteractions();
+		TEST(interactions.size() == 2);
+		const Interaction* iAct = interactions[0];
 		TEST(iAct->name == "Move Button");
 		ScriptEnv env = zone.getScriptEnv(iAct);
 		ScriptDriver driver(assets, zone.mapData, bridge, env);
@@ -933,7 +935,9 @@ static void TestWalkabout()
 
 	// Push the teleport button:
 	{
-		const Interaction* iAct = zone.getInteractions()[2];
+		InteractionVec interactions = zone.getInteractions();
+		TEST(interactions.size() == 2);
+		const Interaction* iAct = interactions[1];
 		TEST(iAct->name == "Teleport Button");
 		ScriptEnv env = zone.getScriptEnv(iAct);
 		ScriptDriver driver(assets, zone.mapData, bridge, env);
