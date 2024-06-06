@@ -34,6 +34,7 @@ enum class MouseState {
 */
 class TextBox {
 	friend class FontManager;
+	friend class RenderFontTask;
 
 public:
 	TextBox();
@@ -41,7 +42,7 @@ public:
 
 	Point pos = Point{ 0, 0 };	// in screen!
 
-	size_t size() const { return _text.size(); }
+	size_t size() const { return _row.size(); }
 	void resize(size_t s);
 
 	void setFont(const Font* font) { setFont(0, font);  }
@@ -53,10 +54,12 @@ public:
 	void setText(size_t i, const std::string& text);
 	void setColor(size_t i, SDL_Color color);
 	void setBgColor(size_t i, SDL_Color color);
+	void setSpace(size_t i, int virtualSpaceAfter);
 
-	const Font* font(size_t i = 0) const { return _font[i]; }
-	const std::string& text(size_t i = 0) const { return _text[i]; }
-	SDL_Color color(size_t i = 0) const { return _color[i]; }
+	const Font* font(size_t i = 0) const { return _row[i].font; }
+	const std::string& text(size_t i = 0) const { return _row[i].text; }
+	SDL_Color color(size_t i = 0) const { return _row[i].color; }
+	int spacing(size_t i = 0) const { return _row[i].virtualSpace; }
 	SDL_Color bgColor() const { return _bg; }
 
 	Size virtualSize() const { return _virtualSize;	}
@@ -79,15 +82,19 @@ private:
 	MouseState _mouseState = MouseState::none;
 
 	const Font* _font0 = nullptr;
-	std::vector<const Font*> _font;
-	std::vector<std::string> _text;
-	std::vector<SDL_Color> _color;
+	struct Row {
+		const Font* font = nullptr;
+		std::string text;
+		SDL_Color color = { 255, 255, 255, 255 };
+		int virtualSpace = 0;
+	};
+	std::vector<Row> _row;
 };
 
 /*
 * A VBox is a collection of TextBoxes, and does the same layout.
 * The advantage is that a VBox can be hit tested for individual TextBoxes.
-* The disadvantage is that it uses more memory.
+* The disadvantage is that it uses more video memory.
 */
 class VBox {
 	friend class FontManager;

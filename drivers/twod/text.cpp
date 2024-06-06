@@ -21,27 +21,35 @@ public:
 
 	virtual void ExecuteRange(enki::TaskSetPartition /*range_*/, uint32_t /*threadnum_*/) override 
 	{
-		static std::mutex gTTFMutex;
 		TextureUpdate update{ _texture, nullptr, _generation, _hqOpaque, _bg };
 
-		for (size_t i = 0; i < _font.size(); i++) {
-			SDL_Surface* surface = nullptr;
-			if (!_text[i].empty()) {
-				// TTF, it turns out, is not thread safe.
-				std::lock_guard<std::mutex> lock(gTTFMutex);
+		{
+			// TTF, it turns out, is not thread safe.
+			// I wish it was - there really should be a context object.
+			// In any case, do all the texture generation all at once for this object, in case we hop threads.
+			static std::mutex gTTFMutex;
+			std::lock_guard<std::mutex> lock(gTTFMutex);
 
-				if (_hqOpaque) {
-					if (gQuality == 0)
-						surface = TTF_RenderUTF8_LCD_Wrapped(_font[i]->font, _text[i].c_str(), _color[i], _bg, _texture->pixelSize().w);
-					else
-						surface = TTF_RenderUTF8_Shaded_Wrapped(_font[i]->font, _text[i].c_str(), _color[i], _bg, _texture->pixelSize().w);
+			for (size_t i = 0; i < _row.size(); i++) {
+				SDL_Surface* surface = nullptr;
+				if (!_row[i].text.empty()) {
+					const Font* font = _row[i].font;
+					const std::string& text = _row[i].text;
+					SDL_Color color = _row[i].color;
+
+					if (_hqOpaque) {
+						if (gQuality == 0)
+							surface = TTF_RenderUTF8_LCD_Wrapped(font->font, text.c_str(), color, _bg, _texture->pixelSize().w);
+						else
+							surface = TTF_RenderUTF8_Shaded_Wrapped(font->font, text.c_str(), color, _bg, _texture->pixelSize().w);
+					}
+					else {
+						surface = TTF_RenderUTF8_Blended_Wrapped(font->font, text.c_str(), color, _texture->pixelSize().w);
+					}
+					assert(surface);
 				}
-				else {
-					surface = TTF_RenderUTF8_Blended_Wrapped(_font[i]->font, _text[i].c_str(), _color[i], _texture->pixelSize().w);
-				}
-				assert(surface);
+				update.surfaceVec.push_back(surface);
 			}
-			update.surfaceVec.push_back(surface);
 		}
 
 #if DEBUG_TEXT
@@ -59,18 +67,13 @@ public:
 	TextureLoadQueue* _queue = nullptr;
 	int _generation = 0;
 
-	std::vector<const Font*> _font;
-	std::vector<std::string> _text;
-	std::vector<SDL_Color> _color;
+	std::vector<TextBox::Row> _row;
 	SDL_Color _bg;
 	bool _hqOpaque = false;
 };
 
 TextBox::TextBox()
 {
-	_font.push_back(nullptr);	
-	_text.push_back("");
-	_color.push_back({ 255, 255, 255, 255 });
 }
 
 
@@ -80,23 +83,19 @@ TextBox::~TextBox()
 
 void TextBox::resize(size_t s)
 {
-	if (s < _font.size()) {
-		_font.resize(s);
-		_text.resize(s);
-		_color.resize(s);
+	if (s < _row.size()) {
+		_row.resize(s);
 		_needUpdate = true;
 	}
-	else if (s > _font.size()) {
+	else if (s > _row.size()) {
 		assert(_font0);
-		_font.resize(s, _font0);
-		_text.resize(s, "");
-		_color.resize(s, { 255, 255, 255, 255 });
+		_row.resize(s, { _font0, "", { 255, 255, 255, 255 }, 0 });
 	}
 }
 
 void TextBox::setFont(size_t i, const Font* font) {
-	if (font != _font[i]) {
-		_font[i] = font;
+	if (font != _row[i].font) {
+		_row[i].font = font;
 		_needUpdate = true;
 		if (i == 0)
 			_font0 = font;
@@ -104,15 +103,22 @@ void TextBox::setFont(size_t i, const Font* font) {
 }
 
 void TextBox::setText(size_t i, const std::string& text) {
-	if (text != _text[i]) {
-		_text[i] = text;
+	if (text != _row[i].text) {
+		_row[i].text = text;
 		_needUpdate = true;
 	}
 }
 
 void TextBox::setColor(size_t i, SDL_Color color) {
-	if (!ColorEqual(color, _color[i])) {
-		_color[i] = color;
+	if (!ColorEqual(color, _row[i].color)) {
+		_row[i].color = color;
+		_needUpdate = true;
+	}
+}
+
+void TextBox::setSpace(size_t i, int space) {
+	if (_row[i].virtualSpace != space) {
+		_row[i].virtualSpace = space;
 		_needUpdate = true;
 	}
 }
@@ -221,9 +227,7 @@ void FontManager::update(const XFormer& xf)
 			task->_queue = &_textureManager._loadQueue;
 			task->_generation = ++_textureManager._generation;
 
-			task->_font = tf->_font;
-			task->_color = tf->_color;
-			task->_text = tf->_text;
+			task->_row = tf->_row;	// copy all the data
 
 			task->_hqOpaque = tf->_hqOpaque;
 			task->_bg = tf->_bg;
@@ -251,11 +255,12 @@ std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width,
 
 	TextBox* tf = new TextBox();
 	tf->_font0 = f;
-	tf->_font[0] = f;
 	tf->_virtualSize = Size{ width, height };
 	// No point in creating the texture because we don't know the real size yet.
 	//tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
+
+	tf->resize(1);
 
 	std::shared_ptr<TextBox> ptr(tf);
 	_textFields.push_back(ptr);
@@ -351,7 +356,7 @@ std::shared_ptr<TextBox> FontManager::doButton(const Point& screen, const Point&
 			}
 			else {
 				if (_mouseBox == tf) {
-					fmt::print("Clicked: {}\n", tf->_text[0]);
+					fmt::print("Clicked: {}\n", tf->_row[0].text);
 					clicked = tf;
 #			if DEBUG_MOUSE
 					fmt::print("Clicked: {}\n", tf->_text[0]);
