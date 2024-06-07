@@ -7,12 +7,17 @@ class Texture;
 struct SDL_Surface;
 
 struct TextureUpdate {
+	struct TextUpdate {
+		SDL_Surface* surface = nullptr;
+		int space = 0;
+	};
+
 	std::shared_ptr<Texture> texture;
 	SDL_Surface* surface = nullptr;
 	int generation = 0;
 	bool hqOpaque = false;
 	SDL_Color bg = SDL_Color{ 0, 0, 0, 0 };
-	std::vector<SDL_Surface*> surfaceVec;
+	std::vector<TextUpdate> textVec;
 };
 using TextureLoadQueue = lurp::QueueMT<TextureUpdate>;
 

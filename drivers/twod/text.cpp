@@ -48,7 +48,8 @@ public:
 					}
 					assert(surface);
 				}
-				update.surfaceVec.push_back(surface);
+				TextureUpdate::TextUpdate t = { surface, _row[i].virtualSpace};
+				update.textVec.push_back(t);
 			}
 		}
 
