@@ -13,6 +13,8 @@ Config = {
     }
 }
 
+--LoadMD("chullu.md")
+
 Item {
     entityID = "GOLD",
     name = "Greenbacks"

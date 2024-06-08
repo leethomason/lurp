@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <filesystem>
 
 extern "C" struct lua_State;
 
@@ -61,8 +62,8 @@ public:
 	}
 
 	void loadLUA(const std::string& path);
-	// Read the CSAs. 
 	ConstScriptAssets readCSA(const std::string& path);
+	void LoadMD(const std::string& filename);
 
 	lua_State* getLuaState() const { return L; }
 
@@ -134,6 +135,7 @@ private:
 	ITextHandler* _iTextHandler = nullptr;
 	IAssetHandler* _iAssetHandler = nullptr;
 	int _iCoreCount = 0;
+	std::filesystem::path _currentDir;
 
 	void registerCallbacks();
 
@@ -172,6 +174,7 @@ private:
 	static int l_CAllTextRead(lua_State* L);
 	static int l_CMove(lua_State* L);
 	static int l_CEndGame(lua_State* L);
+	static int l_CLoadMD(lua_State* L);
 };
 
 struct TableIt

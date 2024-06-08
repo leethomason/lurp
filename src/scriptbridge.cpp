@@ -5,6 +5,7 @@
 #include "scriptasset.h"
 #include "util.h"
 #include "../drivers/platform.h"
+#include "markdown.h"
 
 #include <ionic/ionic.h>
 #include <plog/Log.h>
@@ -206,8 +207,8 @@ void ScriptBridge::appendLuaPath(const std::string& path)
 
 void ScriptBridge::doFile(const std::string& filename)
 {
-
 	LuaStackCheck check(L);
+
 
 	std::string cwd;
 	CheckPath(filename, cwd);
@@ -216,7 +217,13 @@ void ScriptBridge::doFile(const std::string& filename)
 		PLOG(plog::error) << fmt::format("Occurs when calling luaL_loadfile() 0x{:x}", error);
 		PLOG(plog::error) << fmt::format("Msg: '{}'", lua_tostring(L, -1));
 	}
+	
+	std::filesystem::path path = filename;
+	_currentDir = path.parent_path();
+
 	error = lua_pcall(L, 0, LUA_MULTRET, 0);
+	_currentDir.clear();
+
 	if (error) {
 		PLOG(plog::error) << fmt::format("Error Iitializing file '{}'.", filename);
 		PLOG(plog::error) << fmt::format("Occurs when calling lua_pcall() 0x{:x}", error);
@@ -1117,6 +1124,21 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	return csa;
 }
 
+void ScriptBridge::LoadMD(const std::string& filename)
+{
+	LuaStackCheck check(L);
+
+	std::filesystem::path path = _currentDir / filename;
+	try {
+		//MarkDown md;
+		//md.
+		
+	}
+	catch (std::exception& e) {
+		PLOG(plog::error) << fmt::format("Error loading MD file '{}': {}", path.string(), e.what());
+	}
+}
+
 /*static*/ int ScriptBridge::l_CRandom(lua_State* L)
 {
 	ScriptBridge* bridge = (ScriptBridge*)lua_touserdata(L, lua_upvalueindex(1));
@@ -1235,5 +1257,17 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 		bridge->_iMapHandler->endGame(reason, bias);
 	return 0;
 }
+
+/*static*/ int ScriptBridge::l_CLoadMD(lua_State* L)
+{
+	ScriptBridge* bridge = (ScriptBridge*)lua_touserdata(L, lua_upvalueindex(1));
+
+	std::string fname = lua_tostring(L, 1);
+
+	bridge->LoadMD(fname);
+
+	return 0;
+}
+
 
 } // namespace lurp
