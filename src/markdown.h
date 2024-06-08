@@ -5,11 +5,11 @@
 
 #include <functional>
 
-class MarkDownHandler
+class MarkDown
 {
 public:
-	MarkDownHandler() {}
-	~MarkDownHandler() {
+	MarkDown() {}
+	~MarkDown() {
 		CHECK(blockStack.empty());
 	}
 
@@ -18,17 +18,28 @@ public:
 		bool italic = false;
 		bool image = false;
 		bool code = false;
+		uint32_t flags() const {
+			uint32_t f = 0;
+			if (bold) f |= 1;
+			if (italic) f |= 2;
+			if (image) f |= 4;
+			if (code) f |= 8;
+			return f;
+		}
 		size_t stackSize = 0;
+
+		bool isText() const { return !code && !image; }
+
 		std::string text;
 	};
 
 	std::vector<MD_BLOCKTYPE> blockStack;
 	std::vector<Span> spans;
 
-	std::function<void(const MarkDownHandler&, const std::string&, MD_TEXTTYPE)> textHandler;
+	std::function<void(const MarkDown&, const std::string&, MD_TEXTTYPE)> textHandler;
 
-	std::function<void(const MarkDownHandler&, const std::vector<Span>&, int level)> headingHandler;
-	std::function<void(const MarkDownHandler&, const std::vector<Span>&, int level)> paragraphHandler;
+	std::function<void(const MarkDown&, const std::vector<Span>&, int level)> headingHandler;
+	std::function<void(const MarkDown&, const std::vector<Span>&, int level)> paragraphHandler;
 
 	void process(const std::string& str);
 

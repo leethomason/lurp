@@ -1565,18 +1565,17 @@ static void TestChullu()
 
 static void TestMarkDown()
 {
-#if 0
 	{
 		std::string t =
 			"# Heading 1\n\n"
 			"h1 text\n\n"
 			"## Heading 2\n\n"
 			"h2 text\n\n";
-		MarkDownHandler md;
+		MarkDown md;
 		int level = 0;
 		int nCallbacks = 0;
 
-		md.headingHandler = [&level, &nCallbacks](const MarkDownHandler& md, const std::vector<MarkDownHandler::Span>& spans, int _level) {
+		md.headingHandler = [&level, &nCallbacks](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int _level) {
 			level = _level;
 			TEST(level == 1 || level == 2);
 			if (level == 1) {
@@ -1590,7 +1589,7 @@ static void TestMarkDown()
 				++nCallbacks;
 			}
 		};
-		md.paragraphHandler = [&level, &nCallbacks](const MarkDownHandler& md, const std::vector<MarkDownHandler::Span>& spans, int _level) {
+		md.paragraphHandler = [&level, &nCallbacks](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int _level) {
 			TEST(spans.size() == 1);
 			TEST(_level == level);
 			if (level == 1) {
@@ -1605,7 +1604,6 @@ static void TestMarkDown()
 		md.process(t);
 		TEST(nCallbacks == 4);
 	}
-#endif
 	{
 		std::string t =
 			"# STARTING_TEXT\n"
@@ -1613,25 +1611,27 @@ static void TestMarkDown()
 			"> Need something for comments. *Quotes?* But then how to do tabs?\n"
 			"\n"
 			"You sleep.\n"
-			"You dream.\n";
+			"You dream.\n\n"
+			"The night goes on.\n\n\n";
 
 		std::string entity;
-		std::string text;
+		std::vector<std::string> text;
 		
-		MarkDownHandler md;
+		MarkDown md;
 
-		md.headingHandler = [&entity, &text](const MarkDownHandler& md, const std::vector<MarkDownHandler::Span>& spans, int level) {
+		md.headingHandler = [&entity, &text](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			entity = spans[0].text;
 		};
-		md.paragraphHandler = [&entity, &text](const MarkDownHandler& md, const std::vector<MarkDownHandler::Span>& spans, int level) {
+		md.paragraphHandler = [&entity, &text](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
-			text = spans[0].text;
+			text.push_back(spans[0].text);
 		};
 		md.process(t);
 
 		TEST(entity == "STARTING_TEXT");
-		TEST(text == "You sleep. You dream.");
+		TEST(text[0] == "You sleep. You dream.");
+		TEST(text[1] == "The night goes on.");
 	}
 }
 

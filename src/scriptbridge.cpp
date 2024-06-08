@@ -1128,11 +1128,13 @@ void ScriptBridge::LoadMD(const std::string& filename)
 {
 	LuaStackCheck check(L);
 
+	std::string text;
 	std::filesystem::path path = _currentDir / filename;
 	try {
-		//MarkDown md;
-		//md.
-		
+		std::ifstream stream(path);
+		std::stringstream buffer;
+		buffer << stream.rdbuf();
+		text = buffer.str();
 	}
 	catch (std::exception& e) {
 		PLOG(plog::error) << fmt::format("Error loading MD file '{}': {}", path.string(), e.what());

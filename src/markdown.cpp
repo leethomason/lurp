@@ -3,11 +3,11 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_MD 1
+#define DEBUG_MD 0
 
-/*static*/ int MarkDownHandler::enterBlock(MD_BLOCKTYPE block, void* arg, void* user) 
+/*static*/ int MarkDown::enterBlock(MD_BLOCKTYPE block, void* arg, void* user) 
 {
-	MarkDownHandler* self = (MarkDownHandler*)user;
+	MarkDown* self = (MarkDown*)user;
 	self->blockStack.push_back(block);
 
 	if (block == MD_BLOCK_H) {
@@ -25,9 +25,9 @@
 	return 0;
 }
 
-/*static*/ int MarkDownHandler::leaveBlock(MD_BLOCKTYPE block, void*, void* user)
+/*static*/ int MarkDown::leaveBlock(MD_BLOCKTYPE block, void*, void* user)
 {
-	MarkDownHandler* self = (MarkDownHandler*)user;
+	MarkDown* self = (MarkDown*)user;
 	assert(self->blockStack.back() == block);
 	self->blockStack.pop_back();
 
@@ -52,9 +52,9 @@
 	return 0;
 }
 
-/*static*/ int MarkDownHandler::enterSpan(MD_SPANTYPE span, void*, void* user)
+/*static*/ int MarkDown::enterSpan(MD_SPANTYPE span, void*, void* user)
 {
-	MarkDownHandler* self = (MarkDownHandler*)user;
+	MarkDown* self = (MarkDown*)user;
 	self->spanStack.push_back(span);
 
 #if DEBUG_MD
@@ -65,9 +65,9 @@
 	return 0;
 }
 
-/*static*/ int MarkDownHandler::leaveSpan(MD_SPANTYPE span, void*, void* user)
+/*static*/ int MarkDown::leaveSpan(MD_SPANTYPE span, void*, void* user)
 {
-	MarkDownHandler* self = (MarkDownHandler*)user;
+	MarkDown* self = (MarkDown*)user;
 	assert(self->spanStack.back() == span);
 	self->spanStack.pop_back();
 
@@ -79,9 +79,9 @@
 	return 0;
 }
 
-/*static*/ int MarkDownHandler::textCallback(MD_TEXTTYPE type, const MD_CHAR* p, MD_SIZE size, void* user)
+/*static*/ int MarkDown::textCallback(MD_TEXTTYPE type, const MD_CHAR* p, MD_SIZE size, void* user)
 {
-	MarkDownHandler* self = (MarkDownHandler*)user;
+	MarkDown* self = (MarkDown*)user;
 	std::string str(p, size);
 	if (self->textHandler)
 		self->textHandler(*self, str, type);
@@ -91,13 +91,17 @@
 			self->spans.back().text += ' ';
 		}
 	}
-	else if (type == MD_TEXT_NORMAL) {
-		if (!self->spans.empty() && self->spans.back().stackSize == self->spanStack.size()) {
+	else if (type == MD_TEXT_NORMAL || type == MD_TEXT_CODE) {
+		Span span = self->fromSpanStack();
+
+		if (!self->spans.empty()
+			&& self->spans.back().stackSize == self->spanStack.size()
+			&& self->spans.back().flags() == span.flags()) 
+		{
 			// append
 			self->spans.back().text += str;
 		}
 		else {
-			Span span = self->fromSpanStack();
 			span.text = str;
 			self->spans.push_back(span);
 		}
@@ -109,7 +113,7 @@
 	return 0;
 }
 
-MarkDownHandler::Span MarkDownHandler::fromSpanStack() const
+MarkDown::Span MarkDown::fromSpanStack() const
 {
 	Span span;
 	for (MD_SPANTYPE type : spanStack) {
@@ -125,7 +129,7 @@ MarkDownHandler::Span MarkDownHandler::fromSpanStack() const
 	return span;
 }
 
-bool MarkDownHandler::inQuoteBlock() const
+bool MarkDown::inQuoteBlock() const
 {
 	for (MD_BLOCKTYPE block : blockStack) {
 		if (block == MD_BLOCK_QUOTE)
@@ -134,7 +138,7 @@ bool MarkDownHandler::inQuoteBlock() const
 	return false;
 }
 
-void MarkDownHandler::printBlockStack()
+void MarkDown::printBlockStack()
 {
 	for (MD_BLOCKTYPE block : blockStack) {
 		switch (block) {
@@ -153,7 +157,7 @@ void MarkDownHandler::printBlockStack()
 	}
 }
 
-void MarkDownHandler::printSpanStack()
+void MarkDown::printSpanStack()
 {
 	for (MD_SPANTYPE span : spanStack) {
 		switch (span) {
@@ -167,16 +171,16 @@ void MarkDownHandler::printSpanStack()
 	}
 }
 
-void MarkDownHandler::process(const std::string& str)
+void MarkDown::process(const std::string& str)
 {
 	MD_PARSER parser;
 	memset(&parser, 0, sizeof(parser));
 
-	parser.enter_block = MarkDownHandler::enterBlock;
-	parser.leave_block = MarkDownHandler::leaveBlock;
-	parser.enter_span = MarkDownHandler::enterSpan;
-	parser.leave_span = MarkDownHandler::leaveSpan;
-	parser.text = MarkDownHandler::textCallback;
+	parser.enter_block = MarkDown::enterBlock;
+	parser.leave_block = MarkDown::leaveBlock;
+	parser.enter_span = MarkDown::enterSpan;
+	parser.leave_span = MarkDown::leaveSpan;
+	parser.text = MarkDown::textCallback;
 
 	md_parse(str.c_str(), (MD_SIZE)str.size(), &parser, this);
 }

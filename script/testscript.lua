@@ -203,23 +203,33 @@ Script {
     Text {
         code = function() script.more = true end, md =
 [[
-[s = "Talker"]
+`s = "Talker"`
 I'm going to tell a story.
 It will be fun.
 
 Listen closely!
 
-[s="Listener"]
+`s="Listener"`
 Yay!
 
-[s="Another", test = {script.more}]
+`s="Another", test = {script.more}`
 I want to hear too!
 
-[s="YetAnother", test={~script.more}]
+`s="YetAnother", test={~script.more}`
 I'm not interested.
 ]]
     }
 }
+
+--[[
+Script {
+    entityID = "ALT_TEXT_1_B",
+    CallScript {
+        scriptID = "ALT_TEXT_1_B_TEXT",
+        code = function() script.more = true end
+    }
+}
+]]--
 
 Script {
     entityID = "ALT_TEXT_2",
