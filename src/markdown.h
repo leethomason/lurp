@@ -5,6 +5,8 @@
 
 #include <functional>
 
+namespace lurp {
+
 class MarkDown
 {
 public:
@@ -33,23 +35,27 @@ public:
 		std::string text;
 	};
 
+	void* user = nullptr;
 	std::vector<MD_BLOCKTYPE> blockStack;
 	std::vector<Span> spans;
 
 	std::function<void(const MarkDown&, const std::string&, MD_TEXTTYPE)> textHandler;
 
-	std::function<void(const MarkDown&, const std::vector<Span>&, int level)> headingHandler;
-	std::function<void(const MarkDown&, const std::vector<Span>&, int level)> paragraphHandler;
+	using HeadingHandlerFunc = std::function<void(const MarkDown&, const std::vector<Span>&, int level)>;
+	using ParagraphHandlerFunc = std::function<void(const MarkDown&, const std::vector<Span>&, int level)>;
+
+	HeadingHandlerFunc headingHandler;
+	ParagraphHandlerFunc paragraphHandler;
 
 	void process(const std::string& str);
 
+private:
 	static int enterBlock(MD_BLOCKTYPE block, void*, void* user);
 	static int leaveBlock(MD_BLOCKTYPE block, void*, void* user);
 	static int enterSpan(MD_SPANTYPE span, void*, void* user);
 	static int leaveSpan(MD_SPANTYPE span, void*, void* user);
 	static int textCallback(MD_TEXTTYPE type, const MD_CHAR* p, MD_SIZE size, void* user);
 
-private:
 	void printBlockStack();
 	std::vector<MD_SPANTYPE> spanStack;	// tracked but not used
 	void printSpanStack();
@@ -61,3 +67,4 @@ private:
 	int _lastHeading = 0;
 };
 
+} // namespace lurp

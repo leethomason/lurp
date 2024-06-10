@@ -68,6 +68,10 @@ function EndGame(reason, bias)
     CEndGame(reason, bias)
 end
 
+function LoadMD(path)
+    CLoadMD(path)
+end
+
 local poolID = {}
 -- this weird little piece of code is to allow for changing 
 -- generated entityIDs for testing.

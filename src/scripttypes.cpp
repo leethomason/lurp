@@ -5,43 +5,87 @@
 
 namespace lurp {
 
+/*static*/ void Text::paragraphHandler(const MarkDown& md, const std::vector<MarkDown::Span>& spans, int)
+{
+	std::string text;
+	ParseData* data = (ParseData*)md.user;
+
+	for (const MarkDown::Span& span : spans) {
+		if (span.text.empty())
+			continue;	// superfluous?
+
+		if (span.isText()) {
+			if (!text.empty() && !std::isspace(text.back())) {
+				text += ' '; // superfluous?
+			}
+			text += span.text;
+		}
+		else if (span.code) {
+			data->speaker.clear();
+			data->test.clear();
+			parseMDTag(span.text, data->speaker, data->test);
+		}
+	}
+
+	if (!text.empty()) {
+		Text::Line line;
+		line.speaker = data->speaker;
+		line.text = text;
+		line.test = data->test;
+		data->lines.push_back(line);
+	}
+}
+
 std::vector<Text::Line> Text::parseMarkdown(const std::string& t)
 {
 	MarkDown md;
+	ParseData data;
+	md.user = &data;
 
-	std::vector<Text::Line> lines;
-
-	std::string speaker;
-	std::string test;
-
-	md.paragraphHandler = [&](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
-		std::string text;
-
-		for (const MarkDown::Span& span : spans) {
-			if (span.text.empty())
-				continue;	// superfluous?
-
-			if (span.isText()) {
-				if (!text.empty() && !std::isspace(text.back())) {
-					text += ' '; // superfluous?
-				}
-				text += span.text;
-			}
-			else if (span.code) {
-				parseMDTag(span.text, speaker, test);
-			}
-		}
-
-		Text::Line line;
-		line.speaker = speaker;
-		line.text = text;
-		line.test = test;
-		lines.push_back(line);
-		};
-
+	md.paragraphHandler = paragraphHandler;
 	md.process(t);
-	return lines;
+
+	return data.lines;
 }
+
+/*static*/ std::vector<Text> Text::parseMarkdownFile(const std::string& t)
+{
+	MarkDown md;
+	ParseData data;
+	md.user = &data;
+	std::vector<Text> textVec;
+	std::string entityID;
+
+	md.paragraphHandler = paragraphHandler;
+	md.headingHandler = [&](const MarkDown&, const std::vector<MarkDown::Span>& span, int) {
+		//if (data.lines.empty())
+		//	return;
+
+		// Flush the current text
+		//Text text;
+		//text.entityID = entityID;
+		//text.lines = data.lines;
+		//textVec.push_back(text);
+
+		//data.lines.clear();
+
+		assert(data.lines.empty());	// should be already flushed
+		data.speaker.clear();
+		data.test.clear();
+
+		entityID = span[0].text;
+		};
+	md.process(t);
+
+	if (!data.lines.empty()) {
+		Text text;
+		text.entityID = entityID;
+		text.lines = data.lines;
+		textVec.push_back(text);
+	}
+	return textVec;
+}
+
 
 /*static*/ bool Text::isMDTag(const std::string& str)
 {

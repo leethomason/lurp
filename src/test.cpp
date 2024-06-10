@@ -1575,7 +1575,7 @@ static void TestMarkDown()
 		int level = 0;
 		int nCallbacks = 0;
 
-		md.headingHandler = [&level, &nCallbacks](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int _level) {
+		md.headingHandler = [&level, &nCallbacks](const MarkDown&, const std::vector<MarkDown::Span>& spans, int _level) {
 			level = _level;
 			TEST(level == 1 || level == 2);
 			if (level == 1) {
@@ -1589,7 +1589,7 @@ static void TestMarkDown()
 				++nCallbacks;
 			}
 		};
-		md.paragraphHandler = [&level, &nCallbacks](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int _level) {
+		md.paragraphHandler = [&level, &nCallbacks](const MarkDown&, const std::vector<MarkDown::Span>& spans, int _level) {
 			TEST(spans.size() == 1);
 			TEST(_level == level);
 			if (level == 1) {
@@ -1619,11 +1619,11 @@ static void TestMarkDown()
 		
 		MarkDown md;
 
-		md.headingHandler = [&entity, &text](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int level) {
+		md.headingHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			entity = spans[0].text;
 		};
-		md.paragraphHandler = [&entity, &text](const MarkDown& md, const std::vector<MarkDown::Span>& spans, int level) {
+		md.paragraphHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			text.push_back(spans[0].text);
 		};
@@ -1633,6 +1633,31 @@ static void TestMarkDown()
 		TEST(text[0] == "You sleep. You dream.");
 		TEST(text[1] == "The night goes on.");
 	}
+}
+
+static void TestLoadMarkDown()
+{
+	ScriptBridge bridge;
+	std::vector<Text> text = bridge.LoadMD("script/testscript.md");
+	TEST(text[0].entityID == "ALT_TEXT_1_B_TEXT");
+	TEST(text.size() == 1);
+	TEST(text[0].lines.size() == 5);
+	TEST(text[0].lines[0].text == "I'm going to tell a story. It will be fun.");
+	TEST(text[0].lines[1].text == "Listen closely!");
+	TEST(text[0].lines[0].speaker == "Talker");
+	TEST(text[0].lines[1].speaker == "Talker");
+
+	TEST(text[0].lines[2].speaker == "Listener");
+	TEST(text[0].lines[2].test.empty());
+	TEST(text[0].lines[2].text == "Yay!");
+
+	TEST(text[0].lines[3].speaker == "Another");
+	TEST(text[0].lines[3].test == "{script.more}");
+	TEST(text[0].lines[3].text == "I want to hear too!");
+
+	TEST(text[0].lines[4].speaker == "YetAnother");
+	TEST(text[0].lines[4].test == "{~script.more}");
+	TEST(text[0].lines[4].text == "I'm not interested.");
 }
 
 int RunTests()
@@ -1675,6 +1700,7 @@ int RunTests()
 	RUN_TEST(TestFormatting());
 	RUN_TEST(TestChullu());
 	RUN_TEST(TestMarkDown());
+	RUN_TEST(TestLoadMarkDown());
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

@@ -9,6 +9,7 @@
 #include "defs.h"
 #include "items.h"
 #include "battle.h"
+#include "markdown.h"
 
 namespace lurp {
 
@@ -87,11 +88,24 @@ struct Text : Entity {
 		return type;
 	}
 
+	// Parses a small `md = "..."` string into a vector of Text::Line.
 	static std::vector<Text::Line> parseMarkdown(const std::string& md);
+
+	// Parses a full file
+	static std::vector<Text> parseMarkdownFile(const std::string& md);
 		
+private:
+	struct ParseData {
+		std::vector<Text::Line> lines;
+		std::string speaker;
+		std::string test;
+	};
+
 	static bool isMDTag(const std::string& str);
 	static size_t findMDTag(size_t start, const std::string& str);
 	static void parseMDTag(const std::string& str, std::string& speaker, std::string& test);
+
+	static void paragraphHandler(const MarkDown&, const std::vector<MarkDown::Span>&, int level);
 };
 
 struct Choices : Entity {

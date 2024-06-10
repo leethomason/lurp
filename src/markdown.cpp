@@ -3,9 +3,11 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_MD 0
+#define DEBUG_MD 1
 
-/*static*/ int MarkDown::enterBlock(MD_BLOCKTYPE block, void* arg, void* user) 
+namespace lurp {
+
+/*static*/ int MarkDown::enterBlock(MD_BLOCKTYPE block, void* arg, void* user)
 {
 	MarkDown* self = (MarkDown*)user;
 	self->blockStack.push_back(block);
@@ -34,7 +36,7 @@
 	if (block == MD_BLOCK_H) {
 		assert(self->_heading != 0);
 
-		if (self->headingHandler && !self->inQuoteBlock()) 
+		if (self->headingHandler && !self->inQuoteBlock())
 			self->headingHandler(*self, self->spans, self->_heading);
 		self->_heading = 0;
 	}
@@ -90,13 +92,16 @@
 		if (!self->spans.empty()) {
 			self->spans.back().text += ' ';
 		}
+#if DEBUG_MD
+		fmt::print("Text: SOFTBR\n");
+#endif
 	}
 	else if (type == MD_TEXT_NORMAL || type == MD_TEXT_CODE) {
 		Span span = self->fromSpanStack();
 
 		if (!self->spans.empty()
 			&& self->spans.back().stackSize == self->spanStack.size()
-			&& self->spans.back().flags() == span.flags()) 
+			&& self->spans.back().flags() == span.flags())
 		{
 			// append
 			self->spans.back().text += str;
@@ -105,11 +110,16 @@
 			span.text = str;
 			self->spans.push_back(span);
 		}
+#if DEBUG_MD
+		fmt::print("Text: '{}'\n", str);
+#endif
+	}
+	else {
+#if DEBUG_MD
+		fmt::print("Text: Unknown\n");
+#endif
 	}
 
-#if DEBUG_MD
-	fmt::print("Text: '{}'\n", str);
-#endif
 	return 0;
 }
 
@@ -182,5 +192,9 @@ void MarkDown::process(const std::string& str)
 	parser.leave_span = MarkDown::leaveSpan;
 	parser.text = MarkDown::textCallback;
 
+#if DEBUG_MD
+	fmt::print("-- Processing markdown --\n");
+#endif
 	md_parse(str.c_str(), (MD_SIZE)str.size(), &parser, this);
 }
+} // namespace lurp

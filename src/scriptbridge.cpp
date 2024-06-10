@@ -66,6 +66,7 @@ bool TableIt::isTableWithKV(const std::string& key, const std::string& value)
 	return result;
 }
 
+#if 0
 static void Dump(lua_State* L, int index)
 {
 	int t = lua_type(L, index);
@@ -95,6 +96,7 @@ static void DumpStack(lua_State* L, int n) {
 		fmt::print("\n");
 	}
 }
+#endif
 
 ScriptBridge::ScriptBridge()
 {
@@ -164,7 +166,7 @@ void ScriptBridge::registerCallbacks()
 	LuaStackCheck check(L);
 
 	// Register c callback funcs
-	static const int NUM_FUNCS = 8;
+	static const int NUM_FUNCS = 9;
 	static const Func funcs[NUM_FUNCS] = {
 		{ "CRandom", &l_CRandom },
 		{ "CDeltaItem", &l_CDeltaItem},
@@ -174,6 +176,7 @@ void ScriptBridge::registerCallbacks()
 		{ "CAllTextRead", &l_CAllTextRead},
 		{ "CMove", &l_CMove},
 		{ "CEndGame", &l_CEndGame},
+		{ "CLoadMD", &l_CLoadMD}
 	};
 	for (int i = 0; i < NUM_FUNCS; i++) {
 		lua_pushlightuserdata(L, this);
@@ -1094,7 +1097,9 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	// parent_path:    `./game`
 	// need to append: 'game'
 	appendLuaPath(path.parent_path().string());
+	_currentCSA = &csa;
 	doFile(inputFilePath);
+	_currentCSA = nullptr;
 
 	READ_ASSET("Scripts", "Script", scripts, readScript);
 	READ_ASSET("Texts", "Text", texts, readText);
@@ -1124,7 +1129,7 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	return csa;
 }
 
-void ScriptBridge::LoadMD(const std::string& filename)
+std::vector<Text> ScriptBridge::LoadMD(const std::string& filename)
 {
 	LuaStackCheck check(L);
 
@@ -1139,6 +1144,12 @@ void ScriptBridge::LoadMD(const std::string& filename)
 	catch (std::exception& e) {
 		PLOG(plog::error) << fmt::format("Error loading MD file '{}': {}", path.string(), e.what());
 	}
+
+	std::vector<Text> tVec;
+	if (!text.empty()) {
+		tVec = Text::parseMarkdownFile(text);
+	}
+	return tVec;
 }
 
 /*static*/ int ScriptBridge::l_CRandom(lua_State* L)
@@ -1266,8 +1277,9 @@ void ScriptBridge::LoadMD(const std::string& filename)
 
 	std::string fname = lua_tostring(L, 1);
 
-	bridge->LoadMD(fname);
-
+	std::vector<Text> tVec = bridge->LoadMD(fname);
+	assert(bridge->_currentCSA);
+	bridge->_currentCSA->texts.insert(bridge->_currentCSA->texts.end(), tVec.begin(), tVec.end());
 	return 0;
 }
 

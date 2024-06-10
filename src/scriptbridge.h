@@ -63,7 +63,7 @@ public:
 
 	void loadLUA(const std::string& path);
 	ConstScriptAssets readCSA(const std::string& path);
-	void LoadMD(const std::string& filename);
+	std::vector<Text> LoadMD(const std::string& filename);
 
 	lua_State* getLuaState() const { return L; }
 
@@ -135,7 +135,9 @@ private:
 	ITextHandler* _iTextHandler = nullptr;
 	IAssetHandler* _iAssetHandler = nullptr;
 	int _iCoreCount = 0;
+
 	std::filesystem::path _currentDir;
+	ConstScriptAssets* _currentCSA = nullptr;	// for md callback. hacky.
 
 	void registerCallbacks();
 
