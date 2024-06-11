@@ -498,7 +498,8 @@ void ScriptBridge::setStrField(const std::string& key, const std::string& value)
 
 	LuaStackCheck check(L);
 	Variant v;
-	assert(lua_type(L, -1) == LUA_TTABLE); // -1 table
+	int tMinusOne = lua_type(L, -1);
+	assert(tMinusOne == LUA_TTABLE); // -1 table
 	if (!key.empty())
 		lua_pushstring(L, key.c_str());	// -2 table -1 key
 	else
@@ -827,6 +828,12 @@ Script ScriptBridge::readScript() const
 EntityID ScriptBridge::readEntityID(const std::string& key, const std::optional<EntityID>& def) const
 {
 	std::string id;
+	int tMinusOne = lua_type(L, -1);
+	if (tMinusOne != LUA_TTABLE) {
+		assert(tMinusOne == LUA_TTABLE); // -1 table
+		throw std::runtime_error("Error parsing entity");
+	}
+	
 	Variant v = getField(L, key, 0);
 	if (v.type == LUA_TSTRING) {
 		id = v.str;

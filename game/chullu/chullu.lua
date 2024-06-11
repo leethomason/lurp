@@ -69,6 +69,8 @@ Script {
             next = "COFFEE_WITH_GISELLE_TEMPLE"
         },
         {
+            -- note this trick only works because this option doesn't have a Text entity.
+            -- FIXME: need a better way to handle conversation flows
             eval = function() return Entity("COFFEE_CHOICES_IN_SF"):allTextRead() end,
             text = "Adventure awaits"
         },
@@ -181,7 +183,7 @@ Zone {
             eval = function() return player:hasItem("REVOLVER") end,
             next = Script {
                 Text { "You board the plane...or would, if this demo was complete. Thanks for playing!" },
-                Text { code = function() EndGame("Game Over", 0) end, ""}
+                Script { code = function() EndGame("Game Over", 0) end }
             }
         }
     },
