@@ -35,7 +35,9 @@ you are. She must have had the same dream - vision - last night.
 
 You finish the coffee. You suspect you'll need it.
 
-## MEET_GISELLE_AT_LIBRARY
+## The Library Theft
+
+### MEET_GISELLE_AT_LIBRARY_1
 
 You make your way through the doors of the old, regal Library. You find Giselle in
 the back research rooms.
@@ -55,7 +57,9 @@ You nod. "I'm in. What's our next step?"
 his work when he passed on. His ranting about 'saving us from the Old Ones' seems plausible
 now. This very University and this very Library has the journal. We just need to steal it."
 
-"Steal it?"
+### MEET_GISELLE_AT_LIBRARY_2
+
+> "Steal it?"
 
 "Steal it. No time for red tape. I've got a plan. I'll distract the librarian. You get the journal.
 Assuming we save the world we'll give it back to them. Meet me at the cafe for lunch."
@@ -112,4 +116,4 @@ to Cairo. I'll send a telegraph when I have information."
 You stand up. "I'll get by bags and get going. I'll see you in Cairo."
 
 "Thanks {player.name}. I think you'll need to pack your trusty six gun for this.
-Be careful and I'll see you soon.
+Be careful and I'll see you soon."

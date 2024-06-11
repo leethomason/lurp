@@ -104,7 +104,13 @@ Zone {
             eval = function () return zone.hadMorningCoffee end,
             code = function() player:addItem("HAIRPIN", 1) end,
             required = true,
-            next = "MEET_GISELLE_AT_LIBRARY"
+            next = Script {
+                CallScript { scriptID = "MEET_GISELLE_AT_LIBRARY_1" },
+                Choices {
+                    { text = '"Steal it?"'}
+                },
+                CallScript { scriptID = "MEET_GISELLE_AT_LIBRARY_2" },
+            }
         },
         Interaction {
             entityID = "SF_LIBRARY_RESTRICTED_INTERACTION",
