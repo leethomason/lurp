@@ -231,6 +231,7 @@ void GameScene::addText(Drawing& d)
 		_mainText->resize(idx + 1);
 		// FIXME speaker variant
 		_mainText->setText(idx, text.text);
+		_mainText->setSpace(idx, d.config.font->pointSize);
 		_zoneDriver->advance();
 	}
 }
@@ -244,17 +245,29 @@ void GameScene::addRoom(Drawing& d)
 	const lurp::Room& room = _zoneDriver->currentRoom();
 
 	std::shared_ptr<TextBox>& tb = _infoText;
+	
 	size_t start = tb->size();
-	tb->resize(start + 3);
+	if (!zone.name.empty()) {
+		tb->resize(start + 1);
+		tb->setText(start, zone.name);
+		tb->setColor(start, { 192, 192, 192, 255 });
+	}
 
-	tb->setText(start + 0, zone.name);
-	tb->setColor(start + 0, { 192, 192, 192, 255 });
+	start = tb->size();
+	if (!room.name.empty()) {
+		tb->resize(start + 1);
+		tb->setText(start, room.name);
+		tb->setColor(start, { 255, 255, 255, 255 });
+		tb->setSpace(start, d.config.font->pointSize);
+	}
 
-	tb->setText(start + 1, room.name);
-	tb->setColor(start + 1, { 255, 255, 255, 255 });
-
-	tb->setText(start + 2, room.desc);
-	tb->setColor(start + 2, { 192, 192, 192, 255 });
+	start = tb->size();
+	if (!room.desc.empty()) {
+		tb->resize(start + 1);
+		tb->setText(start, room.desc);
+		tb->setColor(start, { 192, 192, 192, 255 });
+	}
+	tb->setSpace(start, d.config.font->pointSize);
 }
 
 void GameScene::addInventory(Drawing& d)
@@ -290,15 +303,6 @@ void GameScene::process(Drawing& d)
 		addContainers(d);
 		addNavigation(d);
 	}
-	//else if (mode == lurp::ZoneDriver::Mode::kText) {
-	//	// fixme: should be "while text" with option to continue
-	//	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
-	//	if (region) {
-	//		std::shared_ptr<TextBox>& tb = _mainText;
-	//		tb->resize(1);
-	//		tb->setText(_zoneDriver->text().text);
-	//	}
-	//}
 	else if (mode == lurp::ZoneDriver::Mode::kChoices) {
 		addChoices(d);
 	}

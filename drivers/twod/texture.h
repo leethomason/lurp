@@ -104,7 +104,7 @@ public:
 	// std::shared_ptr<Texture> getTexture(const std::string& name) const;
 	std::shared_ptr<Texture> createTextField(int w, int h);
 
-	void update();
+	void update(const XFormer& xf);
 	void freeAll();
 
 	int numTextures() const { return (int)_textures.size(); }

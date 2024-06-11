@@ -261,7 +261,7 @@ Item {
 Script {
     entityID = "KEY_MASTER",
     Choices {
-        { 
+        {
             eval = function() return not player:hasItem("SKELETON_KEY") end,
             text = "Get the key",
             code = function() player:addItem("SKELETON_KEY") end,

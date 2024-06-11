@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 			if (scene)
 				scene->load(drawing, frameData);
 
-			textureManager.update();
+			textureManager.update(xFormer);
 			fontManager.update(xFormer);
 
 			nk_input_begin(nukCtx);

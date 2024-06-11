@@ -111,7 +111,7 @@ TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer
 {
 }
 
-void TextureManager::update()
+void TextureManager::update(const XFormer& xf)
 {
 	TextureUpdate update;
 	while (_loadQueue.tryPop(update))
@@ -125,8 +125,8 @@ void TextureManager::update()
 #			endif
 			// This is an old surface. Discard it.
 			SDL_FreeSurface(update.surface);
-			for(size_t i=0; i<update.surfaceVec.size(); i++) {
-				SDL_FreeSurface(update.surfaceVec[i]);
+			for(size_t i=0; i<update.textVec.size(); i++) {
+				SDL_FreeSurface(update.textVec[i].surface);
 			}
 			continue;
 		}
@@ -150,8 +150,8 @@ void TextureManager::update()
 			}
 			SDL_Rect surfaceSize{ 0, 0, 0, 0 };
 			int y = 0;
-			for (size_t i = 0; i < update.surfaceVec.size(); i++) {
-				SDL_Surface* surface = update.surfaceVec[i];
+			for (size_t i = 0; i < update.textVec.size(); i++) {
+				SDL_Surface* surface = update.textVec[i].surface;
 				if (surface) {
 					SDL_Rect src{ 0, 0, surface->w, surface->h };
 					SDL_Rect dst{ 0, y, surface->w, surface->h };
@@ -163,8 +163,10 @@ void TextureManager::update()
 
 					int e = SDL_BlitSurface(surface, &src, target, &dst);
 					assert(e == 0);
+					int space = xf.s(update.textVec[i].space);;
+					dst.h += space;
 					surfaceSize = UnionRect(surfaceSize, dst);
-					y += surface->h;
+					y += surface->h + space;
 
 					SDL_FreeSurface(surface);
 				}
