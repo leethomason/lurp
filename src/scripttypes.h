@@ -96,10 +96,12 @@ struct Text : Entity {
 		
 private:
 	struct ParseData {
-		std::vector<Text::Line> lines;
+		std::string entityID;
 		std::string speaker;
 		std::string test;
+		std::vector<Text::Line> lines;
 	};
+	static Text flushParseData(ParseData& data);
 
 	static bool isMDTag(const std::string& str);
 	static size_t findMDTag(size_t start, const std::string& str);

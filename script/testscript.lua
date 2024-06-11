@@ -221,16 +221,6 @@ I'm not interested.
     }
 }
 
---[[
-Script {
-    entityID = "ALT_TEXT_1_B",
-    CallScript {
-        scriptID = "ALT_TEXT_1_B_TEXT",
-        code = function() script.more = true end
-    }
-}
-]]--
-
 Script {
     entityID = "ALT_TEXT_2",
     Text {

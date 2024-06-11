@@ -3,7 +3,7 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_MD 1
+#define DEBUG_MD 0
 
 namespace lurp {
 

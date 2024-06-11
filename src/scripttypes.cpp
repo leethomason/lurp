@@ -32,7 +32,7 @@ namespace lurp {
 		line.speaker = data->speaker;
 		line.text = text;
 		line.test = data->test;
-		data->lines.push_back(line);
+		data->lines.push_back(line);		
 	}
 }
 
@@ -48,39 +48,43 @@ std::vector<Text::Line> Text::parseMarkdown(const std::string& t)
 	return data.lines;
 }
 
+/*static*/ Text Text::flushParseData(ParseData& data)
+{
+	Text text;
+	
+	text.entityID = data.entityID;
+	text.lines = data.lines;
+	data.lines.clear();
+	data.speaker.clear();
+	data.test.clear();
+
+	return text;
+}
+
 /*static*/ std::vector<Text> Text::parseMarkdownFile(const std::string& t)
 {
 	MarkDown md;
 	ParseData data;
 	md.user = &data;
 	std::vector<Text> textVec;
-	std::string entityID;
 
 	md.paragraphHandler = paragraphHandler;
 	md.headingHandler = [&](const MarkDown&, const std::vector<MarkDown::Span>& span, int) {
-		//if (data.lines.empty())
-		//	return;
-
-		// Flush the current text
-		//Text text;
-		//text.entityID = entityID;
-		//text.lines = data.lines;
-		//textVec.push_back(text);
-
-		//data.lines.clear();
+		
+		Text text = flushParseData(data);
+		if (!text.lines.empty()) {
+			textVec.push_back(text);
+		}
 
 		assert(data.lines.empty());	// should be already flushed
 		data.speaker.clear();
 		data.test.clear();
-
-		entityID = span[0].text;
+		data.entityID = span[0].text;
 		};
 	md.process(t);
 
-	if (!data.lines.empty()) {
-		Text text;
-		text.entityID = entityID;
-		text.lines = data.lines;
+	Text text = flushParseData(data);
+	if (!text.lines.empty()) {
 		textVec.push_back(text);
 	}
 	return textVec;
