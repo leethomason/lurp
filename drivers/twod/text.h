@@ -40,7 +40,7 @@ public:
 	TextBox();
 	~TextBox();
 
-	Point pos = Point{ 0, 0 };	// in screen!
+	lurp::Point pos;	// in screen!
 
 	size_t size() const { return _row.size(); }
 	void resize(size_t s);
@@ -62,12 +62,12 @@ public:
 	int spacing(size_t i = 0) const { return _row[i].virtualSpace; }
 	SDL_Color bgColor() const { return _bg; }
 
-	Size virtualSize() const { return _virtualSize;	}
+	lurp::Size virtualSize() const { return _virtualSize;	}
 	// Note that surface is in screen, not virtual.
-	Size surfaceSize() const { return _texture->surfaceSize(); }
+	lurp::Size surfaceSize() const { return _texture->surfaceSize(); }
 
 	void enableInteraction(bool enable) { _interactive = enable; }
-	bool hitTest(const Point& screen) const;
+	bool hitTest(const lurp::Point& screen) const;
 	MouseState mouseState() const { return _mouseState; }
 
 private:
@@ -75,7 +75,7 @@ private:
 	bool _interactive = false;
 
 	std::shared_ptr<Texture> _texture;
-	Size _virtualSize;
+	lurp::Size _virtualSize;
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
@@ -130,10 +130,10 @@ public:
 
 	// Note it draws in real pixels (like ::Draw)
 	void Draw(const std::shared_ptr<TextBox>& tf) const;
-	void Draw(const VBox& vbox, const Point& p) const;
+	void Draw(const VBox& vbox, const lurp::Point& p) const;
 
-	void doMove(const Point& screen, const Point& virt);
-	std::shared_ptr<TextBox> doButton(const Point& screen, const Point& virt, bool down);
+	void doMove(const lurp::Point& screen, const lurp::Point& virt);
+	std::shared_ptr<TextBox> doButton(const lurp::Point& screen, const lurp::Point& virt, bool down);
 
 	void toggleQuality();
 

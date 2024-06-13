@@ -4,7 +4,7 @@
 #include "xform.h"
 #include "test2d.h"
 #include "drawable.h"
-#include "config.h"
+#include "config2d.h"
 #include "statemachine.h"
 #include "../platform.h"
 
@@ -182,11 +182,11 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		GameConfig gameConfig = GameConfig::demoConfig();
-		gameConfig.assetsDir = "assets";
-		gameConfig.validate();
-		gameConfig.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
-		gameConfig.startingZone = startingZone;
+		lurp::GameConfig gameConfig1D;
+		gameConfig1D.assetsDir = "assets";
+		gameConfig1D.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
+		gameConfig1D.startingZone = startingZone;
+		GameConfig2D gameConfig = GameConfig2D::demoConfig2D(gameConfig1D);
 
 		StateMachine machine(gameConfig);
 
@@ -288,14 +288,14 @@ int main(int argc, char* argv[])
 					}
 				}
 				else if (e.type == SDL_MOUSEMOTION) {
-					Point screen = { e.motion.x, e.motion.y };
-					Point virt = xFormer.screenToVirtual(screen);
+					lurp::Point screen = { e.motion.x, e.motion.y };
+					lurp::Point virt = xFormer.screenToVirtual(screen);
 					scene->mouseMotion(fontManager, screen, virt);
 				}
 				else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
 					if (e.button.button == 1) {
-						Point screen = { e.button.x, e.button.y };
-						Point virt = xFormer.screenToVirtual(screen);
+						lurp::Point screen = { e.button.x, e.button.y };
+						lurp::Point virt = xFormer.screenToVirtual(screen);
 						scene->mouseButton(fontManager, screen, virt, e.type == SDL_MOUSEBUTTONDOWN);
 					}
 				}

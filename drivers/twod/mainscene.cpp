@@ -1,5 +1,5 @@
 #include "mainscene.h"
-#include "config.h"
+#include "config2d.h"
 #include "drawable.h"
 
 #include "nuk.h"
@@ -9,7 +9,7 @@ void MainScene::load(Drawing& d, const FrameData& f)
 	constexpr double RAMP = 0.2;
 
 	if (f.sceneFrame == 0) {
-		_texture = d.textureManager.loadTexture(d.config.assetsDir / d.config.mainBackground);
+		_texture = d.textureManager.loadTexture(d.config.config.assetsDir / d.config.mainBackground);
 		_tween.add(RAMP, 1.0, tween::cosine);
 	}
 }
@@ -28,8 +28,8 @@ void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf
 	const float height = realFontSize * 1.8f;
 	const float realWidth = height * 5.0f;
 	const float realHeight = 1000.0f;
-	const PointF center{xf.renderSize().w / 2.f, xf.renderSize().h / 2.f};
-	RectF guiRect{center.x - realWidth / 2, center.y, realWidth, realHeight};
+	const lurp::PointF center{xf.renderSize().w / 2.f, xf.renderSize().h / 2.f};
+	lurp::RectF guiRect{center.x - realWidth / 2, center.y, realWidth, realHeight};
 
 	struct nk_style* s = &ctx->style;
 	nk_style_push_color(ctx, &s->window.background, nk_rgba(0, 0, 0, 0));

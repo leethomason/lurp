@@ -10,7 +10,7 @@
 #include <fmt/core.h>
 #include <SDL2/SDL.h>
 
-StateMachine::StateMachine(const GameConfig& gameConfig) : _gameConfig(gameConfig)
+StateMachine::StateMachine(const GameConfig2D& gameConfig) : _gameConfig(gameConfig)
 {
 }
 

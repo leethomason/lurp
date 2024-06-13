@@ -131,12 +131,12 @@ void TextBox::setBgColor(SDL_Color color) {
 	}
 }
 
-bool TextBox::hitTest(const Point& screen) const
+bool TextBox::hitTest(const lurp::Point& screen) const
 {
 	if (!_texture->ready())
 		return false;
 
-	Rect rect = { pos.x, pos.y, _texture->surfaceSize().w, _texture->surfaceSize().h };
+	lurp::Rect rect = { pos.x, pos.y, _texture->surfaceSize().w, _texture->surfaceSize().h };
 	if (rect.contains(screen))
 		return true;
 	return false;
@@ -209,8 +209,8 @@ void FontManager::update(const XFormer& xf)
 	// Stage 2: update the text fields to the correct size
 	for (auto& tf : _textFields) {
 		// The texture needs to be kept 1:1 with the real size, so text doesn't look fuzzy.
-		Size realSize = xf.t(tf->_virtualSize);
-		Size texSize = tf->_texture ? tf->_texture->pixelSize() : Size{ 0, 0};
+		lurp::Size realSize = xf.t(tf->_virtualSize);
+		lurp::Size texSize = tf->_texture ? tf->_texture->pixelSize() : lurp::Size{ 0, 0};
 
 		if (!tf->_texture || realSize != texSize) {
 			tf->_texture = _textureManager.createTextField(realSize.w, realSize.h);
@@ -256,7 +256,7 @@ std::shared_ptr<TextBox> FontManager::createTextBox(const Font* font, int width,
 
 	TextBox* tf = new TextBox();
 	tf->_font0 = f;
-	tf->_virtualSize = Size{ width, height };
+	tf->_virtualSize = lurp::Size{ width, height };
 	// No point in creating the texture because we don't know the real size yet.
 	//tf->_texture = _textureManager.createTextField(width, height);
 	tf->_hqOpaque = useOpaqueHQ;
@@ -287,7 +287,7 @@ void FontManager::Draw(const std::shared_ptr<TextBox>& tf) const
 	}
 }
 
-void FontManager::Draw(const VBox& vbox, const Point& p) const
+void FontManager::Draw(const VBox& vbox, const lurp::Point& p) const
 {
 	int y = p.y;
 	for (size_t i = 0; i < vbox.boxes.size(); i++) {
@@ -306,7 +306,7 @@ void FontManager::Draw(const VBox& vbox, const Point& p) const
 		case MouseState::down:
 			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), 192, 192, 192);
 		}
-		tf->pos = Point{ p.x, y };
+		tf->pos = lurp::Point{ p.x, y };
 		Draw(tf);
 		y += tf->surfaceSize().h;
 	}
@@ -323,7 +323,7 @@ void FontManager::toggleQuality()
 	else if (gQuality == 1) fmt::print("LCD font\n");
 }
 
-void FontManager::doMove(const Point& screen, const Point&)
+void FontManager::doMove(const lurp::Point& screen, const lurp::Point&)
 {
 	for (auto& tf : _textFields) {
 		tf->_mouseState = MouseState::none;
@@ -342,7 +342,7 @@ void FontManager::doMove(const Point& screen, const Point&)
 	}
 }
 
-std::shared_ptr<TextBox> FontManager::doButton(const Point& screen, const Point&, bool down)
+std::shared_ptr<TextBox> FontManager::doButton(const lurp::Point& screen, const lurp::Point&, bool down)
 {
 	std::shared_ptr<TextBox> clicked;
 	for (auto& tf : _textFields) {
@@ -368,7 +368,7 @@ std::shared_ptr<TextBox> FontManager::doButton(const Point& screen, const Point&
 	}
 	if (!down)
 		_mouseBox = nullptr;
-	doMove(screen, Point());
+	doMove(screen, lurp::Point());
 	return clicked;
 }
 

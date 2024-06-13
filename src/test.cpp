@@ -7,6 +7,7 @@
 #include "battle.h"
 #include "tree.h"
 #include "markdown.h"
+#include "config.h"
 #include "../drivers/platform.h"
 
 #include <fmt/core.h>
@@ -1658,6 +1659,15 @@ static void TestLoadMarkDown()
 	TEST(text[0].lines[4].speaker == "YetAnother");
 	TEST(text[0].lines[4].test == "{~script.more}");
 	TEST(text[0].lines[4].text == "I'm not interested.");
+}
+
+static void TestLoadConfig()
+{
+	ScriptBridge bridge;
+	bridge.loadLUA("game/chullu/config.lua");
+
+	//GameConfig config;
+	//config.apply(bridge);
 }
 
 int RunTests()

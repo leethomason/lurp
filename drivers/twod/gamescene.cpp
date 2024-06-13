@@ -9,7 +9,7 @@ void GameScene::load(Drawing& d, const FrameData& f)
 
 	if (const GameRegion* r = getRegion(GameRegion::Type::kImage, d.config.regions)) {
 		if (!r->imagePath.empty()) {
-			_imageTexture = d.textureManager.loadTexture(d.config.assetsDir / r->imagePath);
+			_imageTexture = d.textureManager.loadTexture(d.config.config.assetsDir / r->imagePath);
 		}
 	}
 
@@ -17,16 +17,16 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		bool opaque = r->bgColor.a > 0;
 		
 		_mainText = d.fontManager.createTextBox(d.config.font, r->position.w, r->position.h, opaque);
-		_mainText->setColor(d.config.textColor);
-		_mainText->setBgColor(r->bgColor);
+		_mainText->setColor(toSDL(d.config.textColor));
+		_mainText->setBgColor(toSDL(r->bgColor));
 
 		_mainOptions.boxes.resize(kMaxOptions);
 		const int height = 2 * r->position.h / kMaxOptions;
 
 		for (int i = 0; i < kMaxOptions; ++i) {
 			_mainOptions.boxes[i] = d.fontManager.createTextBox(d.config.font, r->position.w, height, opaque);
-			_mainOptions.boxes[i]->setColor(d.config.optionColor);
-			_mainOptions.boxes[i]->setBgColor(r->bgColor);
+			_mainOptions.boxes[i]->setColor(toSDL(d.config.optionColor));
+			_mainOptions.boxes[i]->setBgColor(toSDL(r->bgColor));
 			_mainOptions.boxes[i]->enableInteraction(true);
 		}
 	}
@@ -35,13 +35,13 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		bool opaque = r->bgColor.a > 0;
 
 		_infoText = d.fontManager.createTextBox(d.config.font, r->position.w, r->position.h, opaque);
-		_infoText->setColor(d.config.textColor);
-		_infoText->setBgColor(r->bgColor);
+		_infoText->setColor(toSDL(d.config.textColor));
+		_infoText->setBgColor(toSDL(r->bgColor));
 	}
 
-	_csassets = _bridge.readCSA(d.config.scriptFile);
+	_csassets = _bridge.readCSA(d.config.config.scriptFile);
 	_assets = new lurp::ScriptAssets(_csassets);
-	_zoneDriver = new lurp::ZoneDriver(*_assets, _bridge, d.config.startingZone);
+	_zoneDriver = new lurp::ZoneDriver(*_assets, _bridge, d.config.config.startingZone);
 	_needProcess = true;
 }
 
@@ -60,24 +60,24 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 
 	const GameRegion* imageRegion = getRegion(GameRegion::Type::kImage, d.config.regions);
 	if (imageRegion) {
-		Rect rDst = x.t(imageRegion->position);
+		lurp::Rect rDst = x.t(imageRegion->position);
 		SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
 		Draw(d.renderer, _imageTexture, nullptr, &dst, RenderQuality::kBlit);
 	}
 
 	const GameRegion* textRegion = getRegion(GameRegion::Type::kText, d.config.regions);
 	if (textRegion) {
-		_mainText->pos = x.t(Point{ textRegion->position.x, textRegion->position.y });
+		_mainText->pos = x.t(lurp::Point{ textRegion->position.x, textRegion->position.y });
 		d.fontManager.Draw(_mainText);
 		
 		int y = _mainText->pos.y + _mainText->surfaceSize().h;
-		Point p = { _mainText->pos.x, y };
+		lurp::Point p = { _mainText->pos.x, y };
 		d.fontManager.Draw(_mainOptions, p);
 	}
 
 	const GameRegion* infoRegion = getRegion(GameRegion::Type::kInfo, d.config.regions);
 	if (infoRegion) {
-		_infoText->pos = x.t(Point{ infoRegion->position.x, infoRegion->position.y });
+		_infoText->pos = x.t(lurp::Point{ infoRegion->position.x, infoRegion->position.y });
 		d.fontManager.Draw(_infoText);
 	}
 
@@ -317,12 +317,12 @@ void GameScene::process(Drawing& d)
 	addInventory(d);
 }
 
-void GameScene::mouseMotion(FontManager& fm, const Point& screen, const Point& virt)
+void GameScene::mouseMotion(FontManager& fm, const lurp::Point& screen, const lurp::Point& virt)
 {
 	fm.doMove(screen, virt);
 }
 
-void GameScene::mouseButton(FontManager& fm, const Point& screen, const Point& virt, bool down)
+void GameScene::mouseButton(FontManager& fm, const lurp::Point& screen, const lurp::Point& virt, bool down)
 {
 	std::shared_ptr<TextBox> clicked = fm.doButton(screen, virt, down);
 	if (clicked) {
