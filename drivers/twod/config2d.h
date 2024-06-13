@@ -25,6 +25,8 @@ struct GameRegion {
 };
 
 struct GameConfig2D {
+	GameConfig2D(const lurp::GameConfig& c) : config(c) {}
+
 	lurp::GameConfig config;
 
 	lurp::Point virtualSize = { 1920, 1080 };
@@ -40,5 +42,5 @@ struct GameConfig2D {
 
 	const Font* font = nullptr;
 
-	static GameConfig2D demoConfig2D();
+	static GameConfig2D demoConfig2D(const lurp::GameConfig& c);
 };

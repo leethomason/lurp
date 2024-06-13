@@ -1,12 +1,12 @@
 #pragma once
 
-#include "config.h"
+#include "config2d.h"
 #include "scene.h"
 
 class StateMachine
 {
 public:
-	StateMachine(const lurp::GameConfig& gameConfig);
+	StateMachine(const GameConfig2D& gameConfig);
 
 	std::shared_ptr<Scene> tick(FrameData* frameData);
 
@@ -25,7 +25,7 @@ private:
 	std::shared_ptr<Scene> makeNewScene(Type t);
 
 	bool _done = false;
-	lurp::GameConfig _gameConfig;
+	GameConfig2D _gameConfig;
 	std::shared_ptr<Scene> _currentScene;
 	Type _type = Type::kNone;
 };

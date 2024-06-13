@@ -182,11 +182,11 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		GameConfig2D gameConfig = GameConfig2D::demoConfig();
-		gameConfig.assetsDir = "assets";
-		gameConfig.validate();
-		gameConfig.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
-		gameConfig.startingZone = startingZone;
+		lurp::GameConfig gameConfig1D;
+		gameConfig1D.assetsDir = "assets";
+		gameConfig1D.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
+		gameConfig1D.startingZone = startingZone;
+		GameConfig2D gameConfig = GameConfig2D::demoConfig2D(gameConfig1D);
 
 		StateMachine machine(gameConfig);
 

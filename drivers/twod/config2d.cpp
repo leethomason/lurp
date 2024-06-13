@@ -3,9 +3,9 @@
 #include <fmt/core.h>
 #include <plog/Log.h>
 
-/*static*/ GameConfig2D GameConfig2D::demoConfig2D()
+/*static*/ GameConfig2D GameConfig2D::demoConfig2D(const lurp::GameConfig& c1)
 {
-	GameConfig2D c;
+	GameConfig2D c(c1);
 	c.openingTitles = { "title1", "title2"};
 	c.mainBackground = "main";
 

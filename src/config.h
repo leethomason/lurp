@@ -13,7 +13,6 @@ struct GameConfig {
 	std::string scriptFile;
 	std::string startingZone;
 
-	bool validate() const;
 	bool validatePath(const std::filesystem::path& dir, const std::string& stem) const;
 };
 
