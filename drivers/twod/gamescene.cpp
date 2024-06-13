@@ -267,7 +267,8 @@ void GameScene::addRoom(Drawing& d)
 		tb->setText(start, room.desc);
 		tb->setColor(start, { 192, 192, 192, 255 });
 	}
-	tb->setSpace(start, d.config.font->pointSize);
+	if (start)
+		tb->setSpace(start-1, d.config.font->pointSize);
 }
 
 void GameScene::addInventory(Drawing& d)
@@ -307,7 +308,8 @@ void GameScene::process(Drawing& d)
 		addChoices(d);
 	}
 	else {
-		assert(false);
+		//assert(false);
+		_zoneDriver->battleDone();
 	}
 
 	// Side panel
