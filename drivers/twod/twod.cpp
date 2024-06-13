@@ -4,7 +4,7 @@
 #include "xform.h"
 #include "test2d.h"
 #include "drawable.h"
-#include "config.h"
+#include "config2d.h"
 #include "statemachine.h"
 #include "../platform.h"
 
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		lurp::GameConfig gameConfig = lurp::GameConfig::demoConfig();
+		GameConfig2D gameConfig = GameConfig2D::demoConfig();
 		gameConfig.assetsDir = "assets";
 		gameConfig.validate();
 		gameConfig.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;

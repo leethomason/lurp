@@ -1,5 +1,5 @@
 #include "titlescene.h"
-#include "config.h"
+#include "config2d.h"
 #include "tween.h"
 
 void TitleScene::load(Drawing& d, const FrameData& f)
@@ -12,7 +12,7 @@ void TitleScene::load(Drawing& d, const FrameData& f)
 	std::function<double(double)> func1 = tween::cosine;
 
 	if (f.sceneFrame == 0 && d.config.openingTitles.size() > 0) {
-		_textures.push_back(d.textureManager.loadTexture(d.config.assetsDir / d.config.openingTitles[0]));
+		_textures.push_back(d.textureManager.loadTexture(d.config.config.assetsDir / d.config.openingTitles[0]));
 
 		tween::Tween t(0.0);
 		t.addASR(RAMP, HOLD, RAMP, 0.0, 1.0, func0, func1);
@@ -20,7 +20,7 @@ void TitleScene::load(Drawing& d, const FrameData& f)
 	}
 	else if (f.sceneFrame == 2) {
 		for(size_t i=1; i<d.config.openingTitles.size(); i++) {
-			_textures.push_back(d.textureManager.loadTexture(d.config.assetsDir / d.config.openingTitles[i]));
+			_textures.push_back(d.textureManager.loadTexture(d.config.config.assetsDir / d.config.openingTitles[i]));
 
 			tween::Tween t(0.0);
 			t.add((RAMP * 2.0 + HOLD) * i - HALF, 0.0);

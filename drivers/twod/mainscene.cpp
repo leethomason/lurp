@@ -1,5 +1,5 @@
 #include "mainscene.h"
-#include "config.h"
+#include "config2d.h"
 #include "drawable.h"
 
 #include "nuk.h"
@@ -9,7 +9,7 @@ void MainScene::load(Drawing& d, const FrameData& f)
 	constexpr double RAMP = 0.2;
 
 	if (f.sceneFrame == 0) {
-		_texture = d.textureManager.loadTexture(d.config.assetsDir / d.config.mainBackground);
+		_texture = d.textureManager.loadTexture(d.config.config.assetsDir / d.config.mainBackground);
 		_tween.add(RAMP, 1.0, tween::cosine);
 	}
 }

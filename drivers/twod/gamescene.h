@@ -3,7 +3,7 @@
 #include "scene.h"
 #include "texture.h"
 #include "text.h"
-#include "config.h"
+#include "config2d.h"
 
 #include "scriptbridge.h"
 #include "scriptasset.h"
@@ -50,7 +50,7 @@ private:
 	// Auxillary info region
 	std::shared_ptr<TextBox> _infoText;
 
-	const lurp::GameRegion* getRegion(lurp::GameRegion::Type type, const std::vector<lurp::GameRegion>& regions);
+	const GameRegion* getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
 
 	// Game -------------------
 	lurp::ScriptBridge _bridge;
