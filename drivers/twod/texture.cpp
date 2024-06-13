@@ -38,7 +38,7 @@ public:
 		SDL_Surface* surface = IMG_Load(path.string().c_str());
 		assert(surface);
 		assert(_queue);
-		_texture->_size = Size({ surface->w, surface->h });
+		_texture->_size = lurp::Size({ surface->w, surface->h });
 		//_texture->_bytes = surface->format->BytesPerPixel;
 
 		TextureUpdate update{ _texture, surface, _generation };
@@ -93,7 +93,7 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path
 std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 {
 	Texture* texture = new Texture();
-	texture->_size = Size{ w, h };
+	texture->_size = lurp::Size{ w, h };
 	texture->_type = Texture::Type::textfield;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
 	texture->_path = fmt::format("field:{}x{}", w, h);
@@ -171,7 +171,7 @@ void TextureManager::update(const XFormer& xf)
 					SDL_FreeSurface(surface);
 				}
 			}
-			texture->_surfaceSize = Size{surfaceSize.w, surfaceSize.h};
+			texture->_surfaceSize = lurp::Size{surfaceSize.w, surfaceSize.h};
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}
 		else {

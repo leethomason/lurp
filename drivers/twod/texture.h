@@ -54,8 +54,8 @@ public:
 	bool ready() const { return _sdlTexture != nullptr; }
 	SDL_Texture* sdlTexture() const { _age = 0; return _sdlTexture; }
 
-	const Size& pixelSize() const { return _size; }
-	const Size& surfaceSize() const { return _surfaceSize; }	
+	const lurp::Size& pixelSize() const { return _size; }
+	const lurp::Size& surfaceSize() const { return _surfaceSize; }
 	const std::string& path() const { return _path; }
 
 	int memory() const { return _size.w * _size.h * 4; }	// 4 bytes per pixel? now sure how SDL stores these things
@@ -73,8 +73,8 @@ private:
 	SDL_Texture* _sdlTexture = nullptr;
 	std::string _path;
 	int _generation = 0;
-	Size _size;			// allocated size, and size of the texture
-	Size _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
+	lurp::Size _size;			// allocated size, and size of the texture
+	lurp::Size _surfaceSize;	// size of the surface it was created from (smaller for text surfaces)
 
 	enum class Type {
 		texture,		// simple texture reference

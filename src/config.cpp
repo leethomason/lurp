@@ -3,6 +3,8 @@
 #include <fmt/core.h>
 #include <plog/Log.h>
 
+namespace lurp {
+
 /*static*/ GameConfig GameConfig::demoConfig()
 {
 	GameConfig c;
@@ -88,3 +90,5 @@ bool GameConfig::validate() const
 		okay &= validatePath(assetsDir, saveLoadBackground);
 	return okay;
 }
+
+} // namespace lurp

@@ -21,8 +21,8 @@ public:
 	virtual void draw(Drawing& d, const FrameData& f, const XFormer& xformer) override;
 	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
-	virtual void mouseMotion(FontManager&, const Point& screen, const Point& virt) override;
-	virtual void mouseButton(FontManager&, const Point& screen, const Point& virt, bool down) override;
+	virtual void mouseMotion(FontManager&, const lurp::Point& screen, const lurp::Point& virt) override;
+	virtual void mouseButton(FontManager&, const lurp::Point& screen, const lurp::Point& virt, bool down) override;
 
 private:
 	const SDL_Color clearColor = { 0, 179, 228, 255 };

@@ -6,7 +6,7 @@
 class StateMachine
 {
 public:
-	StateMachine(const GameConfig& gameConfig);
+	StateMachine(const lurp::GameConfig& gameConfig);
 
 	std::shared_ptr<Scene> tick(FrameData* frameData);
 
@@ -25,7 +25,7 @@ private:
 	std::shared_ptr<Scene> makeNewScene(Type t);
 
 	bool _done = false;
-	GameConfig _gameConfig;
+	lurp::GameConfig _gameConfig;
 	std::shared_ptr<Scene> _currentScene;
 	Type _type = Type::kNone;
 };

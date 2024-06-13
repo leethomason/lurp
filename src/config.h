@@ -8,6 +8,8 @@
 
 struct Font;
 
+namespace lurp {
+
 struct GameRegion {
 	std::string name;
 	Rect position = { 0, 0, 1920, 1080 };
@@ -47,3 +49,5 @@ struct GameConfig {
 private:
 	bool validatePath(const std::filesystem::path& dir, const std::string& stem) const;
 };
+
+} // namespace lurp

@@ -20,8 +20,8 @@ public:
 	void setState(State s) { _state = s; }
 	State state() const { return _state; }
 
-	virtual void mouseMotion(FontManager&, const Point& /*screen*/, const Point& /*virt*/) {}
-	virtual void mouseButton(FontManager&, const Point& /*screen*/, const Point& /*virt*/, bool /*down*/) {}
+	virtual void mouseMotion(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/) {}
+	virtual void mouseButton(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/, bool /*down*/) {}
 
 private:
 	State _state = State::kActive;

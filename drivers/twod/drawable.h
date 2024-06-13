@@ -7,15 +7,19 @@ class TextureManager;
 class FontManager;
 struct nk_context;
 struct SDL_Renderer;
-struct GameConfig;
+
+namespace lurp
+{
+	struct GameConfig;
+}
 
 struct Drawing {
-	Drawing(SDL_Renderer* renderer, TextureManager& textureManager, FontManager& fontManager, const GameConfig& config) : renderer(renderer), textureManager(textureManager), fontManager(fontManager), config(config) {}
+	Drawing(SDL_Renderer* renderer, TextureManager& textureManager, FontManager& fontManager, const lurp::GameConfig& config) : renderer(renderer), textureManager(textureManager), fontManager(fontManager), config(config) {}
 
 	SDL_Renderer* renderer;
 	TextureManager& textureManager; 
 	FontManager& fontManager;
-	const GameConfig& config;
+	const lurp::GameConfig& config;
 };
 
 struct FrameData {

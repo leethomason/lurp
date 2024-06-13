@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		GameConfig gameConfig = GameConfig::demoConfig();
+		lurp::GameConfig gameConfig = lurp::GameConfig::demoConfig();
 		gameConfig.assetsDir = "assets";
 		gameConfig.validate();
 		gameConfig.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
@@ -288,14 +288,14 @@ int main(int argc, char* argv[])
 					}
 				}
 				else if (e.type == SDL_MOUSEMOTION) {
-					Point screen = { e.motion.x, e.motion.y };
-					Point virt = xFormer.screenToVirtual(screen);
+					lurp::Point screen = { e.motion.x, e.motion.y };
+					lurp::Point virt = xFormer.screenToVirtual(screen);
 					scene->mouseMotion(fontManager, screen, virt);
 				}
 				else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
 					if (e.button.button == 1) {
-						Point screen = { e.button.x, e.button.y };
-						Point virt = xFormer.screenToVirtual(screen);
+						lurp::Point screen = { e.button.x, e.button.y };
+						lurp::Point virt = xFormer.screenToVirtual(screen);
 						scene->mouseButton(fontManager, screen, virt, e.type == SDL_MOUSEBUTTONDOWN);
 					}
 				}

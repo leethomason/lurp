@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+namespace lurp {
+
 struct Color {
 	uint8_t r = 0;
 	uint8_t g = 0;
@@ -85,3 +87,4 @@ struct RectF {
 	}
 };
 
+} // namespace lurp

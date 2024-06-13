@@ -1666,7 +1666,8 @@ static void TestLoadConfig()
 	ScriptBridge bridge;
 	bridge.loadLUA("game/chullu/config.lua");
 
-	//GameC
+	//GameConfig config;
+	//config.apply(bridge);
 }
 
 int RunTests()

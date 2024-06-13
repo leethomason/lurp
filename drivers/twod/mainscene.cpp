@@ -28,8 +28,8 @@ void MainScene::layoutGUI(nk_context* ctx, float realFontSize, const XFormer& xf
 	const float height = realFontSize * 1.8f;
 	const float realWidth = height * 5.0f;
 	const float realHeight = 1000.0f;
-	const PointF center{xf.renderSize().w / 2.f, xf.renderSize().h / 2.f};
-	RectF guiRect{center.x - realWidth / 2, center.y, realWidth, realHeight};
+	const lurp::PointF center{xf.renderSize().w / 2.f, xf.renderSize().h / 2.f};
+	lurp::RectF guiRect{center.x - realWidth / 2, center.y, realWidth, realHeight};
 
 	struct nk_style* s = &ctx->style;
 	nk_style_push_color(ctx, &s->window.background, nk_rgba(0, 0, 0, 0));

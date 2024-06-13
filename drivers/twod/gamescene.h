@@ -27,8 +27,8 @@ public:
 	virtual void draw(Drawing&, const FrameData& f, const XFormer& xformer) override;
 	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
-	virtual void mouseMotion(FontManager&, const Point& /*screen*/, const Point& /*virt*/) override;
-	virtual void mouseButton(FontManager&, const Point& /*screen*/, const Point& /*virt*/, bool /*down*/) override;
+	virtual void mouseMotion(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/) override;
+	virtual void mouseButton(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/, bool /*down*/) override;
 
 private:
 	// Image region
@@ -50,7 +50,7 @@ private:
 	// Auxillary info region
 	std::shared_ptr<TextBox> _infoText;
 
-	const GameRegion* getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
+	const lurp::GameRegion* getRegion(lurp::GameRegion::Type type, const std::vector<lurp::GameRegion>& regions);
 
 	// Game -------------------
 	lurp::ScriptBridge _bridge;
