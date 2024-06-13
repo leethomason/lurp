@@ -17,16 +17,16 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		bool opaque = r->bgColor.a > 0;
 		
 		_mainText = d.fontManager.createTextBox(d.config.font, r->position.w, r->position.h, opaque);
-		_mainText->setColor(d.config.textColor);
-		_mainText->setBgColor(r->bgColor);
+		_mainText->setColor(toSDL(d.config.textColor));
+		_mainText->setBgColor(toSDL(r->bgColor));
 
 		_mainOptions.boxes.resize(kMaxOptions);
 		const int height = 2 * r->position.h / kMaxOptions;
 
 		for (int i = 0; i < kMaxOptions; ++i) {
 			_mainOptions.boxes[i] = d.fontManager.createTextBox(d.config.font, r->position.w, height, opaque);
-			_mainOptions.boxes[i]->setColor(d.config.optionColor);
-			_mainOptions.boxes[i]->setBgColor(r->bgColor);
+			_mainOptions.boxes[i]->setColor(toSDL(d.config.optionColor));
+			_mainOptions.boxes[i]->setBgColor(toSDL(r->bgColor));
 			_mainOptions.boxes[i]->enableInteraction(true);
 		}
 	}
@@ -35,8 +35,8 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		bool opaque = r->bgColor.a > 0;
 
 		_infoText = d.fontManager.createTextBox(d.config.font, r->position.w, r->position.h, opaque);
-		_infoText->setColor(d.config.textColor);
-		_infoText->setBgColor(r->bgColor);
+		_infoText->setColor(toSDL(d.config.textColor));
+		_infoText->setBgColor(toSDL(r->bgColor));
 	}
 
 	_csassets = _bridge.readCSA(d.config.scriptFile);

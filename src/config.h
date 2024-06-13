@@ -1,9 +1,6 @@
 #pragma once
 
-#include "xform.h"
-#include "texture.h"
-
-#include "SDL.h"
+#include "geom.h"
 
 #include <string>
 #include <vector>
@@ -23,14 +20,14 @@ struct GameRegion {
 	};
 	Type type = Type::kNone;
 	std::string imagePath;		// default image - can be changed by the game
-	SDL_Color bgColor = SDL_Color{ 0, 0, 0, 0 };
+	Color bgColor = { 0, 0, 0, 255 };
 };
 
 struct GameConfig {
 	Point virtualSize = { 1920, 1080 };
-	SDL_Color textColor = { 255, 255, 255, 255 };
-	SDL_Color optionColor = { 0, 148, 255, 255 };
-	SDL_Color backgroundColor = { 0, 0, 0, 255 };
+	Color textColor = { 255, 255, 255, 255 };
+	Color optionColor = { 0, 148, 255, 255 };
+	Color backgroundColor = { 0, 0, 0, 255 };
 
 	std::vector<GameRegion> regions;
 	std::vector<std::string> openingTitles;
