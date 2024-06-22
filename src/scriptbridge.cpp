@@ -279,7 +279,7 @@ void ScriptBridge::setGlobal(const std::string& key, const Variant& value)
 	lua_setglobal(L, key.c_str());
 }
 
-void ScriptBridge::pushGlobal(const std::string& key)
+void ScriptBridge::pushGlobal(const std::string& key) const
 {
 	LuaStackCheck check(L, 1);
 	int t = lua_getglobal(L, key.c_str());
@@ -300,7 +300,7 @@ void ScriptBridge::callGlobalFunc(const std::string& name)
 	lua_call(L, 0, 0);
 }
 
-void ScriptBridge::pushTable(const std::string& key, int index)
+void ScriptBridge::pushTable(const std::string& key, int index) const
 {
 	assert(!key.empty() || index > 0);
 	assert(lua_type(L, -1) == LUA_TTABLE);
@@ -403,6 +403,58 @@ std::vector<int> ScriptBridge::getIntArray(const std::string& key) const
 	}
 	lua_pop(L, 1);
 	return r;
+}
+
+Point ScriptBridge::GetPointField(const std::string& key, const std::optional<Point>& def) const
+{
+	Point p;
+	LuaStackCheck check(L);
+
+	std::vector<int> vec = getIntArray(key);
+	if (vec.size() == 2) {
+		p.x = vec[0];
+		p.y = vec[1];
+	}
+	else if (def) {
+		p = def.value();
+	}
+	return p;
+}
+
+Rect ScriptBridge::GetRectField(const std::string& key, const std::optional<Rect>& def) const
+{
+	Rect r;
+	LuaStackCheck check(L);
+
+	std::vector<int> vec = getIntArray(key);
+	if (vec.size() == 4) {
+		r.x = vec[0];
+		r.y = vec[1];
+		r.w = vec[2];
+		r.h = vec[3];
+	}
+	else if (def) {
+		r = def.value();
+	}
+	return r;
+}
+
+Color ScriptBridge::GetColorField(const std::string& key, const std::optional<Color>& def) const
+{
+	Color c;
+	LuaStackCheck check(L);
+
+	std::vector<int> vec = getIntArray(key);
+	if (vec.size() == 4) {
+		c.r = (uint8_t) vec[0];
+		c.g = (uint8_t) vec[1];
+		c.b = (uint8_t) vec[2];
+		c.a = (uint8_t) vec[3];
+	}
+	else if (def) {
+		c = def.value();
+	}
+	return c;
 }
 
 void ScriptBridge::setIntArray(const std::string& key, const std::vector<int>& values)

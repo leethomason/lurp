@@ -6,9 +6,13 @@ Config = {
     size = { 1920, 1080},
     clearColor = { 0, 0, 0 },
     frames = {
-        { 0, 0, 1920, 1080, "background" },
-        { 40, 40, 500, 1000, "image"},          -- fixme
-        { 540, 40, 1340, 1000, "text", type="text", opaque=true},  -- fixme
-        { 40, 1040, 1840, 40, "status"},         -- fixme
+        { "background", pos = {0, 0, 1920, 1080 }},
+        { "image", pos = { 50, 50, 528, 980 }},
+        { "text", pos = { 620, 50, 760, 980 },
+            bg = { 64, 64, 64, 255 }
+        },
+        { "info", pos = { 1422, 50, 448, 980 },
+            bg = { 64, 64, 64, 255 },
+        }
     }
 }

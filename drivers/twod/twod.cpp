@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
 		StateMachine machine(gameConfig);
 
 		if (doAssetsTest) {
-			gameConfig.virtualSize = { 800, 600 };
+			gameConfig.size = { 800, 600 };
 			machine.setStart(StateMachine::Type::kTest);
 		}
 		else {
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
 				machine.setStart(StateMachine::Type::kGame);
 		}
 
-		XFormer xFormer(gameConfig.virtualSize.x, gameConfig.virtualSize.y);
+		XFormer xFormer(gameConfig.size.x, gameConfig.size.y);
 		xFormer.setRenderSize(renderW, renderH);
 		{
 			SDL_Rect clip = xFormer.sdlClipRect();

@@ -1,4 +1,5 @@
 #include "config2d.h"
+#include "scriptbridge.h"
 
 #include <fmt/core.h>
 #include <plog/Log.h>
@@ -50,3 +51,41 @@
 	return c;
 }
 
+void GameConfig2D::load(const lurp::ScriptBridge& bridge)
+{
+	lua_State* L = bridge.getLuaState();
+	lurp::ScriptBridge::LuaStackCheck check(L);
+
+	bridge.pushGlobal("Config");
+	if (!lua_istable(L, -1)) {
+		PLOG(plog::warning) << "Config table not found";
+		lua_pop(L, 1);
+		return;
+	}
+
+	size = bridge.GetPointField("size", size);
+	textColor = bridge.GetColorField("textColor", textColor);
+	optionColor = bridge.GetColorField("optionColor", optionColor);
+	choiceColor = bridge.GetColorField("choiceColor", choiceColor);
+	backgroundColor = bridge.GetColorField("backgroundColor", backgroundColor);
+
+	if (bridge.hasField("frames")) {
+		regions.clear();
+
+		for (lurp::TableIt it(L, -1); !it.done(); it.next()) {
+			if (it.kType() == LUA_TNUMBER && it.vType() == LUA_TTABLE) {
+				GameRegion r;
+				r.name = lurp::ScriptBridge::getField(L, "", 1).str;
+				r.position = bridge.GetRectField("pos", lurp::Rect{0, 0, 0, 0});
+				r.image = bridge.getStrField("image", "");
+				r.textColor = bridge.GetColorField("fg", r.textColor);
+				r.bgColor = bridge.GetColorField("bg", r.bgColor);
+
+				regions.push_back(r);
+			}
+		}
+	}
+	lua_pop(L, 1);
+
+	// Fixme: set the font pointer
+}

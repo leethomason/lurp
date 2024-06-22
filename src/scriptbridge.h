@@ -4,6 +4,7 @@
 #include "scriptdriver.h"
 #include "scripttypes.h"
 #include "util.h"
+#include "geom.h"
 
 #include <vector>
 #include <string>
@@ -76,8 +77,8 @@ public:
 		}
 	};
 	void setGlobal(const std::string& key, const Variant& value);
-	void pushGlobal(const std::string& key);
-	void pushTable(const std::string& key, int index = 0);
+	void pushGlobal(const std::string& key) const;
+	void pushTable(const std::string& key, int index = 0) const;
 	void pushNewGlobalTable(const std::string& key);
 	void pushNewTable(const std::string& key, int index = 0);
 	void pop(int n = 1);
@@ -94,6 +95,11 @@ public:
 	std::vector<std::string> getStrArray(const std::string& key) const;
 	std::vector<StringCount> getStrCountArray(const std::string& key) const;
 	std::vector<int> getIntArray(const std::string& key) const;
+
+	Point GetPointField(const std::string& key, const std::optional<Point>& def) const;
+	Rect GetRectField(const std::string& key, const std::optional<Rect>& def) const;
+	Color GetColorField(const std::string& key, const std::optional<Color>& def) const;
+
 	static Variant getField(lua_State* L, const std::string& key, int index, bool raw = false);
 
 	void setStrField(const std::string& key, const std::string& value);
