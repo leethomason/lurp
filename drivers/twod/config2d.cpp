@@ -24,27 +24,23 @@
 	GameRegion background;
 	background.name = "background";
 	background.position = { 0, 0, 1920, 1080 };
-	background.type = GameRegion::Type::kImage;
-	background.imagePath = "game";
+	background.image = "game";
 	c.regions.push_back(background);
 
 	GameRegion image;
 	image.name = "image";
 	image.position = { 50, 50, 528, 980 };
-	image.type = GameRegion::Type::kImage;
 	c.regions.push_back(image);
 
 	GameRegion text;
 	text.name = "text";
 	text.position = { 620, 50, 760, 980 };
-	text.type = GameRegion::Type::kText;
 	text.bgColor = { 64, 64, 64, 255 };
 	c.regions.push_back(text);
 
 	GameRegion info;
 	info.name = "info";
 	info.position = { 1422, 50, 448, 980 };
-	info.type = GameRegion::Type::kInfo;
 	info.bgColor = { 64, 64, 64, 255 };
 	c.regions.push_back(info);
 
@@ -69,6 +65,11 @@ void GameConfig2D::load(const lurp::ScriptBridge& bridge)
 	choiceColor = bridge.GetColorField("choiceColor", choiceColor);
 	backgroundColor = bridge.GetColorField("backgroundColor", backgroundColor);
 
+	fontName = bridge.getStrField("fontName", fontName);
+	fontSize = bridge.getIntField("fontSize", fontSize);
+	uiFont = bridge.getStrField("uiFont", uiFont);
+	uiFontSize = bridge.getIntField("uiFontSize", uiFontSize);
+
 	if (bridge.hasField("frames")) {
 		regions.clear();
 
@@ -86,6 +87,4 @@ void GameConfig2D::load(const lurp::ScriptBridge& bridge)
 		}
 	}
 	lua_pop(L, 1);
-
-	// Fixme: set the font pointer
 }

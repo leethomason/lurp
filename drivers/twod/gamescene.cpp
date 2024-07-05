@@ -7,13 +7,19 @@ void GameScene::load(Drawing& d, const FrameData& f)
 {
 	if (f.sceneFrame != 0) return;
 
-	if (const GameRegion* r = getRegion(GameRegion::Type::kImage, d.config.regions)) {
-		if (!r->imagePath.empty()) {
-			_imageTexture = d.textureManager.loadTexture(d.config.config.assetsDir / r->imagePath);
+	_regions.resize(d.config.regions.size());
+
+	for (size_t i = 0; i < d.config.regions.size(); ++i) {
+		const GameRegion& r = d.config.regions[i];
+		Region& reg = _regions[i];
+		reg.name = r.name;
+		reg.position = r.position;
+		if (!r.image.empty()) {
+			reg.images.push_back({ 0, d.textureManager.loadTexture(d.config.config.assetsDir / r.image) });
 		}
 	}
 
-	if (const GameRegion* r = getRegion(GameRegion::Type::kText, d.config.regions)) {
+	if (const GameRegion* r = getRegion(GameRegion::kText, d.config.regions)) {
 		bool opaque = r->bgColor.a > 0;
 		
 		_mainText = d.fontManager.createTextBox(d.config.font, r->position.w, r->position.h, opaque);
@@ -31,7 +37,7 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		}
 	}
 
-	if (const GameRegion* r = getRegion(GameRegion::Type::kInfo, d.config.regions)) {
+	if (const GameRegion* r = getRegion(GameRegion::kInfo, d.config.regions)) {
 		bool opaque = r->bgColor.a > 0;
 
 		_infoText = d.fontManager.createTextBox(d.config.font, r->position.w, r->position.h, opaque);
@@ -58,14 +64,21 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 		_needProcess = false;
 	}
 
-	const GameRegion* imageRegion = getRegion(GameRegion::Type::kImage, d.config.regions);
-	if (imageRegion) {
-		lurp::Rect rDst = x.t(imageRegion->position);
-		SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
-		Draw(d.renderer, _imageTexture, nullptr, &dst, RenderQuality::kBlit);
+	// Render all images.
+	for (Region& r : _regions) {
+		std::sort(r.images.begin(), r.images.end(), [](const TextureRef& a, const TextureRef& b) { return a.first < b.first; });
+	}
+	for (const Region& r : _regions) {
+		for (const auto& tr : r.images) {
+			lurp::Rect rDst = x.t(r.position);
+			SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
+			Draw(d.renderer, tr.second, nullptr, &dst, RenderQuality::kBlit);
+		}
+
 	}
 
-	const GameRegion* textRegion = getRegion(GameRegion::Type::kText, d.config.regions);
+	// Now text and extra info on top.
+	const GameRegion* textRegion = getRegion(GameRegion::kText, d.config.regions);
 	if (textRegion) {
 		_mainText->pos = x.t(lurp::Point{ textRegion->position.x, textRegion->position.y });
 		d.fontManager.Draw(_mainText);
@@ -75,7 +88,7 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 		d.fontManager.Draw(_mainOptions, p);
 	}
 
-	const GameRegion* infoRegion = getRegion(GameRegion::Type::kInfo, d.config.regions);
+	const GameRegion* infoRegion = getRegion(GameRegion::kInfo, d.config.regions);
 	if (infoRegion) {
 		_infoText->pos = x.t(lurp::Point{ infoRegion->position.x, infoRegion->position.y });
 		d.fontManager.Draw(_infoText);
@@ -88,11 +101,11 @@ void GameScene::layoutGUI(nk_context*, float, const XFormer&)
 
 }
 
-const GameRegion* GameScene::getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions)
+const GameRegion* GameScene::getRegion(const std::string& name, const std::vector<GameRegion>& regions)
 {
 	for (size_t i = 0; i < regions.size(); ++i) {
 		const GameRegion& r = regions[i];
-		if (r.type == type) {
+		if (r.name == name) {
 			return &r;
 		}
 	}
@@ -101,7 +114,7 @@ const GameRegion* GameScene::getRegion(GameRegion::Type type, const std::vector<
 
 void GameScene::addNavigation(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kText, d.config.regions);
 	if (region) {
 		std::vector<lurp::DirEdge> dirEdges = _zoneDriver->dirEdges();
 
@@ -130,7 +143,7 @@ void GameScene::addNavigation(Drawing& d)
 
 void GameScene::addContainers(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kText, d.config.regions);
 	if (!region) return;
 
 	lurp::ContainerVec vec = _zoneDriver->getContainers();
@@ -166,7 +179,7 @@ void GameScene::addContainers(Drawing& d)
 
 void GameScene::addChoices(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kText, d.config.regions);
 	if (!region) return;
 
 	const lurp::Choices& choices = _zoneDriver->choices();
@@ -187,7 +200,7 @@ void GameScene::addChoices(Drawing& d)
 
 void GameScene::addInteractions(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kText, d.config.regions);
 	if (!region) return;
 
 	lurp::InteractionVec vec = _zoneDriver->getInteractions();
@@ -209,7 +222,7 @@ void GameScene::addInteractions(Drawing& d)
 
 void GameScene::addNews(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kText, d.config.regions);
 	if (!region) return;
 
 	while (!_zoneDriver->news().empty()) {
@@ -222,7 +235,7 @@ void GameScene::addNews(Drawing& d)
 
 void GameScene::addText(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kText, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kText, d.config.regions);
 	if (!region) return;
 
 	while (_zoneDriver->mode() == lurp::ZoneDriver::Mode::kText) {
@@ -238,7 +251,7 @@ void GameScene::addText(Drawing& d)
 
 void GameScene::addRoom(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kInfo, d.config.regions);
 	if (!region) return;
 
 	const lurp::Zone& zone = _zoneDriver->currentZone();
@@ -273,7 +286,7 @@ void GameScene::addRoom(Drawing& d)
 
 void GameScene::addInventory(Drawing& d)
 {
-	const GameRegion* region = getRegion(GameRegion::Type::kInfo, d.config.regions);
+	const GameRegion* region = getRegion(GameRegion::kInfo, d.config.regions);
 	if (!region) return;
 
 	const lurp::Actor& player = _zoneDriver->getPlayer();

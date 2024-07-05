@@ -254,7 +254,7 @@ void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer)
 		static int property = 20;
 		nk_colorf bg{ 0, 0, 0, 0 };
 
-		nk_layout_row_static(nukCtx, height, 80, 1);
+		nk_layout_row_dynamic(nukCtx, height, 1);
 		if (nk_button_label(nukCtx, "button"))
 			fprintf(stdout, "button pressed\n");
 		nk_layout_row_dynamic(nukCtx, height, 2);

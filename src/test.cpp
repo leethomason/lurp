@@ -1661,15 +1661,6 @@ static void TestLoadMarkDown()
 	TEST(text[0].lines[4].text == "I'm not interested.");
 }
 
-static void TestLoadConfig()
-{
-	ScriptBridge bridge;
-	bridge.loadLUA("game/chullu/config.lua");
-
-	//GameConfig config;
-	//config.apply(bridge);
-}
-
 int RunTests()
 {
 	RUN_TEST(BridgeWorkingTest());

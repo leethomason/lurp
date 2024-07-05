@@ -31,8 +31,16 @@ public:
 	virtual void mouseButton(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/, bool /*down*/) override;
 
 private:
-	// Image region
-	std::shared_ptr<Texture> _imageTexture;
+	using TextureRef = std::pair<int, std::shared_ptr<Texture>>;
+
+	// mutable version of GameRegion
+	struct Region {
+		std::string name;
+		lurp::Rect position;
+		std::vector<TextureRef> images;
+	};
+
+	std::vector<Region> _regions;
 
 	// Text region (main i/o)
 	static constexpr int kMaxOptions = 16;
@@ -50,7 +58,7 @@ private:
 	// Auxillary info region
 	std::shared_ptr<TextBox> _infoText;
 
-	const GameRegion* getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
+	const GameRegion* getRegion(const std::string& name, const std::vector<GameRegion>& regions);
 
 	// Game -------------------
 	lurp::ScriptBridge _bridge;

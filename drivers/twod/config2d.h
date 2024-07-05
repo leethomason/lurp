@@ -14,7 +14,12 @@ namespace lurp {
 }
 
 struct GameRegion {
-	std::string name;							// "image", "text", "info" are special names
+	// special region names
+	static constexpr char kImage[] = "image";
+	static constexpr char kText[] = "text";
+	static constexpr char kInfo[] = "info";
+
+	std::string name;
 	lurp::Rect position = { 0, 0, 1920, 1080 };
 	std::string image;							// default image - can be changed by the game
 
@@ -34,8 +39,10 @@ struct GameConfig2D {
 	lurp::Color choiceColor = { 0, 148, 255, 255 };
 	lurp::Color backgroundColor = { 0, 0, 0, 255 };
 
-	std::string font;
+	std::string fontName;
+	int fontSize = 32;
 	std::string uiFont;
+	int uiFontSize = 48;
 
 	std::vector<GameRegion> regions;
 	std::vector<std::string> openingTitles;

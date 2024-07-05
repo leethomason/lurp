@@ -52,6 +52,37 @@ std::ifstream OpenLoadStream(const std::filesystem::path& path)
     return stream;
 }
 
+std::filesystem::path ConstructAssetPath(const std::string& assets, const std::string& file, std::optional<std::string> defaultFullPath, bool validate)
+{
+    std::filesystem::path assetsFS = std::filesystem::path(assets);
+    return ConstructAssetPath(assetsFS, file, defaultFullPath, validate);
+}
+
+std::filesystem::path ConstructAssetPath(const std::filesystem::path& assets, const std::string& file, std::optional<std::string> defaultFullPath, bool validate)
+{
+    std::filesystem::path full;
+    
+    if (!file.empty())
+        full = assets / file;
+    if (std::filesystem::exists(full)) {
+		return full;
+	}
+
+    if (defaultFullPath.has_value()) {
+        full = std::filesystem::path(defaultFullPath.value());
+		if (std::filesystem::exists(full)) {
+			return full;
+		}
+	}
+
+    if (validate) {
+		PLOG(plog::error) << fmt::format("Assets path '{}' does not exist", full.string());
+		FATAL_INTERNAL_ERROR();
+	}
+    return full;
+}
+
+
 bool CheckPath(const std::string& path, std::string& cwd)
 {
     std::ofstream stream;

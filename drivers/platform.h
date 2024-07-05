@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <filesystem>
+#include <optional>
 
 namespace lurp {
 
@@ -18,6 +19,10 @@ std::filesystem::path LogPath(const std::string& stem);
 std::string GameFileToDir(const std::string& gameFile);
 std::ofstream OpenSaveStream(const std::filesystem::path& path);
 std::ifstream OpenLoadStream(const std::filesystem::path& path);
+
+std::filesystem::path ConstructAssetPath(const std::string& assets, const std::string& file, std::optional<std::string> defaultFullPath, bool validate = true);
+std::filesystem::path ConstructAssetPath(const std::filesystem::path& assets, const std::string& file, std::optional<std::string> defaultFullPath, bool validate = true);
+
 
 bool CheckPath(const std::string& path, std::string& cwd);
 
