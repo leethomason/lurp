@@ -163,7 +163,7 @@ void TextureManager::update(const XFormer& xf)
 
 					int e = SDL_BlitSurface(surface, &src, target, &dst);
 					assert(e == 0);
-					int space = xf.s(update.textVec[i].space);;
+					int space = xf.s(update.textVec[i].virtualSpace);
 					dst.h += space;
 					surfaceSize = UnionRect(surfaceSize, dst);
 					y += surface->h + space;

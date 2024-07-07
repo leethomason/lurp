@@ -61,8 +61,17 @@ void GameConfig2D::load(const lurp::ScriptBridge& bridge)
 
 	size = bridge.GetPointField("size", size);
 	textColor = bridge.GetColorField("textColor", textColor);
-	optionColor = bridge.GetColorField("optionColor", optionColor);
-	choiceColor = bridge.GetColorField("choiceColor", choiceColor);
+
+	navNormalColor = bridge.GetColorField("navNormalColor", navNormalColor);
+	navOverColor = bridge.GetColorField("navOverColor", navOverColor);
+	navDownColor = bridge.GetColorField("navDownColor", navDownColor);
+	navDisabledColor = bridge.GetColorField("navDisabledColor", navDisabledColor);
+	
+	optionNormalColor = bridge.GetColorField("optionNormalColor", optionNormalColor);
+	optionOverColor = bridge.GetColorField("optionOverColor", optionOverColor);
+	optionDownColor = bridge.GetColorField("optionDownColor", optionDownColor);
+	optionDisabledColor = bridge.GetColorField("optionDisabledColor", optionDisabledColor);
+	
 	backgroundColor = bridge.GetColorField("backgroundColor", backgroundColor);
 
 	fontName = bridge.getStrField("fontName", fontName);

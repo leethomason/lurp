@@ -30,8 +30,8 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		const int height = 2 * r->position.h / kMaxOptions;
 
 		for (int i = 0; i < kMaxOptions; ++i) {
-			_mainOptions.boxes[i] = d.fontManager.createTextBox(d.config.font, r->position.w, height, opaque);
-			_mainOptions.boxes[i]->setColor(toSDL(d.config.optionColor));
+			_mainOptions.boxes[i] = d.fontManager.createTextBox(d.config.font, r->position.w, height, false);
+			_mainOptions.boxes[i]->setColor({255, 255, 255, 255});
 			_mainOptions.boxes[i]->setBgColor(toSDL(r->bgColor));
 			_mainOptions.boxes[i]->enableInteraction(true);
 		}
@@ -218,6 +218,9 @@ void GameScene::addInteractions(Drawing& d)
 
 		_options.push_back(opt);
 	}
+	if (!_options.empty()) {
+		_mainOptions.boxes[_options.size() - 1]->setSpace(0, d.config.font->pointSize);
+	}
 }
 
 void GameScene::addNews(Drawing& d)
@@ -281,7 +284,7 @@ void GameScene::addRoom(Drawing& d)
 		tb->setColor(start, { 192, 192, 192, 255 });
 	}
 	if (start)
-		tb->setSpace(start-1, d.config.font->pointSize);
+		tb->setSpace(start, d.config.font->pointSize);
 }
 
 void GameScene::addInventory(Drawing& d)
@@ -303,8 +306,10 @@ void GameScene::addInventory(Drawing& d)
 void GameScene::process(Drawing& d)
 {
 	_mainText->resize(0);
-	for (auto& tb : _mainOptions.boxes)
+	for (auto& tb : _mainOptions.boxes) {
 		tb->setText("");
+		tb->setSpace(0, 0);
+	}
 	_options.clear();
 	_infoText->resize(0);
 
