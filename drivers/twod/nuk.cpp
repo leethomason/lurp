@@ -4,6 +4,8 @@
 
 #include "debug.h"
 
+#include <fmt/core.h>
+
 void NukFontAtlas::load(const std::string& path, const std::vector<float>& sizes)
 {
 	assert(!sizes.empty());
@@ -14,6 +16,11 @@ void NukFontAtlas::load(const std::string& path, const std::vector<float>& sizes
 		Entry e;
 		e.size = s;
 		e.font = nk_font_atlas_add_from_file(_atlas, path.c_str(), s, &nukConfig);
+
+		if (!e.font) {
+			FatalError(fmt::format("Could not load font '{}'", path));
+		}
+
 		_entries.push_back(e);
 	}
 	nk_sdl_font_stash_end();

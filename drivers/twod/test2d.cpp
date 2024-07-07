@@ -12,7 +12,7 @@ static void TestXFormer()
 	{
 		XFormer xf(800, 600);
 		TEST(xf.scale() == 1.0f);
-		TEST(xf.offset() == Point());
+		TEST(xf.offset() == lurp::Point());
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 0);
 		TEST(sr.y == 0);
@@ -21,12 +21,12 @@ static void TestXFormer()
 
 		xf.setRenderSize(800, 600);
 		TEST(xf.scale() == 1.0f);
-		TEST(xf.offset() == Point(0, 0));
+		TEST(xf.offset() == lurp::Point(0, 0));
 
 		xf.setRenderSize(400, 300);
 		sr = xf.sdlClipRect();
 		TEST(xf.scale() == 0.5f);
-		TEST(xf.offset() == Point(0, 0));
+		TEST(xf.offset() == lurp::Point(0, 0));
 		TEST(sr.x == 0);
 		TEST(sr.y == 0);
 		TEST(sr.w == 800 / 2);
@@ -35,7 +35,7 @@ static void TestXFormer()
 		xf.setRenderSize(1600, 1200);
 		sr = xf.sdlClipRect();
 		TEST(xf.scale() == 2.0f);
-		TEST(xf.offset() == Point(0, 0));
+		TEST(xf.offset() == lurp::Point(0, 0));
 		TEST(sr.x == 0);
 		TEST(sr.y == 0);
 		TEST(sr.w == 800 * 2);
@@ -45,7 +45,7 @@ static void TestXFormer()
 		XFormer xf(800, 600);		 // too wide:
 		xf.setRenderSize(800, 400);	 // -> 533, 400 ouchie. 800 - 533 = 267 / 2 = 133
 		TEST_FP(xf.scale(), 2.0f / 3.0f);
-		TEST(xf.offset() == Point(133, 0));
+		TEST(xf.offset() == lurp::Point(133, 0));
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 133);
 		TEST(sr.y == 0);
@@ -54,7 +54,7 @@ static void TestXFormer()
 
 		xf.setRenderSize(800, 800);	 // too tall & square. -> 800, 800, y = 100
 		TEST_FP(xf.scale(), 1.0f);
-		TEST(xf.offset() == Point(0, 100));
+		TEST(xf.offset() == lurp::Point(0, 100));
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 0);
 		TEST(sr.y == 100);
@@ -63,7 +63,7 @@ static void TestXFormer()
 
 		xf.setRenderSize(400, 800); // too narrow -> 400, 300. y = 250
 		TEST_FP(xf.scale(), 0.5f);
-		TEST(xf.offset() == Point(0, 250));
+		TEST(xf.offset() == lurp::Point(0, 250));
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 0);
 		TEST(sr.y == 250);
@@ -74,7 +74,7 @@ static void TestXFormer()
 		XFormer xf(600, 800);
 		xf.setRenderSize(800, 400);	 // -> 300, 400 y = 250
 		TEST_FP(xf.scale(), 0.50f);
-		TEST(xf.offset() == Point(250, 0));
+		TEST(xf.offset() == lurp::Point(250, 0));
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 250);
 		TEST(sr.y == 0);
@@ -83,7 +83,7 @@ static void TestXFormer()
 
 		xf.setRenderSize(800, 800);	 // -> 600, 800
 		TEST_FP(xf.scale(), 1.0f);
-		TEST(xf.offset() == Point(100, 0));
+		TEST(xf.offset() == lurp::Point(100, 0));
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 100);
 		TEST(sr.y == 0);
@@ -92,7 +92,7 @@ static void TestXFormer()
 
 		xf.setRenderSize(400, 800);	 // -> 400, 533 y = 133
 		TEST_FP(xf.scale(), 2.0f / 3.0f);
-		TEST(xf.offset() == Point(0, 133));
+		TEST(xf.offset() == lurp::Point(0, 133));
 		sr = xf.sdlClipRect();
 		TEST(sr.x == 0);
 		TEST(sr.y == 133);
@@ -103,11 +103,11 @@ static void TestXFormer()
 		XFormer xf(1024, 768);
 		xf.setRenderSize(1024*2, 768*2);
 		TEST(xf.scale() == 2.0f);
-		TEST(xf.offset() == Point(0, 0));
+		TEST(xf.offset() == lurp::Point(0, 0));
 
 		xf.setRenderSize(1024/2, 768/2);
 		TEST(xf.scale() == 0.5f);
-		TEST(xf.offset() == Point(0, 0));
+		TEST(xf.offset() == lurp::Point(0, 0));
 	}
 }
 
@@ -116,7 +116,7 @@ static void XFormerAlignment()
 	XFormer xf(800, 600);
 
 	const int N = 2;
-	Point sizes[N] = { { 2194, 1171 }, { 681, 429 } };
+	lurp::Point sizes[N] = { { 2194, 1171 }, { 681, 429 } };
 
 	for (int i = 0; i < N; i++) {
 		xf.setRenderSize(sizes[i].x, sizes[i].y);
@@ -225,25 +225,25 @@ void AssetsTest::draw(Drawing& d, const FrameData& f, const XFormer& xFormer)
 	{
 		tf0->setText(fmt::format("Hello, world! This is some text that will need to be wrapped to fit in the box. frame/60={}", f.frame / 60));
 		tf0->setColor(SDL_Color{ 255, 255, 255, 255 });
-		tf0->pos = xFormer.t(Point{ 400, 300 });
+		tf0->pos = xFormer.t(lurp::Point{ 400, 300 });
 		d.fontManager.Draw(tf0);
 
 		tf2->setText(1, fmt::format("Green frame/60={}", f.frame/60));
-		tf2->pos = xFormer.t(Point{ 400, 500 });
+		tf2->pos = xFormer.t(lurp::Point{ 400, 500 });
 		d.fontManager.Draw(tf2);
 
-		d.fontManager.Draw(vbox, xFormer.t(Point{ 600, 500 }));
+		d.fontManager.Draw(vbox, xFormer.t(lurp::Point{ 600, 500 }));
 
 		tf1->setText("This is some fancy pants hq text.");
 		tf1->setColor(SDL_Color{ 255, 255, 255, 255 });
-		tf1->pos = xFormer.t(Point{ 20, 550 });
+		tf1->pos = xFormer.t(lurp::Point{ 20, 550 });
 		d.fontManager.Draw(tf1);
 	}
 }
 
 void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer)
 {
-	RectF guiRect = xFormer.t(RectF{ 560, 20, 230, 250 });
+	lurp::RectF guiRect = xFormer.t(lurp::RectF{ 560, 20, 230, 250 });
 	const float height = fs * 1.8f;
 
 	if (nk_begin(nukCtx, "Demo", nk_rect(guiRect.x, guiRect.y, guiRect.w, guiRect.h),
@@ -254,7 +254,7 @@ void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer)
 		static int property = 20;
 		nk_colorf bg{ 0, 0, 0, 0 };
 
-		nk_layout_row_static(nukCtx, height, 80, 1);
+		nk_layout_row_dynamic(nukCtx, height, 1);
 		if (nk_button_label(nukCtx, "button"))
 			fprintf(stdout, "button pressed\n");
 		nk_layout_row_dynamic(nukCtx, height, 2);
@@ -267,12 +267,12 @@ void AssetsTest::layoutGUI(nk_context* nukCtx, float fs, const XFormer& xFormer)
 	nk_end(nukCtx);
 }
 
-void AssetsTest::mouseMotion(FontManager& fman, const Point& screen, const Point& virt)
+void AssetsTest::mouseMotion(FontManager& fman, const lurp::Point& screen, const lurp::Point& virt)
 {
 	fman.doMove(screen, virt);
 }
 
-void AssetsTest::mouseButton(FontManager& fman, const Point& screen, const Point& virt, bool down)
+void AssetsTest::mouseButton(FontManager& fman, const lurp::Point& screen, const lurp::Point& virt, bool down)
 {
 	fman.doButton(screen, virt, down);
 }

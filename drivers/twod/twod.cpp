@@ -4,7 +4,7 @@
 #include "xform.h"
 #include "test2d.h"
 #include "drawable.h"
-#include "config.h"
+#include "config2d.h"
 #include "statemachine.h"
 #include "../platform.h"
 
@@ -182,16 +182,16 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		GameConfig gameConfig = GameConfig::demoConfig();
-		gameConfig.assetsDir = "assets";
-		gameConfig.validate();
-		gameConfig.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
-		gameConfig.startingZone = startingZone;
+		lurp::GameConfig gameConfig1D;
+		gameConfig1D.assetsDir = "assets";
+		gameConfig1D.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
+		gameConfig1D.startingZone = startingZone;
+		GameConfig2D gameConfig = GameConfig2D::demoConfig2D(gameConfig1D);
 
 		StateMachine machine(gameConfig);
 
 		if (doAssetsTest) {
-			gameConfig.virtualSize = { 800, 600 };
+			gameConfig.size = { 800, 600 };
 			machine.setStart(StateMachine::Type::kTest);
 		}
 		else {
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
 				machine.setStart(StateMachine::Type::kGame);
 		}
 
-		XFormer xFormer(gameConfig.virtualSize.x, gameConfig.virtualSize.y);
+		XFormer xFormer(gameConfig.size.x, gameConfig.size.y);
 		xFormer.setRenderSize(renderW, renderH);
 		{
 			SDL_Rect clip = xFormer.sdlClipRect();
@@ -217,9 +217,9 @@ int main(int argc, char* argv[])
 		FontManager fontManager(sdlRenderer, pool, textureManager, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
-		const float nukFontBaseSize = 16.0f;
 		NukFontAtlas nukFontAtlas(nukCtx);
-		nukFontAtlas.load("assets/Roboto-Regular.ttf", { 12.f, 16.f, 24.f, 32.f, 48.f, 64.f });
+		nukFontAtlas.load(lurp::ConstructAssetPath(gameConfig.config.assetsDir, gameConfig.uiFont, "assets/Roboto-Regular.ttf").string().c_str(), 
+			{12.f, 18.f, 24.f, 36.f, 48.f, 64.f});
 
 		// ---------- Initialization done -----------
 		lurp::RollingAverage<uint64_t, 48> innerAve;
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 		FrameData frameData;
 		Drawing drawing(sdlRenderer, textureManager, fontManager, gameConfig);
 
-		gameConfig.font = fontManager.loadFont("assets/Roboto-Regular.ttf", 24);	// fixme: hardcode. should be in config.
+		gameConfig.font = fontManager.loadFont(lurp::ConstructAssetPath(gameConfig.config.assetsDir, gameConfig.fontName, "assets/Roboto-Regular.ttf").string(), gameConfig.fontSize);
 
 		bool done = false;
 		SDL_Event e;
@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 			if (scene)
 				scene->load(drawing, frameData);
 
-			textureManager.update();
+			textureManager.update(xFormer);
 			fontManager.update(xFormer);
 
 			nk_input_begin(nukCtx);
@@ -288,14 +288,14 @@ int main(int argc, char* argv[])
 					}
 				}
 				else if (e.type == SDL_MOUSEMOTION) {
-					Point screen = { e.motion.x, e.motion.y };
-					Point virt = xFormer.screenToVirtual(screen);
+					lurp::Point screen = { e.motion.x, e.motion.y };
+					lurp::Point virt = xFormer.screenToVirtual(screen);
 					scene->mouseMotion(fontManager, screen, virt);
 				}
 				else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
 					if (e.button.button == 1) {
-						Point screen = { e.button.x, e.button.y };
-						Point virt = xFormer.screenToVirtual(screen);
+						lurp::Point screen = { e.button.x, e.button.y };
+						lurp::Point virt = xFormer.screenToVirtual(screen);
 						scene->mouseButton(fontManager, screen, virt, e.type == SDL_MOUSEBUTTONDOWN);
 					}
 				}
@@ -304,24 +304,23 @@ int main(int argc, char* argv[])
 			//nk_sdl_handle_grab();	// FIXME: do we want grab? why isn't it defined?
 			nk_input_end(nukCtx);
 
-			/* GUI */
-
-			// FIXME: figure out the gui font size
+			// Do the GUI layout (but not render)
 			if (doAssetsTest) {
+				const int nukFontBaseSize = 16;
 				float realFontSize = 0;
-				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(nukFontBaseSize), &realFontSize);
+				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(float(nukFontBaseSize)), &realFontSize);
 				nk_style_set_font(nukCtx, &nukFontBest->handle);
 				scene->layoutGUI(nukCtx, realFontSize, xFormer);
 			}
 			else {
 				float realFontSize = 0;
-				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(48.f), &realFontSize);
+				nk_font* nukFontBest = nukFontAtlas.select(xFormer.s(float(gameConfig.uiFontSize)), &realFontSize);
 				nk_style_set_font(nukCtx, &nukFontBest->handle);
 				scene->layoutGUI(nukCtx, realFontSize, xFormer);
 			}
 
-			//const SDL_Color drawColor = { 0, 179, 228, 255 };
-			SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0, 255);
+			// Rendering.
+			SDL_SetRenderDrawColor(sdlRenderer, gameConfig.backgroundColor.r, gameConfig.backgroundColor.g, gameConfig.backgroundColor.b, gameConfig.backgroundColor.a);
 			SDL_RenderClear(sdlRenderer);	// ignores clipping (which is good)
 
 			if (doAssetsTest) {
@@ -331,6 +330,7 @@ int main(int argc, char* argv[])
 					xFormer);
 			}
 			scene->draw(drawing, frameData, xFormer);
+			nk_sdl_render(NK_ANTI_ALIASING_ON);
 
 			// Sample *before* the present to exclude vsync. Also exclude the time to render the debug text.
 			uint64_t endFrameTime = SDL_GetPerformanceCounter();
@@ -348,8 +348,6 @@ int main(int argc, char* argv[])
 				DrawDebugText(msg, sdlRenderer, atlas.get(), 5, 5, 12, xFormer);
 			}
 
-			// Update screen
-			nk_sdl_render(NK_ANTI_ALIASING_ON);
 			SDL_RenderPresent(sdlRenderer);
 			frameData.frame++;
 			frameData.sceneFrame++;

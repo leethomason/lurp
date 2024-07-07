@@ -1,115 +1,95 @@
 #include "scripttypes.h"
-#include "md4c.h"
+#include "markdown.h"
 
 #define DEBUG_MD 0
 
 namespace lurp {
 
-struct MarkDownHandler
+/*static*/ void Text::paragraphHandler(const MarkDown& md, const std::vector<MarkDown::Span>& spans, int)
 {
-	MarkDownHandler() {}
-	~MarkDownHandler() {
-		CHECK(blockStack.empty());
-	}
-
-	std::vector<MD_BLOCKTYPE> blockStack;
-	std::vector<Text::Line> lines;
-
 	std::string text;
-	std::string speaker;
-	std::string test;
+	ParseData* data = (ParseData*)md.user;
 
-	void flush() {
-		if (!text.empty()) {
-			Text::Line line;
-			line.speaker = speaker;
-			line.test = test;
-			line.text = text;
+	for (const MarkDown::Span& span : spans) {
+		if (span.text.empty())
+			continue;	// superfluous?
 
-			lines.push_back(line);
-			text.clear();
+		if (span.isText()) {
+			if (!text.empty() && !std::isspace(text.back())) {
+				text += ' '; // superfluous?
+			}
+			text += span.text;
+		}
+		else if (span.code) {
+			data->speaker.clear();
+			data->test.clear();
+			parseMDTag(span.text, data->speaker, data->test);
 		}
 	}
 
-	static int enterBlock(MD_BLOCKTYPE block, void*, void* user) {
-		MarkDownHandler* self = (MarkDownHandler*)user;
-#if DEBUG_MD
-		fmt::print("Enter block: {}\n", (int)block);
-#endif
-		self->blockStack.push_back(block);
-		return 0;
+	if (!text.empty()) {
+		Text::Line line;
+		line.speaker = data->speaker;
+		line.text = text;
+		line.test = data->test;
+		data->lines.push_back(line);		
 	}
-	static int leaveBlock(MD_BLOCKTYPE block, void*, void* user) {
-		MarkDownHandler* self = (MarkDownHandler*)user;
-#if DEBUG_MD
-		fmt::print("Leave block: {}\n", (int)block);
-#endif
-		assert(self->blockStack.back() == block);
-		self->blockStack.pop_back();
-
-		self->flush();
-		return 0;
-	}
-	static int enterSpan(MD_SPANTYPE span, void*, void* user) {
-		(void)span;
-		(void)user;
-#if DEBUG_MD
-		fmt::print("Enter span: {}\n", (int)span);
-#endif
-		return 0;
-	}
-	static int leaveSpan(MD_SPANTYPE span, void*, void* user) {
-		(void)span;
-		(void)user;
-#if DEBUG_MD
-		fmt::print("Leave span: {}\n", (int)span);
-#endif
-		return 0;
-	}
-	static int textHandler(MD_TEXTTYPE type, const MD_CHAR* p, MD_SIZE size, void* user) {
-		MarkDownHandler* self = (MarkDownHandler*)user;
-		std::string str(p, size);
-
-		if (type == MD_TEXT_NORMAL && self->blockStack.back() == MD_BLOCK_P) {
-			if (Text::isMDTag(str)) {
-				self->flush();
-				Text::parseMDTag(trim(str), self->speaker, self->test);
-			}
-			else {
-				if (!self->text.empty())
-					self->text += " ";
-				self->text += str;
-			}
-#if DEBUG_MD
-			fmt::print("Normal text: '{}'\n", str);
-#endif
-		}
-		return 0;
-	}
-};
-
-std::vector<Text::Line> Text::parseMarkdown(const std::string& md)
-{
-	MD_PARSER parser;
-	memset(&parser, 0, sizeof(parser));
-
-	MarkDownHandler handler;
-	parser.enter_block = MarkDownHandler::enterBlock;
-	parser.leave_block = MarkDownHandler::leaveBlock;
-	parser.enter_span = MarkDownHandler::enterSpan;
-	parser.leave_span = MarkDownHandler::leaveSpan;
-	parser.text = MarkDownHandler::textHandler;
-
-	md_parse(md.c_str(), (MD_SIZE)md.size(), &parser, &handler);
-
-#if DEBUG_MD
-	fmt::print("sublines:\n");
-	for (const auto& sub : handler.lines) {
-		fmt::print("{}: t='{}' '{}'\n", sub.speaker, sub.test, sub.text);
-	}
-#endif
-	return handler.lines;
 }
+
+std::vector<Text::Line> Text::parseMarkdown(const std::string& t)
+{
+	MarkDown md;
+	ParseData data;
+	md.user = &data;
+
+	md.paragraphHandler = paragraphHandler;
+	md.process(t);
+
+	return data.lines;
+}
+
+/*static*/ Text Text::flushParseData(ParseData& data)
+{
+	Text text;
+	
+	text.entityID = data.entityID;
+	text.lines = data.lines;
+	data.lines.clear();
+	data.speaker.clear();
+	data.test.clear();
+
+	return text;
+}
+
+/*static*/ std::vector<Text> Text::parseMarkdownFile(const std::string& t)
+{
+	MarkDown md;
+	ParseData data;
+	md.user = &data;
+	std::vector<Text> textVec;
+
+	md.paragraphHandler = paragraphHandler;
+	md.headingHandler = [&](const MarkDown&, const std::vector<MarkDown::Span>& span, int) {
+		
+		Text text = flushParseData(data);
+		if (!text.lines.empty()) {
+			textVec.push_back(text);
+		}
+
+		assert(data.lines.empty());	// should be already flushed
+		data.speaker.clear();
+		data.test.clear();
+		data.entityID = span[0].text;
+		};
+	md.process(t);
+
+	Text text = flushParseData(data);
+	if (!text.lines.empty()) {
+		textVec.push_back(text);
+	}
+	return textVec;
+}
+
 
 /*static*/ bool Text::isMDTag(const std::string& str)
 {
@@ -131,11 +111,10 @@ std::vector<Text::Line> Text::parseMarkdown(const std::string& md)
 	return t;
 }
 
-/*static*/ void Text::parseMDTag(const std::string& str, std::string& speaker, std::string& test)
+/*static*/ void Text::parseMDTag(const std::string& _str, std::string& speaker, std::string& test)
 {
-	size_t end = parseRegion(str, 0, '[', ']');
-	std::string region = str.substr(1, end - 2);
-	std::vector<std::string> pairs = parseKVPairs(region);
+	std::string str = trim(_str);
+	std::vector<std::string> pairs = parseKVPairs(str);
 	for (const std::string& pair : pairs) {
 		std::pair<std::string, std::string> kv = parseKV(pair);
 		if (kv.first == "s")

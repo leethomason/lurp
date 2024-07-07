@@ -6,6 +6,8 @@
 #include "scriptbridge.h"
 #include "battle.h"
 #include "tree.h"
+#include "markdown.h"
+#include "config.h"
 #include "../drivers/platform.h"
 
 #include <fmt/core.h>
@@ -1505,10 +1507,18 @@ static void TestChullu()
 	TEST(mr == ZoneDriver::MoveResult::kSuccess);
 	TEST(driver.currentRoom().name == "The SF City Library");
 	FlushText(driver);
+
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);	// "Steal it?"
+	TEST(driver.choices().choices.size() == 1);
+	driver.choose(0);
+	FlushText(driver);
+	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
+
 	{
 		const Inventory& inv = driver.getInventory(driver.getPlayer());
 		TEST(inv.numItems(assets.getItem("HAIRPIN")) == 1);
 	}
+	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
 
 	InteractionVec interactions = driver.getInteractions();
 	TEST(interactions.size() == 1);
@@ -1562,6 +1572,103 @@ static void TestChullu()
 	FlushText(driver);	// adventure awaits!
 }
 
+static void TestMarkDown()
+{
+	{
+		std::string t =
+			"# Heading 1\n\n"
+			"h1 text\n\n"
+			"## Heading 2\n\n"
+			"h2 text\n\n";
+		MarkDown md;
+		int level = 0;
+		int nCallbacks = 0;
+
+		md.headingHandler = [&level, &nCallbacks](const MarkDown&, const std::vector<MarkDown::Span>& spans, int _level) {
+			level = _level;
+			TEST(level == 1 || level == 2);
+			if (level == 1) {
+				TEST(spans.size() == 1);
+				TEST(spans[0].text == "Heading 1");
+				++nCallbacks;
+			}
+			else if (level == 2) {
+				TEST(spans.size() == 1);
+				TEST(spans[0].text == "Heading 2");
+				++nCallbacks;
+			}
+		};
+		md.paragraphHandler = [&level, &nCallbacks](const MarkDown&, const std::vector<MarkDown::Span>& spans, int _level) {
+			TEST(spans.size() == 1);
+			TEST(_level == level);
+			if (level == 1) {
+				TEST(spans[0].text == "h1 text");
+				++nCallbacks;
+			}
+			else if (level == 2) {
+				TEST(spans[0].text == "h2 text");
+				++nCallbacks;
+			}
+		};
+		md.process(t);
+		TEST(nCallbacks == 4);
+	}
+	{
+		std::string t =
+			"# STARTING_TEXT\n"
+			"> This is the opening text. And a test of markdown!\n"
+			"> Need something for comments. *Quotes?* But then how to do tabs?\n"
+			"\n"
+			"You sleep.\n"
+			"You dream.\n\n"
+			"The night goes on.\n\n\n";
+
+		std::string entity;
+		std::vector<std::string> text;
+		
+		MarkDown md;
+
+		md.headingHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
+			TEST(level == 1);
+			entity = spans[0].text;
+		};
+		md.paragraphHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
+			TEST(level == 1);
+			text.push_back(spans[0].text);
+		};
+		md.process(t);
+
+		TEST(entity == "STARTING_TEXT");
+		TEST(text[0] == "You sleep. You dream.");
+		TEST(text[1] == "The night goes on.");
+	}
+}
+
+static void TestLoadMarkDown()
+{
+	ScriptBridge bridge;
+	std::vector<Text> text = bridge.LoadMD("script/testscript.md");
+	TEST(text[0].entityID == "ALT_TEXT_1_B_TEXT");
+	TEST(text.size() == 1);
+	TEST(text[0].lines.size() == 5);
+	TEST(text[0].lines[0].text == "I'm going to tell a story. It will be fun.");
+	TEST(text[0].lines[1].text == "Listen closely!");
+	TEST(text[0].lines[0].speaker == "Talker");
+	TEST(text[0].lines[1].speaker == "Talker");
+
+	TEST(text[0].lines[2].speaker == "Listener");
+	TEST(text[0].lines[2].test.empty());
+	TEST(text[0].lines[2].text == "Yay!");
+
+	TEST(text[0].lines[3].speaker == "Another");
+	TEST(text[0].lines[3].test == "{script.more}");
+	TEST(text[0].lines[3].text == "I want to hear too!");
+
+	TEST(text[0].lines[4].speaker == "YetAnother");
+	TEST(text[0].lines[4].test == "{~script.more}");
+	TEST(text[0].lines[4].text == "I'm not interested.");
+}
+
 int RunTests()
 {
 	RUN_TEST(BridgeWorkingTest());
@@ -1601,6 +1708,8 @@ int RunTests()
 	RUN_TEST(TestInlineText());
 	RUN_TEST(TestFormatting());
 	RUN_TEST(TestChullu());
+	RUN_TEST(TestMarkDown());
+	RUN_TEST(TestLoadMarkDown());
 
 	assert(gNTestPass > 0);
 	assert(gNTestFail == 0);

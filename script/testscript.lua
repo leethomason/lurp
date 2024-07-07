@@ -203,19 +203,19 @@ Script {
     Text {
         code = function() script.more = true end, md =
 [[
-[s = "Talker"]
+`s = "Talker"`
 I'm going to tell a story.
 It will be fun.
 
 Listen closely!
 
-[s="Listener"]
+`s="Listener"`
 Yay!
 
-[s="Another", test = {script.more}]
+`s="Another", test = {script.more}`
 I want to hear too!
 
-[s="YetAnother", test={~script.more}]
+`s="YetAnother", test={~script.more}`
 I'm not interested.
 ]]
     }
@@ -261,7 +261,7 @@ Item {
 Script {
     entityID = "KEY_MASTER",
     Choices {
-        { 
+        {
             eval = function() return not player:hasItem("SKELETON_KEY") end,
             text = "Get the key",
             code = function() player:addItem("SKELETON_KEY") end,

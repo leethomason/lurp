@@ -1,8 +1,7 @@
 # Issues
 
 ## Open Issues
-
-* Release!
+* SDL work (2D)
 
 ## Open / Next
 

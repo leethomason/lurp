@@ -38,7 +38,7 @@ public:
 		SDL_Surface* surface = IMG_Load(path.string().c_str());
 		assert(surface);
 		assert(_queue);
-		_texture->_size = Size({ surface->w, surface->h });
+		_texture->_size = lurp::Size({ surface->w, surface->h });
 		//_texture->_bytes = surface->format->BytesPerPixel;
 
 		TextureUpdate update{ _texture, surface, _generation };
@@ -93,7 +93,7 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path
 std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
 {
 	Texture* texture = new Texture();
-	texture->_size = Size{ w, h };
+	texture->_size = lurp::Size{ w, h };
 	texture->_type = Texture::Type::textfield;
 	texture->_sdlTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
 	texture->_path = fmt::format("field:{}x{}", w, h);
@@ -111,7 +111,7 @@ TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer
 {
 }
 
-void TextureManager::update()
+void TextureManager::update(const XFormer& xf)
 {
 	TextureUpdate update;
 	while (_loadQueue.tryPop(update))
@@ -125,8 +125,8 @@ void TextureManager::update()
 #			endif
 			// This is an old surface. Discard it.
 			SDL_FreeSurface(update.surface);
-			for(size_t i=0; i<update.surfaceVec.size(); i++) {
-				SDL_FreeSurface(update.surfaceVec[i]);
+			for(size_t i=0; i<update.textVec.size(); i++) {
+				SDL_FreeSurface(update.textVec[i].surface);
 			}
 			continue;
 		}
@@ -150,8 +150,8 @@ void TextureManager::update()
 			}
 			SDL_Rect surfaceSize{ 0, 0, 0, 0 };
 			int y = 0;
-			for (size_t i = 0; i < update.surfaceVec.size(); i++) {
-				SDL_Surface* surface = update.surfaceVec[i];
+			for (size_t i = 0; i < update.textVec.size(); i++) {
+				SDL_Surface* surface = update.textVec[i].surface;
 				if (surface) {
 					SDL_Rect src{ 0, 0, surface->w, surface->h };
 					SDL_Rect dst{ 0, y, surface->w, surface->h };
@@ -163,13 +163,15 @@ void TextureManager::update()
 
 					int e = SDL_BlitSurface(surface, &src, target, &dst);
 					assert(e == 0);
+					int space = xf.s(update.textVec[i].space);;
+					dst.h += space;
 					surfaceSize = UnionRect(surfaceSize, dst);
-					y += surface->h;
+					y += surface->h + space;
 
 					SDL_FreeSurface(surface);
 				}
 			}
-			texture->_surfaceSize = Size{surfaceSize.w, surfaceSize.h};
+			texture->_surfaceSize = lurp::Size{surfaceSize.w, surfaceSize.h};
 			SDL_UnlockTexture(texture->_sdlTexture);
 		}
 		else {

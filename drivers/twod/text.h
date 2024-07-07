@@ -34,14 +34,15 @@ enum class MouseState {
 */
 class TextBox {
 	friend class FontManager;
+	friend class RenderFontTask;
 
 public:
 	TextBox();
 	~TextBox();
 
-	Point pos = Point{ 0, 0 };	// in screen!
+	lurp::Point pos;	// in screen!
 
-	size_t size() const { return _text.size(); }
+	size_t size() const { return _row.size(); }
 	void resize(size_t s);
 
 	void setFont(const Font* font) { setFont(0, font);  }
@@ -53,18 +54,20 @@ public:
 	void setText(size_t i, const std::string& text);
 	void setColor(size_t i, SDL_Color color);
 	void setBgColor(size_t i, SDL_Color color);
+	void setSpace(size_t i, int virtualSpaceAfter);
 
-	const Font* font(size_t i = 0) const { return _font[i]; }
-	const std::string& text(size_t i = 0) const { return _text[i]; }
-	SDL_Color color(size_t i = 0) const { return _color[i]; }
+	const Font* font(size_t i = 0) const { return _row[i].font; }
+	const std::string& text(size_t i = 0) const { return _row[i].text; }
+	SDL_Color color(size_t i = 0) const { return _row[i].color; }
+	int spacing(size_t i = 0) const { return _row[i].virtualSpace; }
 	SDL_Color bgColor() const { return _bg; }
 
-	Size virtualSize() const { return _virtualSize;	}
+	lurp::Size virtualSize() const { return _virtualSize;	}
 	// Note that surface is in screen, not virtual.
-	Size surfaceSize() const { return _texture->surfaceSize(); }
+	lurp::Size surfaceSize() const { return _texture->surfaceSize(); }
 
 	void enableInteraction(bool enable) { _interactive = enable; }
-	bool hitTest(const Point& screen) const;
+	bool hitTest(const lurp::Point& screen) const;
 	MouseState mouseState() const { return _mouseState; }
 
 private:
@@ -72,22 +75,26 @@ private:
 	bool _interactive = false;
 
 	std::shared_ptr<Texture> _texture;
-	Size _virtualSize;
+	lurp::Size _virtualSize;
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
 	MouseState _mouseState = MouseState::none;
 
 	const Font* _font0 = nullptr;
-	std::vector<const Font*> _font;
-	std::vector<std::string> _text;
-	std::vector<SDL_Color> _color;
+	struct Row {
+		const Font* font = nullptr;
+		std::string text;
+		SDL_Color color = { 255, 255, 255, 255 };
+		int virtualSpace = 0;
+	};
+	std::vector<Row> _row;
 };
 
 /*
 * A VBox is a collection of TextBoxes, and does the same layout.
 * The advantage is that a VBox can be hit tested for individual TextBoxes.
-* The disadvantage is that it uses more memory.
+* The disadvantage is that it uses more video memory.
 */
 class VBox {
 	friend class FontManager;
@@ -123,10 +130,10 @@ public:
 
 	// Note it draws in real pixels (like ::Draw)
 	void Draw(const std::shared_ptr<TextBox>& tf) const;
-	void Draw(const VBox& vbox, const Point& p) const;
+	void Draw(const VBox& vbox, const lurp::Point& p) const;
 
-	void doMove(const Point& screen, const Point& virt);
-	std::shared_ptr<TextBox> doButton(const Point& screen, const Point& virt, bool down);
+	void doMove(const lurp::Point& screen, const lurp::Point& virt);
+	std::shared_ptr<TextBox> doButton(const lurp::Point& screen, const lurp::Point& virt, bool down);
 
 	void toggleQuality();
 

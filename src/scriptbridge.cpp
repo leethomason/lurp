@@ -5,6 +5,7 @@
 #include "scriptasset.h"
 #include "util.h"
 #include "../drivers/platform.h"
+#include "markdown.h"
 
 #include <ionic/ionic.h>
 #include <plog/Log.h>
@@ -65,6 +66,7 @@ bool TableIt::isTableWithKV(const std::string& key, const std::string& value)
 	return result;
 }
 
+#if 0
 static void Dump(lua_State* L, int index)
 {
 	int t = lua_type(L, index);
@@ -94,6 +96,7 @@ static void DumpStack(lua_State* L, int n) {
 		fmt::print("\n");
 	}
 }
+#endif
 
 ScriptBridge::ScriptBridge()
 {
@@ -163,7 +166,7 @@ void ScriptBridge::registerCallbacks()
 	LuaStackCheck check(L);
 
 	// Register c callback funcs
-	static const int NUM_FUNCS = 8;
+	static const int NUM_FUNCS = 9;
 	static const Func funcs[NUM_FUNCS] = {
 		{ "CRandom", &l_CRandom },
 		{ "CDeltaItem", &l_CDeltaItem},
@@ -173,6 +176,7 @@ void ScriptBridge::registerCallbacks()
 		{ "CAllTextRead", &l_CAllTextRead},
 		{ "CMove", &l_CMove},
 		{ "CEndGame", &l_CEndGame},
+		{ "CLoadMD", &l_CLoadMD}
 	};
 	for (int i = 0; i < NUM_FUNCS; i++) {
 		lua_pushlightuserdata(L, this);
@@ -206,8 +210,8 @@ void ScriptBridge::appendLuaPath(const std::string& path)
 
 void ScriptBridge::doFile(const std::string& filename)
 {
-
 	LuaStackCheck check(L);
+
 
 	std::string cwd;
 	CheckPath(filename, cwd);
@@ -216,7 +220,13 @@ void ScriptBridge::doFile(const std::string& filename)
 		PLOG(plog::error) << fmt::format("Occurs when calling luaL_loadfile() 0x{:x}", error);
 		PLOG(plog::error) << fmt::format("Msg: '{}'", lua_tostring(L, -1));
 	}
+	
+	std::filesystem::path path = filename;
+	_currentDir = path.parent_path();
+
 	error = lua_pcall(L, 0, LUA_MULTRET, 0);
+	_currentDir.clear();
+
 	if (error) {
 		PLOG(plog::error) << fmt::format("Error Iitializing file '{}'.", filename);
 		PLOG(plog::error) << fmt::format("Occurs when calling lua_pcall() 0x{:x}", error);
@@ -269,7 +279,7 @@ void ScriptBridge::setGlobal(const std::string& key, const Variant& value)
 	lua_setglobal(L, key.c_str());
 }
 
-void ScriptBridge::pushGlobal(const std::string& key)
+void ScriptBridge::pushGlobal(const std::string& key) const
 {
 	LuaStackCheck check(L, 1);
 	int t = lua_getglobal(L, key.c_str());
@@ -290,7 +300,7 @@ void ScriptBridge::callGlobalFunc(const std::string& name)
 	lua_call(L, 0, 0);
 }
 
-void ScriptBridge::pushTable(const std::string& key, int index)
+void ScriptBridge::pushTable(const std::string& key, int index) const
 {
 	assert(!key.empty() || index > 0);
 	assert(lua_type(L, -1) == LUA_TTABLE);
@@ -395,6 +405,58 @@ std::vector<int> ScriptBridge::getIntArray(const std::string& key) const
 	return r;
 }
 
+Point ScriptBridge::GetPointField(const std::string& key, const std::optional<Point>& def) const
+{
+	Point p;
+	LuaStackCheck check(L);
+
+	std::vector<int> vec = getIntArray(key);
+	if (vec.size() == 2) {
+		p.x = vec[0];
+		p.y = vec[1];
+	}
+	else if (def) {
+		p = def.value();
+	}
+	return p;
+}
+
+Rect ScriptBridge::GetRectField(const std::string& key, const std::optional<Rect>& def) const
+{
+	Rect r;
+	LuaStackCheck check(L);
+
+	std::vector<int> vec = getIntArray(key);
+	if (vec.size() == 4) {
+		r.x = vec[0];
+		r.y = vec[1];
+		r.w = vec[2];
+		r.h = vec[3];
+	}
+	else if (def) {
+		r = def.value();
+	}
+	return r;
+}
+
+Color ScriptBridge::GetColorField(const std::string& key, const std::optional<Color>& def) const
+{
+	Color c;
+	LuaStackCheck check(L);
+
+	std::vector<int> vec = getIntArray(key);
+	if (vec.size() == 4) {
+		c.r = (uint8_t) vec[0];
+		c.g = (uint8_t) vec[1];
+		c.b = (uint8_t) vec[2];
+		c.a = (uint8_t) vec[3];
+	}
+	else if (def) {
+		c = def.value();
+	}
+	return c;
+}
+
 void ScriptBridge::setIntArray(const std::string& key, const std::vector<int>& values)
 {
 	LuaStackCheck check(L);
@@ -488,7 +550,8 @@ void ScriptBridge::setStrField(const std::string& key, const std::string& value)
 
 	LuaStackCheck check(L);
 	Variant v;
-	assert(lua_type(L, -1) == LUA_TTABLE); // -1 table
+	int tMinusOne = lua_type(L, -1);
+	assert(tMinusOne == LUA_TTABLE); // -1 table
 	if (!key.empty())
 		lua_pushstring(L, key.c_str());	// -2 table -1 key
 	else
@@ -817,6 +880,12 @@ Script ScriptBridge::readScript() const
 EntityID ScriptBridge::readEntityID(const std::string& key, const std::optional<EntityID>& def) const
 {
 	std::string id;
+	int tMinusOne = lua_type(L, -1);
+	if (tMinusOne != LUA_TTABLE) {
+		assert(tMinusOne == LUA_TTABLE); // -1 table
+		throw std::runtime_error("Error parsing entity");
+	}
+	
 	Variant v = getField(L, key, 0);
 	if (v.type == LUA_TSTRING) {
 		id = v.str;
@@ -1087,7 +1156,9 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	// parent_path:    `./game`
 	// need to append: 'game'
 	appendLuaPath(path.parent_path().string());
+	_currentCSA = &csa;
 	doFile(inputFilePath);
+	_currentCSA = nullptr;
 
 	READ_ASSET("Scripts", "Script", scripts, readScript);
 	READ_ASSET("Texts", "Text", texts, readText);
@@ -1115,6 +1186,29 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	PLOG(plog::info) << fmt::format("LUA memory usage: {} KB", kbytes);
 
 	return csa;
+}
+
+std::vector<Text> ScriptBridge::LoadMD(const std::string& filename)
+{
+	LuaStackCheck check(L);
+
+	std::string text;
+	std::filesystem::path path = _currentDir / filename;
+	try {
+		std::ifstream stream(path);
+		std::stringstream buffer;
+		buffer << stream.rdbuf();
+		text = buffer.str();
+	}
+	catch (std::exception& e) {
+		PLOG(plog::error) << fmt::format("Error loading MD file '{}': {}", path.string(), e.what());
+	}
+
+	std::vector<Text> tVec;
+	if (!text.empty()) {
+		tVec = Text::parseMarkdownFile(text);
+	}
+	return tVec;
 }
 
 /*static*/ int ScriptBridge::l_CRandom(lua_State* L)
@@ -1235,5 +1329,18 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 		bridge->_iMapHandler->endGame(reason, bias);
 	return 0;
 }
+
+/*static*/ int ScriptBridge::l_CLoadMD(lua_State* L)
+{
+	ScriptBridge* bridge = (ScriptBridge*)lua_touserdata(L, lua_upvalueindex(1));
+
+	std::string fname = lua_tostring(L, 1);
+
+	std::vector<Text> tVec = bridge->LoadMD(fname);
+	assert(bridge->_currentCSA);
+	bridge->_currentCSA->texts.insert(bridge->_currentCSA->texts.end(), tVec.begin(), tVec.end());
+	return 0;
+}
+
 
 } // namespace lurp

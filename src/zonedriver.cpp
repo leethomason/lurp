@@ -175,6 +175,9 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 
 bool ZoneDriver::filterInteraction(const Interaction& i)
 {
+	// This should only be at the zone level - no ScriptDriver
+	assert(!_scriptDriver.get());
+
 	bool eval = true;
 	ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), NO_ENTITY };
 	ScriptHelper helper(_bridge, mapData.coreData, env);

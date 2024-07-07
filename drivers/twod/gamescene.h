@@ -3,7 +3,7 @@
 #include "scene.h"
 #include "texture.h"
 #include "text.h"
-#include "config.h"
+#include "config2d.h"
 
 #include "scriptbridge.h"
 #include "scriptasset.h"
@@ -27,12 +27,20 @@ public:
 	virtual void draw(Drawing&, const FrameData& f, const XFormer& xformer) override;
 	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
-	virtual void mouseMotion(FontManager&, const Point& /*screen*/, const Point& /*virt*/) override;
-	virtual void mouseButton(FontManager&, const Point& /*screen*/, const Point& /*virt*/, bool /*down*/) override;
+	virtual void mouseMotion(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/) override;
+	virtual void mouseButton(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/, bool /*down*/) override;
 
 private:
-	// Image region
-	std::shared_ptr<Texture> _imageTexture;
+	using TextureRef = std::pair<int, std::shared_ptr<Texture>>;
+
+	// mutable version of GameRegion
+	struct Region {
+		std::string name;
+		lurp::Rect position;
+		std::vector<TextureRef> images;
+	};
+
+	std::vector<Region> _regions;
 
 	// Text region (main i/o)
 	static constexpr int kMaxOptions = 16;
@@ -50,7 +58,7 @@ private:
 	// Auxillary info region
 	std::shared_ptr<TextBox> _infoText;
 
-	const GameRegion* getRegion(GameRegion::Type type, const std::vector<GameRegion>& regions);
+	const GameRegion* getRegion(const std::string& name, const std::vector<GameRegion>& regions);
 
 	// Game -------------------
 	lurp::ScriptBridge _bridge;

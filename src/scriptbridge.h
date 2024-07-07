@@ -4,10 +4,12 @@
 #include "scriptdriver.h"
 #include "scripttypes.h"
 #include "util.h"
+#include "geom.h"
 
 #include <vector>
 #include <string>
 #include <optional>
+#include <filesystem>
 
 extern "C" struct lua_State;
 
@@ -61,8 +63,8 @@ public:
 	}
 
 	void loadLUA(const std::string& path);
-	// Read the CSAs. 
 	ConstScriptAssets readCSA(const std::string& path);
+	std::vector<Text> LoadMD(const std::string& filename);
 
 	lua_State* getLuaState() const { return L; }
 
@@ -75,8 +77,8 @@ public:
 		}
 	};
 	void setGlobal(const std::string& key, const Variant& value);
-	void pushGlobal(const std::string& key);
-	void pushTable(const std::string& key, int index = 0);
+	void pushGlobal(const std::string& key) const;
+	void pushTable(const std::string& key, int index = 0) const;
 	void pushNewGlobalTable(const std::string& key);
 	void pushNewTable(const std::string& key, int index = 0);
 	void pop(int n = 1);
@@ -93,6 +95,11 @@ public:
 	std::vector<std::string> getStrArray(const std::string& key) const;
 	std::vector<StringCount> getStrCountArray(const std::string& key) const;
 	std::vector<int> getIntArray(const std::string& key) const;
+
+	Point GetPointField(const std::string& key, const std::optional<Point>& def) const;
+	Rect GetRectField(const std::string& key, const std::optional<Rect>& def) const;
+	Color GetColorField(const std::string& key, const std::optional<Color>& def) const;
+
 	static Variant getField(lua_State* L, const std::string& key, int index, bool raw = false);
 
 	void setStrField(const std::string& key, const std::string& value);
@@ -135,6 +142,9 @@ private:
 	IAssetHandler* _iAssetHandler = nullptr;
 	int _iCoreCount = 0;
 
+	std::filesystem::path _currentDir;
+	ConstScriptAssets* _currentCSA = nullptr;	// for md callback. hacky.
+
 	void registerCallbacks();
 
 	Zone readZone() const;
@@ -172,6 +182,7 @@ private:
 	static int l_CAllTextRead(lua_State* L);
 	static int l_CMove(lua_State* L);
 	static int l_CEndGame(lua_State* L);
+	static int l_CLoadMD(lua_State* L);
 };
 
 struct TableIt

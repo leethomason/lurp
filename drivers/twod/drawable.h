@@ -7,15 +7,15 @@ class TextureManager;
 class FontManager;
 struct nk_context;
 struct SDL_Renderer;
-struct GameConfig;
+struct GameConfig2D;
 
 struct Drawing {
-	Drawing(SDL_Renderer* renderer, TextureManager& textureManager, FontManager& fontManager, const GameConfig& config) : renderer(renderer), textureManager(textureManager), fontManager(fontManager), config(config) {}
+	Drawing(SDL_Renderer* renderer, TextureManager& textureManager, FontManager& fontManager, const GameConfig2D& config) : renderer(renderer), textureManager(textureManager), fontManager(fontManager), config(config) {}
 
 	SDL_Renderer* renderer;
 	TextureManager& textureManager; 
 	FontManager& fontManager;
-	const GameConfig& config;
+	const GameConfig2D& config;
 };
 
 struct FrameData {
