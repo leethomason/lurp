@@ -18,13 +18,13 @@ NewsItem NewsItem::itemDelta(const Item& item, int delta, int count)
 	ni.count = count;
 
 	if (delta == 1) {
-		ni.text = fmt::format("One {} added to inventory.", item.name);
+		ni.text = fmt::format("{} added to inventory.", item.name);
 	} 
 	else if (delta > 1) {
 		ni.text = fmt::format("{} {}s added to inventory.", delta, item.name);
 	}
 	else if (delta == -1) {
-		ni.text = fmt::format("One {} removed from inventory.", item.name);
+		ni.text = fmt::format("{} removed from inventory.", item.name);
 	}
 	else if (delta < -1) {
 		ni.text = fmt::format("{} {}s removed from inventory.", -delta, item.name);

@@ -124,7 +124,7 @@ void GameScene::addNavigation(Drawing& d)
 			if (de.dir == lurp::Edge::Dir::kUnknown)
 				text = fmt::format("{}", de.name);
 			else
-				text = fmt::format("{}:\t{}", de.dirLong, de.name);
+				text = fmt::format("{}: {}", de.dirLong, de.name);
 
 			Option opt;
 			opt.type = Option::Type::kDir;
@@ -158,8 +158,13 @@ void GameScene::addContainers(Drawing& d)
 		}
 		else {
 			const lurp::Inventory& inv = _zoneDriver->getInventory(*c);
-			std::string istr = inventoryString(inv);
-			text = fmt::format("{} ({})", c->name, istr);
+			if (inv.items().empty()) {
+				text = c->name;
+			}
+			else {
+				std::string istr = inventoryString(inv);
+				text = fmt::format("{} ({})", c->name, istr);
+			}
 		}
 
 		Option opt;
