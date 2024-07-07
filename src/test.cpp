@@ -1507,10 +1507,18 @@ static void TestChullu()
 	TEST(mr == ZoneDriver::MoveResult::kSuccess);
 	TEST(driver.currentRoom().name == "The SF City Library");
 	FlushText(driver);
+
+	TEST(driver.mode() == ZoneDriver::Mode::kChoices);	// "Steal it?"
+	TEST(driver.choices().choices.size() == 1);
+	driver.choose(0);
+	FlushText(driver);
+	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
+
 	{
 		const Inventory& inv = driver.getInventory(driver.getPlayer());
 		TEST(inv.numItems(assets.getItem("HAIRPIN")) == 1);
 	}
+	TEST(driver.mode() == ZoneDriver::Mode::kNavigation);
 
 	InteractionVec interactions = driver.getInteractions();
 	TEST(interactions.size() == 1);
