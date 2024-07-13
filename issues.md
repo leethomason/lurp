@@ -1,26 +1,24 @@
 # Issues
 
 ## Open Issues
-* SDL work (2D)
 
 ## Open / Next
-
-### General
 
 * Show status effects during combat
 * save / load
   * Auto-save before battle
   * manage multiple save files
   * select default load
-* OSX
-  * OSX - deploy
-* Linux
-  * Linux - deploy
+* Deploy game
+  * Windows
+  * OSX
+  * Linux
 * Actors move between rooms
 * Inventory
   * management
   * select active melee / ranged / armor
-* Parties
+* hot reload (console + 2D) & hot re-layout (2D)
+* rework battle system to be more narrative
 
 ### 2D Driver
 
@@ -34,11 +32,14 @@
   * audio driver
   * music player
   * event sounds
+* 2D Linux
+* 2D OSX
 
 ## Ideas / Icebox
 
 * error if calling random in eval() or test()
 * multi-threaded driver
+* Parties
 
 ## Done
 
