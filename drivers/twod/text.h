@@ -48,6 +48,7 @@ public:
 	void setFont(const Font* font) { setFont(0, font);  }
 	void setText(const std::string& text) { setText(0, text); }
 	void setColor(SDL_Color color) { setColor(0, color); }
+
 	void setBgColor(SDL_Color color);
 
 	void setFont(size_t i, const Font* font);
@@ -66,9 +67,12 @@ public:
 	// Note that surface is in screen, not virtual.
 	lurp::Size surfaceSize() const { return _texture->surfaceSize(); }
 
+	// Interaction only works if the text is transparent. (Else the background will also transform.)
 	void enableInteraction(bool enable) { _interactive = enable; }
+	bool interactive() const { return _interactive; }
 	bool hitTest(const lurp::Point& screen) const;
 	MouseState mouseState() const { return _mouseState; }
+	void setStateColors(SDL_Color normal, SDL_Color over, SDL_Color down, SDL_Color disabled);
 
 private:
 	bool _needUpdate = false;
@@ -79,9 +83,16 @@ private:
 
 	bool _hqOpaque = false;
 	SDL_Color _bg = SDL_Color{ 0, 0, 0, 255 };
+
+	SDL_Color _normalColor = { 192, 192, 192, 255 };
+	SDL_Color _overColor = { 255, 255, 255, 255 };
+	SDL_Color _downColor = { 224, 224, 224, 255 };
+	SDL_Color _disabledColor = { 128, 128, 128, 255 };
+
 	MouseState _mouseState = MouseState::none;
 
 	const Font* _font0 = nullptr;
+
 	struct Row {
 		const Font* font = nullptr;
 		std::string text;

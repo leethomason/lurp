@@ -9,7 +9,7 @@ struct SDL_Surface;
 struct TextureUpdate {
 	struct TextUpdate {
 		SDL_Surface* surface = nullptr;
-		int space = 0;
+		int virtualSpace = 0;
 	};
 
 	std::shared_ptr<Texture> texture;

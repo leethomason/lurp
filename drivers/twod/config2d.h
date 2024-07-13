@@ -35,12 +35,21 @@ struct GameConfig2D {
 	// File
 	lurp::Point size = { 1920, 1080 };
 	lurp::Color textColor = { 255, 255, 255, 255 };
-	lurp::Color optionColor = { 0, 148, 255, 255 };
-	lurp::Color choiceColor = { 0, 148, 255, 255 };
+
+	lurp::Color navNormalColor = { 0, 148, 230, 255 };
+	lurp::Color navOverColor = { 0, 148, 255, 255 };
+	lurp::Color navDownColor = { 0, 148, 240, 255 };
+	lurp::Color navDisabledColor = { 0, 74, 128, 255 };
+
+	lurp::Color optionNormalColor = { 0, 148, 230, 255 };
+	lurp::Color optionOverColor = { 0, 148, 255, 255 };
+	lurp::Color optionDownColor = { 0, 148, 240, 255 };
+	lurp::Color optionDisabledColor = { 0, 74, 128, 255 };
+
 	lurp::Color backgroundColor = { 0, 0, 0, 255 };
 
 	std::string fontName;
-	int fontSize = 32;
+	int fontSize = 28;
 	std::string uiFont;
 	int uiFontSize = 48;
 

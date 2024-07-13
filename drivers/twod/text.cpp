@@ -131,6 +131,14 @@ void TextBox::setBgColor(SDL_Color color) {
 	}
 }
 
+void TextBox::setStateColors(SDL_Color normal, SDL_Color over, SDL_Color down, SDL_Color disabled)
+{
+	_normalColor = normal;
+	_overColor = over;
+	_downColor = down;
+	_disabledColor = disabled;
+}
+
 bool TextBox::hitTest(const lurp::Point& screen) const
 {
 	if (!_texture->ready())
@@ -223,6 +231,8 @@ void FontManager::update(const XFormer& xf)
 	for (auto& tf : _textFields) {
 		if (tf->_needUpdate) {
 			tf->_needUpdate = false;
+			tf->_mouseState = MouseState::none;
+
 			RenderFontTask* task = new RenderFontTask();
 			task->_texture = tf->_texture;
 			task->_queue = &_textureManager._loadQueue;
@@ -293,22 +303,28 @@ void FontManager::Draw(const VBox& vbox, const lurp::Point& p) const
 	for (size_t i = 0; i < vbox.boxes.size(); i++) {
 		static constexpr SDL_Color white{ 255, 255, 255, 255 };
 
-		const std::shared_ptr<TextBox>& tf = vbox.boxes[i];
-		MouseState state = tf->mouseState();
+		const std::shared_ptr<TextBox>& tbox = vbox.boxes[i];
 
-		switch (state) {
-		case MouseState::none:
-			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), vbox._upColor.r, vbox._upColor.g, vbox._upColor.b);
-			break;
-		case MouseState::over:
-			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), 255, 255, 255);
-			break;
-		case MouseState::down:
-			SDL_SetTextureColorMod(tf->_texture->sdlTexture(), 192, 192, 192);
+		if (tbox->interactive()) {
+			MouseState state = tbox->mouseState();
+
+			switch (state) {
+			case MouseState::none:
+				SDL_SetTextureColorMod(tbox->_texture->sdlTexture(), tbox->_normalColor.r, tbox->_normalColor.g, tbox->_normalColor.b);
+				break;
+			case MouseState::over:
+				SDL_SetTextureColorMod(tbox->_texture->sdlTexture(), tbox->_overColor.r, tbox->_overColor.g, tbox->_overColor.b);
+				break;
+			case MouseState::down:
+				SDL_SetTextureColorMod(tbox->_texture->sdlTexture(), tbox->_downColor.r, tbox->_downColor.g, tbox->_downColor.b);
+			}
 		}
-		tf->pos = lurp::Point{ p.x, y };
-		Draw(tf);
-		y += tf->surfaceSize().h;
+		else {
+			SDL_SetTextureColorMod(tbox->_texture->sdlTexture(), white.r, white.g, white.b);
+		}
+		tbox->pos = lurp::Point{ p.x, y };
+		Draw(tbox);
+		y += tbox->surfaceSize().h;
 	}
 }
 
