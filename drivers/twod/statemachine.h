@@ -6,7 +6,7 @@
 class StateMachine
 {
 public:
-	StateMachine(const GameConfig2D& gameConfig);
+	StateMachine();
 
 	std::shared_ptr<Scene> tick(FrameData* frameData);
 
@@ -25,7 +25,6 @@ private:
 	std::shared_ptr<Scene> makeNewScene(Type t);
 
 	bool _done = false;
-	GameConfig2D _gameConfig;
 	std::shared_ptr<Scene> _currentScene;
 	Type _type = Type::kNone;
 };

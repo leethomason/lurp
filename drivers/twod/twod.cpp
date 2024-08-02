@@ -153,6 +153,11 @@ int main(int argc, char* argv[])
 	PLOG(plog::info) << "Linked against SDL version " << (int)linked.major << "." << (int)linked.minor << "." << (int)linked.patch;
 	int rc = -1;
 
+	{
+		SDL_RendererInfo rendererInfo;
+		SDL_GetRendererInfo(sdlRenderer, &rendererInfo);
+		PLOG(plog::info) << fmt::format("SDL renderer = {}  Texture max = {}x{}", rendererInfo.name, rendererInfo.max_texture_width, rendererInfo.max_texture_width);
+	}
 #if defined(_DEBUG) && defined(_WIN32)
 	// plog::init throws off memory tracking.
 	_CrtMemState s1, s2, s3;
@@ -188,15 +193,18 @@ int main(int argc, char* argv[])
 		gameConfig1D.startingZone = startingZone;
 		GameConfig2D gameConfig = GameConfig2D::demoConfig2D(gameConfig1D);
 
-		StateMachine machine(gameConfig);
+		StateMachine machine;
 
 		if (doAssetsTest) {
 			gameConfig.size = { 800, 600 };
 			machine.setStart(StateMachine::Type::kTest);
 		}
-		else {
+		else if (!startWhere.empty()) {
 			if (startWhere == "new")
 				machine.setStart(StateMachine::Type::kGame);
+			else {
+				assert(false);
+			}
 		}
 
 		XFormer xFormer(gameConfig.size.x, gameConfig.size.y);
@@ -206,10 +214,6 @@ int main(int argc, char* argv[])
 			SDL_RenderSetClipRect(sdlRenderer, &clip);
 			PLOG(plog::info) << fmt::format("SDL renderer = {}x{}", renderW, renderH);
 		}
-
-		SDL_RendererInfo rendererInfo;
-		SDL_GetRendererInfo(sdlRenderer, &rendererInfo);
-		PLOG(plog::info) << fmt::format("SDL renderer = {}  Texture max = {}x{}", rendererInfo.name, rendererInfo.max_texture_width, rendererInfo.max_texture_width);
 
 		TextureManager textureManager(pool, sdlRenderer);
 		std::shared_ptr<Texture> atlas = textureManager.loadTexture("assets/ascii.png");

@@ -10,7 +10,7 @@
 #include <fmt/core.h>
 #include <SDL2/SDL.h>
 
-StateMachine::StateMachine(const GameConfig2D& gameConfig) : _gameConfig(gameConfig)
+StateMachine::StateMachine()
 {
 }
 
@@ -71,10 +71,6 @@ std::shared_ptr<Scene> StateMachine::tick(FrameData* frameData)
 			_currentScene = makeNewScene(Type::kGame);
 			newScene = true;
 		}
-		// FIXME: add other states
-		//else {
-		//	FATAL_INTERNAL_ERROR();
-		//}
 	}
 
 	if (newScene) {

@@ -267,29 +267,30 @@ void GameScene::addRoom(Drawing& d)
 
 	std::shared_ptr<TextBox>& tb = _infoText;
 	
-	size_t start = tb->size();
 	if (!zone.name.empty()) {
+		size_t start = tb->size();
 		tb->resize(start + 1);
 		tb->setText(start, zone.name);
 		tb->setColor(start, { 192, 192, 192, 255 });
 	}
 
-	start = tb->size();
 	if (!room.name.empty()) {
+		size_t start = tb->size();
 		tb->resize(start + 1);
 		tb->setText(start, room.name);
 		tb->setColor(start, { 255, 255, 255, 255 });
 		tb->setSpace(start, d.config.font->pointSize);
 	}
 
-	start = tb->size();
 	if (!room.desc.empty()) {
+		size_t start = tb->size();
 		tb->resize(start + 1);
 		tb->setText(start, room.desc);
 		tb->setColor(start, { 192, 192, 192, 255 });
 	}
-	if (start)
-		tb->setSpace(start, d.config.font->pointSize);
+
+	if (tb->size())
+		tb->setSpace(tb->size() - 1, d.config.font->pointSize);
 }
 
 void GameScene::addInventory(Drawing& d)
