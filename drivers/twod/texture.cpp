@@ -41,7 +41,7 @@ public:
 		_texture->_size = lurp::Size({ surface->w, surface->h });
 		//_texture->_bytes = surface->format->BytesPerPixel;
 
-		TextureUpdate update{ _texture, surface, _generation };
+		TextureUpdateMsg update{ _texture, surface, _generation };
 #if DEBUG_TEXTURES
 		fmt::print("TextureLoadTask -> queue: '{}' {}x{}\n", _texture->path(), _texture->width(), _texture->height());
 #endif
@@ -80,14 +80,16 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path
 #endif
 	auto ptr = std::shared_ptr<Texture>(texture);
 
-	TextureLoadTask* task = new TextureLoadTask();
-	task->_texture = ptr;
-	task->_queue = &_loadQueue;
-	task->_generation = ++_generation;
-
-	_pool.AddTaskSetToPipe(task);
+	fireTextureTask(ptr);
 	_textures.push_back(ptr);
 	return ptr;
+}
+
+void TextureManager::reload()
+{
+	for (auto& t : _textures) {
+		fireTextureTask(t);
+	}
 }
 
 std::shared_ptr<Texture> TextureManager::createTextField(int w, int h)
@@ -111,9 +113,20 @@ TextureManager::TextureManager(enki::TaskScheduler& pool, SDL_Renderer* renderer
 {
 }
 
+void TextureManager::fireTextureTask(std::shared_ptr<Texture> texture)
+{
+	TextureLoadTask* task = new TextureLoadTask();
+	task->_texture = texture;
+	task->_queue = &_loadQueue;
+	task->_generation = ++_generation;
+
+	_pool.AddTaskSetToPipe(task);
+
+}
+
 void TextureManager::update(const XFormer& xf)
 {
-	TextureUpdate update;
+	TextureUpdateMsg update;
 	while (_loadQueue.tryPop(update))
 	{
 		std::shared_ptr<Texture> texture = update.texture;

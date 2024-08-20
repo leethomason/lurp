@@ -79,7 +79,6 @@ private:
 	enum class Type {
 		texture,		// simple texture reference
 		textfield,		// has a _surfaceSize set
-		vbox			// update loop managed separately
 	};
 	Type _type = Type::texture;
 
@@ -104,6 +103,7 @@ public:
 	// std::shared_ptr<Texture> getTexture(const std::string& name) const;
 	std::shared_ptr<Texture> createTextField(int w, int h);
 
+	void reload();
 	void update(const XFormer& xf);
 	void freeAll();
 
@@ -129,6 +129,8 @@ private:
 	enki::TaskScheduler& _pool;
 	TextureLoadQueue _loadQueue;
 	std::vector<std::shared_ptr<Texture>> _textures;
+
+	void fireTextureTask(std::shared_ptr<Texture>);
 };
 
 void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, SDL_Color c1, SDL_Color c2, const XFormer& xf);

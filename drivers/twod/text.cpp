@@ -21,7 +21,7 @@ public:
 
 	virtual void ExecuteRange(enki::TaskSetPartition /*range_*/, uint32_t /*threadnum_*/) override 
 	{
-		TextureUpdate update{ _texture, nullptr, _generation, _hqOpaque, _bg };
+		TextureUpdateMsg update{ _texture, nullptr, _generation, _hqOpaque, _bg };
 
 		{
 			// TTF, it turns out, is not thread safe.
@@ -48,7 +48,7 @@ public:
 					}
 					assert(surface);
 				}
-				TextureUpdate::TextUpdate t = { surface, _row[i].virtualSpace};
+				TextureUpdateMsg::TextUpdate t = { surface, _row[i].virtualSpace};
 				update.textVec.push_back(t);
 			}
 		}
