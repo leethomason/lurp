@@ -5,6 +5,7 @@
 
 namespace lurp {
 
+#if 0
 bool GameConfig::validatePath(const std::filesystem::path& dir, const std::string& stem) const
 {
 	// Order:
@@ -29,5 +30,22 @@ bool GameConfig::validatePath(const std::filesystem::path& dir, const std::strin
 	assert(false);
 	return false;
 }
+#endif
+
+#if 0
+std::filesystem::path GameConfig::getAssetPath(const std::string& asset) const
+{
+	for (const auto& dir : assetsDirs) {
+		std::filesystem::path p = dir / asset;
+		if (std::filesystem::exists(p)) {
+			return p;
+		}
+	}
+
+	PLOG(plog::warning) << "Asset does not exist: '" << asset << "'";
+	assert(false);
+	return {};
+}
+#endif
 
 } // namespace lurp

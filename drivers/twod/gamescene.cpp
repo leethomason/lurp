@@ -2,6 +2,7 @@
 #include "config.h"
 #include "zonedriver.h"
 #include "text.h"
+#include "../platform.h"
 
 void GameScene::load(Drawing& d, const FrameData& f)
 {
@@ -15,7 +16,9 @@ void GameScene::load(Drawing& d, const FrameData& f)
 		reg.name = r.name;
 		reg.position = r.position;
 		if (!r.image.empty()) {
-			reg.images.push_back({ 0, d.textureManager.loadTexture(d.config.config.assetsDir / r.image) });
+			std::filesystem::path p = lurp::ConstructAssetPath(d.config.config.assetsDirs, { r.image });
+			if (p.empty()) continue;
+			reg.images.push_back({ 0, d.textureManager.loadTexture(p) });
 		}
 	}
 

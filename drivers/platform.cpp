@@ -52,6 +52,62 @@ std::ifstream OpenLoadStream(const std::filesystem::path& path)
     return stream;
 }
 
+static std::filesystem::path ConstructAssetPathLower(const std::vector<std::filesystem::path>& assetsDirs, const std::filesystem::path& file)
+{
+    for (const auto& dir : assetsDirs) {
+        if (dir.empty() || file.empty()) {
+            continue;
+        }
+
+        std::filesystem::path p = dir / file;
+        if (std::filesystem::exists(p)) {
+            return p;
+        }
+    }
+    return {};
+}
+
+std::filesystem::path ConstructAssetPath(const std::vector<std::filesystem::path>& assetsDirs, const std::vector<std::string>& files)
+{
+    for (const auto& _file : files) {
+        if (_file.empty()) {
+			continue;
+		}
+        std::filesystem::path file = _file;
+
+        if (!file.has_extension()) {
+            // Assume we want the image files.
+            // QOI is the fast loading version of PNG
+            std::filesystem::path result = ConstructAssetPathLower(assetsDirs, { _file + ".qoi" });
+
+            // Then assume png
+            if (result.empty()) {
+                result = ConstructAssetPathLower(assetsDirs, { _file + ".png" });
+            }
+
+            // Finally try jpeg
+            if (result.empty()) {
+                result = ConstructAssetPathLower(assetsDirs, { _file + ".jpg" });
+            }
+
+            if (!result.empty()) {
+                return result;
+            }
+        }
+        else {
+            std::filesystem::path result = ConstructAssetPathLower(assetsDirs, file);
+            if (!result.empty()) {
+                return result;
+            }
+        }
+    }
+
+	PLOG(plog::warning) << fmt::format("Asset does not exist: '{}'", files[0]);
+	assert(false);
+	return {};
+}
+
+#if 0
 std::filesystem::path ConstructAssetPath(const std::string& assets, const std::string& file, std::optional<std::string> defaultFullPath, bool validate)
 {
     std::filesystem::path assetsFS = std::filesystem::path(assets);
@@ -81,7 +137,7 @@ std::filesystem::path ConstructAssetPath(const std::filesystem::path& assets, co
 	}
     return full;
 }
-
+#endif
 
 bool CheckPath(const std::string& path, std::string& cwd)
 {
