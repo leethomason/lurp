@@ -22,12 +22,9 @@
 
 ### 2D Driver
 
-* Basic setup
-  * SDL2
-  * output regions
-  * image display
-  * text loading
-  * text display
+* Reload
+  * Move path resolution to texture loading
+  * Sort out the texture vs. text thing - way too "coupled up"
 * Audio
   * audio driver
   * music player
@@ -43,6 +40,12 @@
 
 ## Done
 
+* Basic setup
+  * SDL2
+  * output regions
+  * image display
+  * text loading
+  * text display
 * OSX - testing
 * Test example-xyz (to some simple level)
 * Delete: Simple: minimal but complete

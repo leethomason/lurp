@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_TEXTURES 0
+#define DEBUG_TEXTURES 1
 
 class TextureLoadTask : public lurp::SelfDeletingTask
 {
@@ -88,7 +88,8 @@ std::shared_ptr<Texture> TextureManager::loadTexture(const std::filesystem::path
 void TextureManager::reload()
 {
 	for (auto& t : _textures) {
-		fireTextureTask(t);
+		if (t->_type == Texture::Type::texture)		// fixme
+			fireTextureTask(t);
 	}
 }
 

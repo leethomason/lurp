@@ -287,6 +287,11 @@ int main(int argc, char* argv[])
 						SDL_SetWindowFullscreen(window, flag ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
 						break;
 					}
+					case SDLK_F5: {
+						textureManager.reload();
+						break;
+					}
+
 					default:
 						break;
 					}
