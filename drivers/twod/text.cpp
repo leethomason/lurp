@@ -221,7 +221,7 @@ void FontManager::update(const XFormer& xf)
 		lurp::Size texSize = tf->_texture ? tf->_texture->pixelSize() : lurp::Size{ 0, 0};
 
 		if (!tf->_texture || realSize != texSize) {
-			tf->_texture = _textureManager.createTextField(realSize.w, realSize.h);
+			tf->_texture = _textureManager.createStreaming(realSize.w, realSize.h);
 			tf->_needUpdate = true;
 		}
 		tf->_needUpdate |= change;

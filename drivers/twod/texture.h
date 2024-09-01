@@ -78,7 +78,7 @@ private:
 
 	enum class Type {
 		texture,		// simple texture reference
-		textfield,		// has a _surfaceSize set
+		streaming,		// has a _surfaceSize set
 	};
 	Type _type = Type::texture;
 
@@ -101,7 +101,7 @@ public:
 	// The TextureManager can throw textures away at will, so getTexture() isn't very useful.
 	// Use loadTexture() instead, which can re-load the texture if it's been thrown away.
 	// std::shared_ptr<Texture> getTexture(const std::string& name) const;
-	std::shared_ptr<Texture> createTextField(int w, int h);
+	std::shared_ptr<Texture> createStreaming(int w, int h);
 
 	void reload();
 	void update(const XFormer& xf);
@@ -131,6 +131,8 @@ private:
 	std::vector<std::shared_ptr<Texture>> _textures;
 
 	void fireTextureTask(std::shared_ptr<Texture>);
+	void updateStreaming(const TextureUpdateMsg& updateMsg, std::shared_ptr<Texture>& texture, const XFormer& xformer);
+	void updateTexture(const TextureUpdateMsg& updateMsg, std::shared_ptr<Texture>& texture);
 };
 
 void DrawTestPattern(SDL_Renderer* renderer, int w, int h, int size, SDL_Color c1, SDL_Color c2, const XFormer& xf);
