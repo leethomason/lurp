@@ -284,8 +284,8 @@ void FontManager::Draw(const std::shared_ptr<TextBox>& tf) const
 		const Texture* tex = tf->_texture.get();
 
 		// Do a little bit of smart clipping so we are filling pixels that aren't used.
-		SDL_Rect src = {0, 0, tex->_surfaceSize.w, tex->_surfaceSize.h};
-		SDL_Rect dst = { tf->pos.x, tf->pos.y, tex->_surfaceSize.w, tex->_surfaceSize.h };
+		SDL_Rect src = {0, 0, tex->surfaceSize().w, tex->surfaceSize().h};
+		SDL_Rect dst = { tf->pos.x, tf->pos.y, tex->surfaceSize().w, tex->surfaceSize().h};
 
 		if (tf->_hqOpaque)
 			SDL_SetTextureBlendMode(tf->_texture->sdlTexture(), SDL_BLENDMODE_NONE);

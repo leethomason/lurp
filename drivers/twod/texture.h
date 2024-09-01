@@ -45,7 +45,6 @@ inline SDL_Rect UnionRect(const SDL_Rect& a, const SDL_Rect& b)
 
 class Texture {
 	friend class TextureManager;
-	friend class FontManager;
 	friend class TextureLoadTask;
 public:
 	Texture() {}
