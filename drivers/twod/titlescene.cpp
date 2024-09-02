@@ -3,8 +3,10 @@
 #include "tween.h"
 #include "../platform.h"
 
-void TitleScene::load(Drawing& d, const FrameData&)
+void TitleScene::load(Drawing& d, const FrameData& f)
 {
+	if (f.sceneFrame > 0) return;
+
 	constexpr double RAMP = 0.2;
 	//constexpr double HALF = RAMP / 2.0;
 	constexpr double HOLD = 1.0;
@@ -16,9 +18,14 @@ void TitleScene::load(Drawing& d, const FrameData&)
 		std::filesystem::path p = lurp::ConstructAssetPath(d.config.config.assetsDirs, { title });
 		if (p.empty())
 			continue;
-		d.textureManager.loadTexture(p);
+		_textures.push_back(d.textureManager.loadTexture(p));
 
+		// FIXME
+		// it takes much too much context to use tweens.
+		// simpler interface, more fire & forget
+		// Better to start w/o cross fade and have reasonable API?
 		tween::Tween t(0.0);
+		t.add((RAMP + HOLD) * double(_tweens.size()), 0.0);
 		t.addASR(RAMP, HOLD, RAMP, 0.0, 1.0, func0, func1);
 		_tweens.push_back(t);
 	}
