@@ -1,6 +1,7 @@
 #include "mainscene.h"
 #include "config2d.h"
 #include "drawable.h"
+#include "../platform.h"
 
 #include "nuk.h"
 
@@ -9,7 +10,10 @@ void MainScene::load(Drawing& d, const FrameData& f)
 	constexpr double RAMP = 0.2;
 
 	if (f.sceneFrame == 0) {
-		_texture = d.textureManager.loadTexture(d.config.config.assetsDir / d.config.mainBackground);
+		std::filesystem::path p = lurp::ConstructAssetPath(d.config.config.assetsDirs, { d.config.mainBackground });
+		if (p.empty())
+			return;
+		_texture = d.textureManager.loadTexture(p);
 		_tween.add(RAMP, 1.0, tween::cosine);
 	}
 }
