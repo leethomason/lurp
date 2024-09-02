@@ -7,7 +7,6 @@
 #include "../drivers/platform.h"
 #include "markdown.h"
 
-#include <ionic/ionic.h>
 #include <plog/Log.h>
 
 #include <fmt/core.h>
