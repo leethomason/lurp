@@ -54,7 +54,6 @@ public:
 	void setFont(size_t i, const Font* font);
 	void setText(size_t i, const std::string& text);
 	void setColor(size_t i, SDL_Color color);
-	void setBgColor(size_t i, SDL_Color color);
 	void setSpace(size_t i, int virtualSpaceAfter);
 
 	const Font* font(size_t i = 0) const { return _row[i].font; }

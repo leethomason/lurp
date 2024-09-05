@@ -289,6 +289,7 @@ int main(int argc, char* argv[])
 					}
 					case SDLK_F5: {
 						textureManager.reload();
+						scene->reload();
 						break;
 					}
 

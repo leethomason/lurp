@@ -41,10 +41,10 @@ public:
 		assert(_queue);
 		_texture->_size = lurp::Size({ surface->w, surface->h });
 
-		TextureUpdateMsg updateMsg{ _texture, surface, _generation };
 #if DEBUG_TEXTURES
 		fmt::print("TextureLoadTask -> queue: '{}' {}x{}\n", _texture->path(), _texture->width(), _texture->height());
 #endif
+		TextureUpdateMsg updateMsg{ _texture, surface, _generation };
 		_queue->push(updateMsg);
 	}
 
@@ -123,14 +123,7 @@ void TextureManager::fireTextureTask(std::shared_ptr<Texture> texture)
 	task->_generation = ++_generation;
 
 	_pool.AddTaskSetToPipe(task);
-
 }
-
-//
-// 1. factor out the updateTexture vs. updateStreaming
-// 2. straighten out the 'friends' so that a proper interface is being used
-// 3. test font re-loading
-//
 
 void TextureManager::updateStreaming(const TextureUpdateMsg& updateMsg, std::shared_ptr<Texture>& texture, const XFormer& xf)
 {

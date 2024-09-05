@@ -74,7 +74,6 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 			SDL_Rect dst{ rDst.x, rDst.y, rDst.w, rDst.h };
 			Draw(d.renderer, tr.second, nullptr, &dst, RenderQuality::kBlit);
 		}
-
 	}
 
 	// Now text and extra info on top.
@@ -93,7 +92,14 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 		_infoText->pos = x.t(lurp::Point{ infoRegion->position.x, infoRegion->position.y });
 		d.fontManager.Draw(_infoText);
 	}
+}
 
+void GameScene::reload()
+{
+	//if (!_zoneDriver) return;
+	//std::filesystem::path path = SavePath("test", "testsave");
+
+	//_zoneDriver->save()
 }
 
 void GameScene::layoutGUI(nk_context*, float, const XFormer&)
