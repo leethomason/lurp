@@ -88,22 +88,32 @@ source_group("lua" FILES ${LUA_SOURCES})
 
 enable_testing()
 
+# ------- Library -------------
+
+add_library(lurp_lib STATIC ${SOURCES} ${HEADERS} ${fmt_SOURCE_DIR}/src/format.cc ${LUA_SOURCES} ${MD4C_SOURCES})
+
+target_include_directories(lurp_lib PRIVATE src 
+  ${fmt_SOURCE_DIR}/include 
+  ${lua_SOURCE_DIR}/src 
+  ${plog_SOURCE_DIR}/include
+  ${md4c_SOURCE_DIR}/src
+)
+set_target_properties(lurp_lib PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 # ------- LuRP ---------------
 file(GLOB CONSOLE_SRC "drivers/console/*.cpp" "drivers/console/*.h" "drivers/*.cpp" "drivers/*.h")
 source_group("console" FILES ${CONSOLE_SRC})
 
 add_executable(lurp 
-  ${SOURCES} 
-  ${HEADERS} 
-  ${fmt_SOURCE_DIR}/src/format.cc 
-  ${LUA_SOURCES} 
   ${CONSOLE_SRC} 
   ${IONIC_SOURCES}
-  ${MD4C_SOURCES}
 )
 
+target_link_libraries(lurp lurp_lib)
+
 target_include_directories(lurp PUBLIC src 
-  ${argh_SOURCE_DIR} ${fmt_SOURCE_DIR}/include 
+  ${argh_SOURCE_DIR} 
+  ${fmt_SOURCE_DIR}/include 
   ${ionic_SOURCE_DIR}/include 
   ${lua_SOURCE_DIR}/src 
   ${plog_SOURCE_DIR}/include
@@ -136,15 +146,13 @@ if (MSVC)
   find_package(SDL2_ttf REQUIRED)
 
   add_executable(lurp2d 
-    ${SOURCES} 
-    ${HEADERS} 
-    ${fmt_SOURCE_DIR}/src/format.cc 
-    ${LUA_SOURCES} 
-    ${MD4C_SOURCES}
     ${TWOD_SRC}
     ${ENKITS_SOURCES}
     ${NUKLEAR_SOURCES}
   )
+
+  target_link_libraries(lurp2d lurp_lib)
+  set_target_properties(lurp2d PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
   #FIXME: windws & MSVC only
   # Gettnig the SDL2/SDL.h working is a giant PITA. I don't see how to do that at all

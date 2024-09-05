@@ -188,8 +188,9 @@ int main(int argc, char* argv[])
 		}
 
 		lurp::GameConfig gameConfig1D;
-		gameConfig1D.assetsDir = "assets";
+		gameConfig1D.assetsDirs.push_back(std::filesystem::path("assets"));	// relative to the exe
 		gameConfig1D.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
+		
 		gameConfig1D.startingZone = startingZone;
 		GameConfig2D gameConfig = GameConfig2D::demoConfig2D(gameConfig1D);
 
@@ -222,8 +223,9 @@ int main(int argc, char* argv[])
 
 		nk_context* nukCtx = nk_sdl_init(window, sdlRenderer);
 		NukFontAtlas nukFontAtlas(nukCtx);
-		nukFontAtlas.load(lurp::ConstructAssetPath(gameConfig.config.assetsDir, gameConfig.uiFont, "assets/Roboto-Regular.ttf").string().c_str(), 
-			{12.f, 18.f, 24.f, 36.f, 48.f, 64.f});
+
+		std::filesystem::path uiFontPath = lurp::ConstructAssetPath(gameConfig.config.assetsDirs, { gameConfig.uiFont, "Roboto-Regular.ttf" });
+		nukFontAtlas.load(uiFontPath.string().c_str(), {12.f, 18.f, 24.f, 36.f, 48.f, 64.f});
 
 		// ---------- Initialization done -----------
 		lurp::RollingAverage<uint64_t, 48> innerAve;
@@ -232,7 +234,8 @@ int main(int argc, char* argv[])
 		FrameData frameData;
 		Drawing drawing(sdlRenderer, textureManager, fontManager, gameConfig);
 
-		gameConfig.font = fontManager.loadFont(lurp::ConstructAssetPath(gameConfig.config.assetsDir, gameConfig.fontName, "assets/Roboto-Regular.ttf").string(), gameConfig.fontSize);
+		std::filesystem::path fontPath = lurp::ConstructAssetPath(gameConfig.config.assetsDirs, { gameConfig.fontName, "Roboto-Regular.ttf" });
+		gameConfig.font = fontManager.loadFont(fontPath.string(), gameConfig.fontSize);
 
 		bool done = false;
 		SDL_Event e;

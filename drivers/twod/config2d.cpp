@@ -49,6 +49,11 @@
 
 void GameConfig2D::load(const lurp::ScriptBridge& bridge)
 {
+	openingTitles.clear();
+	mainBackground.clear();
+	settingsBackground.clear();
+	saveLoadBackground.clear();	
+
 	lua_State* L = bridge.getLuaState();
 	lurp::ScriptBridge::LuaStackCheck check(L);
 
@@ -79,7 +84,7 @@ void GameConfig2D::load(const lurp::ScriptBridge& bridge)
 	uiFont = bridge.getStrField("uiFont", uiFont);
 	uiFontSize = bridge.getIntField("uiFontSize", uiFontSize);
 
-	if (bridge.hasField("frames")) {
+	if (bridge.hasField("regions")) {
 		regions.clear();
 
 		for (lurp::TableIt it(L, -1); !it.done(); it.next()) {
