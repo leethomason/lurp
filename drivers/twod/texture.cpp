@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#define DEBUG_TEXTURES 1
+#define DEBUG_TEXTURES 0
 
 class TextureLoadTask : public lurp::SelfDeletingTask
 {
@@ -17,7 +17,8 @@ public:
 	virtual void ExecuteRange(enki::TaskSetPartition /*range_*/, uint32_t /*threadnum_*/) override {
 		assert(_texture->_type == Texture::Type::texture);
 
-		// FIXME: use ConstructPath
+		// FIXME: use ConstructPath()
+		// FIXME: check that ConstructPath() is not called before the TextureLoadTask
 		// This path stuff is here just to get it off the main thread.
 		std::filesystem::path path = _texture->_path;
 		std::filesystem::path ext = path.extension();

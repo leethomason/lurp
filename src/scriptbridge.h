@@ -5,6 +5,7 @@
 #include "scripttypes.h"
 #include "util.h"
 #include "geom.h"
+#include "scriptasset.h"
 
 #include <vector>
 #include <string>
@@ -63,7 +64,7 @@ public:
 	}
 
 	void loadLUA(const std::string& path);
-	ConstScriptAssets readCSA(const std::string& path);
+	ConstScriptAssets readCSA(const std::filesystem::path& path);
 	std::vector<Text> LoadMD(const std::string& filename);
 
 	lua_State* getLuaState() const { return L; }

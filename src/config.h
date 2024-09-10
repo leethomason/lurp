@@ -11,8 +11,9 @@ namespace lurp {
 
 struct GameConfig {
 	std::vector<std::filesystem::path> assetsDirs;
-	std::string scriptFile;
-	std::string startingZone;
+	std::filesystem::path scriptFile;		// game/chullu/chulla.lua
+	std::string			  startingZone;		// SAN_FRANCISCO
+	std::string			  gameName;			// chullu
 };
 
 } // namespace lurp

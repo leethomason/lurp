@@ -1140,7 +1140,7 @@ void ScriptBridge::loadLUA(const std::string& inputFilePath)
 }
 
 
-ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
+ConstScriptAssets ScriptBridge::readCSA(const std::filesystem::path& inputFilePath)
 {
 	assert(!inputFilePath.empty());
 	ConstScriptAssets csa;
@@ -1156,7 +1156,7 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	// need to append: 'game'
 	appendLuaPath(path.parent_path().string());
 	_currentCSA = &csa;
-	doFile(inputFilePath);
+	doFile(inputFilePath.string());
 	_currentCSA = nullptr;
 
 	READ_ASSET("Scripts", "Script", scripts, readScript);

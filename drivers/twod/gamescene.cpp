@@ -97,12 +97,37 @@ void GameScene::draw(Drawing& d, const FrameData&, const XFormer& x)
 	}
 }
 
-void GameScene::reload()
+void GameScene::reload(const GameConfig2D& config)
 {
-	//if (!_zoneDriver) return;
-	//std::filesystem::path path = SavePath("test", "testsave");
+	if (!_zoneDriver) return;
 
-	//_zoneDriver->save()
+	fmt::print("Reload gameName={} scriptFile={}\n", config.config.gameName, config.config.scriptFile.string());
+	
+	std::filesystem::path path = lurp::SavePath(config.config.gameName, "reloadcycle");
+
+	{
+		std::ofstream stream = lurp::OpenSaveStream(path);
+		_zoneDriver->save(stream);
+	}
+
+	delete _zoneDriver; _zoneDriver = nullptr;
+	delete _assets; _assets = nullptr;
+
+	{
+		// Load the assets
+		fmt::print("  ..loading new assets\n");
+		_csassets = _bridge.readCSA(config.config.scriptFile);
+		_assets = new lurp::ScriptAssets(_csassets);
+		_zoneDriver = new lurp::ZoneDriver(*_assets, _bridge, config.config.startingZone);
+
+		// Load the game
+		fmt::print("  ..loading new game\n");
+		lurp::ScriptBridge loader;
+		loader.loadLUA(path.string());
+		_zoneDriver->load(loader);
+	}
+	fmt::print("Reload done\n");
+	_needProcess = true;
 }
 
 void GameScene::layoutGUI(nk_context*, float, const XFormer&)

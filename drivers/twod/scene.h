@@ -20,7 +20,7 @@ public:
 	void setState(State s) { _state = s; }
 	State state() const { return _state; }
 
-	virtual void reload() {}
+	virtual void reload(const GameConfig2D&) {}
 
 	virtual void mouseMotion(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/) {}
 	virtual void mouseButton(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/, bool /*down*/) {}

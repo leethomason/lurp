@@ -27,7 +27,7 @@ public:
 	virtual void draw(Drawing&, const FrameData& f, const XFormer& xformer) override;
 	virtual void layoutGUI(nk_context* nukCtx, float fontSize, const XFormer& xformer) override;
 
-	virtual void reload() override;
+	virtual void reload(const GameConfig2D& config) override;
 	virtual void mouseMotion(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/) override;
 	virtual void mouseButton(FontManager&, const lurp::Point& /*screen*/, const lurp::Point& /*virt*/, bool /*down*/) override;
 

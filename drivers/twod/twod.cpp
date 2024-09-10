@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
 	std::string startWhere;
 	cmdl({"--start"}, "") >> startWhere;
 
-	std::string dir = lurp::GameFileToDir(scriptFile);
-	std::filesystem::path savePath = lurp::SavePath(dir, "saves");
+	std::string gameName = lurp::GameFileToDir(scriptFile);
+	std::filesystem::path savePath = lurp::SavePath(gameName, "saves");
 	std::filesystem::path logPath = lurp::LogPath("lurp2d");
 	fmt::print("Save path: {}\n", savePath.string());
 	fmt::print("Log path: {}\n", logPath.string());
@@ -192,6 +192,7 @@ int main(int argc, char* argv[])
 		gameConfig1D.scriptFile = scriptFile.empty() ? "script/testzones.lua" : scriptFile;
 		
 		gameConfig1D.startingZone = startingZone;
+		gameConfig1D.gameName = gameName;
 		GameConfig2D gameConfig = GameConfig2D::demoConfig2D(gameConfig1D);
 
 		StateMachine machine;
@@ -292,7 +293,7 @@ int main(int argc, char* argv[])
 					}
 					case SDLK_F5: {
 						textureManager.reload();
-						scene->reload();
+						scene->reload(gameConfig);
 						break;
 					}
 
