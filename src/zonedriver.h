@@ -117,9 +117,11 @@ public:
 	int endGameBias() const { return _endGameBias; }
 
 	// Note that for save AND load, the ScriptAssets must already be loaded.
-	// The save and load apply a delta on the ScriptAssets.
-	void save(std::ostream& stream) const;
-	EntityID load(ScriptBridge& loader);
+	// The save and load apply a DELTA on the ScriptAssets.
+	// (So for an asset reload, there is an extra step of grabbing new ConstScriptAssets.)
+	// returns true on success
+	bool save(const std::string& path) const;
+	EntityID load(const std::string& path);
 
 	static void saveTextRead(std::ostream& stream, const std::unordered_set<uint64_t>& text);
 	static void loadTextRead(ScriptBridge& loader, std::unordered_set<uint64_t>& text);

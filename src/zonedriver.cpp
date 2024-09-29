@@ -8,6 +8,7 @@
 #include "scriptasset.h"
 #include "scripthelper.h"
 #include "scriptbridge.h"
+#include "../drivers/platform.h" // fixme: sort out path
 
 namespace lurp {
 
@@ -456,8 +457,12 @@ const EntityID& ZoneDriver::roomID() const
 	return room.entityID;
 }
 
-void ZoneDriver::save(std::ostream& stream) const
+bool ZoneDriver::save(const std::string& path) const
 {
+	std::ofstream stream = OpenSaveStream(path);
+	if (!stream.is_open()) // should terminate; this check is redundant
+		return false;
+
 	mapData.coreData.save(stream);
 	_assets.save(stream);
 	ZoneDriver::saveTextRead(stream, mapData.textRead);
@@ -470,10 +475,14 @@ void ZoneDriver::save(std::ostream& stream) const
 	if (_scriptDriver) {
 		_scriptDriver->save(stream);
 	}
+	return true;
 }
 
-EntityID ZoneDriver::load(ScriptBridge& loader)
+EntityID ZoneDriver::load(const std::string& path)
 {
+	ScriptBridge loader;
+	loader.loadLUA(path);
+
 	EntityID script;
 	mapData.coreData.load(loader);
 	_assets.load(loader);

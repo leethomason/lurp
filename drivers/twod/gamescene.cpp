@@ -106,8 +106,7 @@ void GameScene::reload(const GameConfig2D& config)
 	std::filesystem::path path = lurp::SavePath(config.config.gameName, "reloadcycle");
 
 	{
-		std::ofstream stream = lurp::OpenSaveStream(path);
-		_zoneDriver->save(stream);
+		_zoneDriver->save(path.string());
 	}
 
 	delete _zoneDriver; _zoneDriver = nullptr;
@@ -122,9 +121,7 @@ void GameScene::reload(const GameConfig2D& config)
 
 		// Load the game
 		fmt::print("  ..loading new game\n");
-		lurp::ScriptBridge loader;
-		loader.loadLUA(path.string());
-		_zoneDriver->load(loader);
+		_zoneDriver->load(path.string());
 	}
 	fmt::print("Reload done\n");
 	_needProcess = true;

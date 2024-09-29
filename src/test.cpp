@@ -404,13 +404,11 @@ static void TestZoneSave()
 				TEST(zd.mode() == ZoneDriver::Mode::kText);
 				TEST(zd.text().text == "Hello there!");
 			}
-			if (story >=2) {
+			if (story >= 2) {
 				zd.advance();
 				TEST(zd.mode() == ZoneDriver::Mode::kNavigation);
 			}
-
-			std::ofstream stream = OpenSaveStream(path);
-			zd.save(stream);
+			zd.save(path.string());
 		}
 		// LOAD
 		{
@@ -421,7 +419,7 @@ static void TestZoneSave()
 
 			ScriptBridge loader;
 			loader.loadLUA(path.string());
-			zd.load(loader);
+			zd.load(path.string());
 
 			if (story == 0) {
 				TEST(zd.currentRoom().entityID == "FOYER");
@@ -452,7 +450,7 @@ static void TestCodeEval()
 	ScriptAssets assets(csa);
 	MapData mapData(56);
 	ScriptEnv env = { "TEST_MAGIC_BOOK", NO_ENTITY, NO_ENTITY, NO_ENTITY };
-	
+
 	{
 		{
 			VarBinder binder(assets, bridge, mapData.coreData, env);
@@ -573,7 +571,7 @@ static void TestScriptBridge()
 	const std::vector<ScriptBridge::StringCount> strCountArr = { { "str1", 1 }, { "str2", 2 }, { "str3", 3 } };
 	const std::vector<int> intArr = { 1, 2, 3 };
 	{
-		engine.pushNewGlobalTable(gtable); 
+		engine.pushNewGlobalTable(gtable);
 		{
 			engine.setStrField("strField", "strValue");
 			engine.setIntField("intField", 42);
@@ -782,7 +780,7 @@ static void ChoiceMode1PopTest()
 	ScriptDriver driver(assets, mapData, bridge, env);
 
 	TEST(driver.type() == ScriptType::kText);
- 	TEST(driver.line().text == "Text before")
+	TEST(driver.line().text == "Text before")
 		driver.advance();
 
 	TEST(driver.type() == ScriptType::kChoices);
@@ -1211,7 +1209,7 @@ void BattleTest::TestSystem()
 	SWCombatant b;
 	b.name = "Brute";
 	b.fighting = Die(1, 6, 0);
-	b.meleeWeapon = baton;	
+	b.meleeWeapon = baton;
 	b.armor = riotGear;
 
 	SWCombatant c;
@@ -1340,7 +1338,7 @@ void BattleTest::TestExample()
 	// Okay. `text()` is the one you would expect, I think.
 
 	TEST(driver.mode() == ZoneDriver::Mode::kText);	// "you win!"
-	driver.text();									
+	driver.text();
 	driver.advance();
 	TEST(driver.isGameOver() == true);
 }
@@ -1376,7 +1374,7 @@ static void TestExampleZone()
 	const Inventory& inv = assets.getInventory(*c);
 	TEST(inv.emtpy());
 
-	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);	
+	TEST(driver.move("MAIN_HALL") == ZoneDriver::MoveResult::kSuccess);
 }
 
 std::pair<std::string, std::string> makeStrPair(const std::string& a, const std::string& b) {
@@ -1446,7 +1444,7 @@ static void TestInlineText()
 	std::string text = driver.line().text;
 	TEST(speaker == "Talker");
 	TEST(text == "I'm going to tell a story. It will be fun.");
-	
+
 	driver.advance();
 	speaker = driver.line().speaker;
 	text = driver.line().text;
@@ -1597,7 +1595,7 @@ static void TestMarkDown()
 				TEST(spans[0].text == "Heading 2");
 				++nCallbacks;
 			}
-		};
+			};
 		md.paragraphHandler = [&level, &nCallbacks](const MarkDown&, const std::vector<MarkDown::Span>& spans, int _level) {
 			TEST(spans.size() == 1);
 			TEST(_level == level);
@@ -1609,7 +1607,7 @@ static void TestMarkDown()
 				TEST(spans[0].text == "h2 text");
 				++nCallbacks;
 			}
-		};
+			};
 		md.process(t);
 		TEST(nCallbacks == 4);
 	}
@@ -1625,17 +1623,17 @@ static void TestMarkDown()
 
 		std::string entity;
 		std::vector<std::string> text;
-		
+
 		MarkDown md;
 
 		md.headingHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			entity = spans[0].text;
-		};
+			};
 		md.paragraphHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			text.push_back(spans[0].text);
-		};
+			};
 		md.process(t);
 
 		TEST(entity == "STARTING_TEXT");

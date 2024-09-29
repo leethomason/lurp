@@ -204,13 +204,11 @@ static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver
 	if (s == "/s" || s == "/c") {
 		fmt::print("Saving to '{}'...\n", path.string());
 		std::ofstream stream = OpenSaveStream(path);
-		zd.save(stream);
+		zd.save(path.string());
 	}
 	if (s == "/l" || s == "/c") {
 		fmt::print("Loading from '{}'...\n", path.string());
-		ScriptBridge loader;
-		loader.loadLUA(path.string());
-		zd.load(loader);
+		zd.load(path.string());
 	}
 	if (s == "/q") {
 		return true;
