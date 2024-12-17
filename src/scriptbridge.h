@@ -1,5 +1,7 @@
 #pragma once
 
+#include "luabridge.h"
+
 #include "zone.h"
 #include "scriptdriver.h"
 #include "scripttypes.h"
@@ -20,10 +22,8 @@ struct ConstScriptAssets;
 struct Battler;
 class Random;
 
-class ScriptBridge
+class ScriptBridge : public LuaBridge
 {
-	friend struct TableIt;
-	friend class ScriptHelper;
 public:
 	ScriptBridge();
 	~ScriptBridge();
@@ -62,87 +62,25 @@ public:
 		_iAssetHandler = handler;
 	}
 
-	void loadLUA(const std::string& path);
 	ConstScriptAssets readCSA(const std::string& path);
 	std::vector<Text> LoadMD(const std::string& filename);
 
-	lua_State* getLuaState() const { return L; }
-
-	struct StringCount {
-		std::string str;
-		int count = 0;
-
-		bool operator==(const StringCount& rhs) const {
-			return str == rhs.str && count == rhs.count;
-		}
-	};
-	void setGlobal(const std::string& key, const Variant& value);
-	void pushGlobal(const std::string& key) const;
-	void pushTable(const std::string& key, int index = 0) const;
-	void pushNewGlobalTable(const std::string& key);
-	void pushNewTable(const std::string& key, int index = 0);
-	void pop(int n = 1);
-
-	void nilGlobal(const std::string& key);
-	void callGlobalFunc(const std::string& name);	// no return
-
-	bool hasField(const std::string& key) const;
-	int getFieldType(const std::string& key) const;
-
-	std::string getStrField(const std::string& key, const std::optional<std::string>& def) const;
-	int getIntField(const std::string& key, const std::optional<int>& def) const;
-	bool getBoolField(const std::string& key, std::optional<bool>) const;
-	std::vector<std::string> getStrArray(const std::string& key) const;
-	std::vector<StringCount> getStrCountArray(const std::string& key) const;
-	std::vector<int> getIntArray(const std::string& key) const;
 
 	Point GetPointField(const std::string& key, const std::optional<Point>& def) const;
 	Rect GetRectField(const std::string& key, const std::optional<Rect>& def) const;
 	Color GetColorField(const std::string& key, const std::optional<Color>& def) const;
 
-	static Variant getField(lua_State* L, const std::string& key, int index, bool raw = false);
-
-	void setStrField(const std::string& key, const std::string& value);
-	void setIntField(const std::string& key, int value);
-	void setBoolField(const std::string& key, bool value);
-	void setStrArray(const std::string& key, const std::vector<std::string>& values);
-	void setStrCountArray(const std::string& key, const std::vector<StringCount>& values);
-	void setIntArray(const std::string& key, const std::vector<int>& values);
-
-	struct FuncInfo {
-		std::string srcName;
-		int srcLine = 0;
-		int nParams = 0;
-	};
-	FuncInfo getFuncInfo(int funcRef);
-
-	// Make sure the stack is the same size when this object goes out of scope.
-	struct LuaStackCheck {
-		LuaStackCheck(lua_State* L, int diff=0) : _L(L) {
-			_nStack = lua_gettop(_L) + diff;
-		}
-		~LuaStackCheck() {
-			assert(lua_gettop(_L) == _nStack);
-		}
-
-		lua_State* _L;
-		int _nStack = 0;
-	};
-
 	Inventory readInventory() const;
 	bool basicTestPassed() const { return _basicTestPassed; }
 
 private:
-	lua_State* L = 0;
 	bool _basicTestPassed = false;
-	std::map<int, FuncInfo> _funcInfoMap;
 	IMapHandler* _iMapHandler = nullptr;
 	ICoreHandler* _iCoreHandler = nullptr;
 	ITextHandler* _iTextHandler = nullptr;
 	IAssetHandler* _iAssetHandler = nullptr;
 	int _iCoreCount = 0;
 
-	std::filesystem::path _currentDir;
 	ConstScriptAssets* _currentCSA = nullptr;	// for md callback. hacky.
 
 	void registerCallbacks();
@@ -166,13 +104,7 @@ private:
 	EntityID readEntityID(const std::string& key, const std::optional<EntityID>& def) const;
 	ScriptType toScriptType(const std::string& type) const;
 
-	static int getFuncField(lua_State* L, const std::string& key);
-	static bool hasField(lua_State* L, const std::string& key);
-
 	std::vector<EntityID> readObjects() const;
-	void appendLuaPath(const std::string& path);
-
-	void doFile(const std::string& filename);
 
 	static int l_CRandom(lua_State* L);
 	static int l_CDeltaItem(lua_State* L);
@@ -185,32 +117,5 @@ private:
 	static int l_CLoadMD(lua_State* L);
 };
 
-struct TableIt
-{
-	TableIt(lua_State* L, int index);
-	~TableIt();
-
-	bool done() const {
-		return _done;
-	}
-	void next();
-
-	int vType() const {
-		return lua_type(_L, -1);
-	}
-
-	int kType() const {
-		return lua_type(_L, -2);
-	}
-
-	Variant key() const;
-	Variant value() const;
-
-	bool isTableWithKV(const std::string& key, const std::string& value);
-
-private:
-	lua_State* _L;
-	bool _done = false;
-};
 
 } // namespace lurp

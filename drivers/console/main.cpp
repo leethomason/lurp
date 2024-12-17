@@ -7,6 +7,7 @@
 #include "consolebattle.h"
 #include "scriptasset.h"
 #include "varbinder.h"
+#include "consoleboard.h"
 
 #include "../platform.h"
 
@@ -424,8 +425,6 @@ static void RunOutputTests()
 
 int main(int argc, const char* argv[])
 {
-	ionic::Table::initConsole();
-
 	fmt::print("Welcome to the story engine LuRP\n\n");
 	int rc = 0;
 
@@ -446,12 +445,14 @@ int main(int argc, const char* argv[])
 		fmt::print("  --noScan          Do not scan for games or display menu\n");
 		fmt::print("  --noTest          Do not run tests\n");
 		fmt::print("  --win             Automatically win all battles\n");
+		fmt::print("  --board		    Run in board game mode\n");
 	}
 
 	bool debugSave = cmdl[{ "-s", "--debugSave" }];
 	bool outputTests = cmdl[{ "--outputTests" }];
 	bool doScan = !cmdl[{ "--noScan" }];
 	bool runTests = !cmdl[{ "--noTest" }];
+	bool boardGame = cmdl[{ "--board" }];
 
 	if (cmdl[{ "--win" }])
 		gWinAllBattles = true;
@@ -461,8 +462,8 @@ int main(int argc, const char* argv[])
 	std::string log = "warning";
 	cmdl({ "-l", "--log" }, log) >> log;
 
-	std::string dir = GameFileToDir(scriptFile);
-	std::filesystem::path savePath = SavePath(dir, "saves");
+	std::string gameDir = GameFileToDir(scriptFile);
+	std::filesystem::path savePath = SavePath(gameDir, "saves");
 	std::filesystem::path logPath = LogPath("lurp");
 
 	plog::Severity logLevel = plog::severityFromString(log.c_str());
@@ -500,21 +501,26 @@ int main(int argc, const char* argv[])
 		}
 		Globals::debugSave = debugSave;
 
-		if (doScan && gameFile.empty()) {
-			auto gameList = ScanGameFiles();
-			if (!gameList.empty())
-				gameFile = SelectGame(gameList);
+		if (boardGame) {
+			ConsoleBoardDriver(gameDir);
 		}
+		else {
+			if (doScan && gameFile.empty()) {
+				auto gameList = ScanGameFiles();
+				if (!gameList.empty())
+					gameFile = SelectGame(gameList);
+			}
 
-		// Run game.
-		if (!gameFile.empty()) {
-			ScriptBridge bridge;
-			ConstScriptAssets csassets = bridge.readCSA(gameFile);
-			ScriptAssets assets(csassets);
+			// Run game.
+			if (!gameFile.empty()) {
+				ScriptBridge bridge;
+				ConstScriptAssets csassets = bridge.readCSA(gameFile);
+				ScriptAssets assets(csassets);
 
-			assets.log();
+				assets.log();
 
-			ConsoleZoneDriver(assets, bridge, startingZone, dir, seed);
+				ConsoleZoneDriver(assets, bridge, startingZone, gameDir, seed);
+			}
 		}
 	}
 

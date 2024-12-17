@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <stdint.h>
 
 namespace lurp{
 

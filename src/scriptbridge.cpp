@@ -1,4 +1,3 @@
-#include "lua.hpp"
 #include "scriptbridge.h"
 
 #include "zone.h"
@@ -24,46 +23,6 @@ void FatalReadError(const std::string& msg, const T& t)
 	exit(1);
 }
 
-TableIt::TableIt(lua_State* L, int index) : _L(L) {
-	assert(lua_type(_L, index) == LUA_TTABLE);
-	// we don't have to worry about mutating the stack.
-	lua_pushvalue(L, index);
-	lua_pushnil(L);
-	lua_pushnil(L);	// the next() starts with a pop, THEN replaces the key
-	next();
-}
-
-TableIt::~TableIt() {
-	lua_pop(_L, 1);	// remove the dupe.
-}
-
-void TableIt::next() {
-	lua_pop(_L, 1);
-	_done = lua_next(_L, -2) == 0;
-}
-
-Variant TableIt::key() const {
-	return Variant::fromLua(_L, -2);
-}
-
-Variant TableIt::value() const {
-	return Variant::fromLua(_L, -1);
-}
-
-bool TableIt::isTableWithKV(const std::string& key, const std::string& value)
-{
-	bool result = false;
-	if (vType() == LUA_TTABLE) {		// -1 table
-		lua_pushstring(_L, key.c_str());	// -1 key, -2 table
-		int t = lua_gettable(_L, -2);		// -1 value, -2 table 
-		if (t == LUA_TSTRING) {
-			std::string s = lua_tostring(_L, -1);
-			result = s == value;
-		}
-		lua_pop(_L, 1); // -1 table
-	}
-	return result;
-}
 
 #if 0
 static void Dump(lua_State* L, int index)
@@ -99,19 +58,16 @@ static void DumpStack(lua_State* L, int n) {
 
 ScriptBridge::ScriptBridge()
 {
-	L = luaL_newstate();
-	luaL_openlibs(L);
-	LuaStackCheck check(L);
-
-	lua_pushstring(L, "script/");
-	lua_setglobal(L, "DIR");
-	appendLuaPath("script");
+	//lua_pushstring(L, "script/");
+	//lua_setglobal(L, "DIR");
+	setGlobal("DIR", "script/");
 	registerCallbacks();
 
 	_basicTestPassed = true;
 	doFile("script/_test.lua");
+#if 0
 	{
-		LuaStackCheck check2(L);
+		LuaStackCheck check2 = stackCheck();
 		lua_getglobal(L, "_Test");									// push "tests" table (stack=1)
 		if (!lua_istable(L, -1)) {
 			PLOG(plog::error) << "Could not find the global 'Test' table";
@@ -147,12 +103,12 @@ ScriptBridge::ScriptBridge()
 
 		lua_pop(L, 1);												// pop 2 (stack=0)
 	}
+#endif
 	//fmt::print("Script engine init.\n");
 }
 
 ScriptBridge::~ScriptBridge()
 {
-	lua_close(L);
 }
 
 void ScriptBridge::registerCallbacks()
@@ -161,8 +117,6 @@ void ScriptBridge::registerCallbacks()
 		const char* name;
 		lua_CFunction func;
 	};
-
-	LuaStackCheck check(L);
 
 	// Register c callback funcs
 	static const int NUM_FUNCS = 9;
@@ -178,236 +132,13 @@ void ScriptBridge::registerCallbacks()
 		{ "CLoadMD", &l_CLoadMD}
 	};
 	for (int i = 0; i < NUM_FUNCS; i++) {
-		lua_pushlightuserdata(L, this);
-		lua_pushcclosure(L, funcs[i].func, 1);
-		lua_setglobal(L, funcs[i].name);
+		registerGlobalFunc(this, funcs[i].func, funcs[i].name);
 	}
-}
-
-void ScriptBridge::appendLuaPath(const std::string& path)
-{
-	//fmt::print("appendLuaPath: {}\n", path);
-
-	LuaStackCheck check(L);
-	// Thank you stack overflow.
-	// A bunch of code to set the pack.path to include the script directory.
-
-	lua_getglobal(L, "package");
-	lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
-	std::string cur_path = lua_tostring(L, -1); // grab path string from top of stack
-	lua_pop(L, 1); // get rid of the string on the stack we just pushed on line 5
-
-	cur_path.append(";"); // do your path magic here
-	cur_path.append(path + "/?.lua");
-
-	lua_pushstring(L, cur_path.c_str()); // push the new one
-	lua_setfield(L, -2, "path"); // set the field "path" in table at -2 with value at top of stack
-	lua_pop(L, 1); // get rid of package table from top of stack
-
-	//fmt::print("Lua path: {}\n", cur_path);
-}
-
-void ScriptBridge::doFile(const std::string& filename)
-{
-	LuaStackCheck check(L);
-
-
-	std::string cwd;
-	CheckPath(filename, cwd);
-	int error = luaL_loadfile(L, filename.c_str());
-	if (error) {
-		PLOG(plog::error) << fmt::format("Occurs when calling luaL_loadfile() 0x{:x}", error);
-		PLOG(plog::error) << fmt::format("Msg: '{}'", lua_tostring(L, -1));
-	}
-	
-	std::filesystem::path path = filename;
-	_currentDir = path.parent_path();
-
-	error = lua_pcall(L, 0, LUA_MULTRET, 0);
-	_currentDir.clear();
-
-	if (error) {
-		PLOG(plog::error) << fmt::format("Error Iitializing file '{}'.", filename);
-		PLOG(plog::error) << fmt::format("Occurs when calling lua_pcall() 0x{:x}", error);
-		PLOG(plog::error) << fmt::format("Msg: '{}'", lua_tostring(L, -1));
-	}
-
-}
-
-void ScriptBridge::pushNewGlobalTable(const std::string& name)
-{
-	LuaStackCheck check(L, 1);
-
-	// nil the old global
-	lua_pushnil(L);
-	lua_setglobal(L, name.c_str());
-
-	// and push a new one
-	lua_newtable(L);
-	lua_setglobal(L, name.c_str());
-	lua_getglobal(L, name.c_str());
-}
-
-void ScriptBridge::pushNewTable(const std::string& key, int index)
-{
-	LuaStackCheck check(L, 1);
-	assert(!key.empty() || index > 0);
-
-	if (!key.empty()) {
-		lua_newtable(L);
-		lua_setfield(L, -2, key.c_str());
-
-		lua_pushstring(L, key.c_str());
-		int t = lua_gettable(L, -2);
-		CHECK(t == LUA_TTABLE);
-	}
-	else {
-		lua_newtable(L);
-		lua_seti(L, -2, index);
-
-		lua_pushinteger(L, index);
-		int t = lua_gettable(L, -2);
-		CHECK(t == LUA_TTABLE);
-	}
-}
-
-void ScriptBridge::setGlobal(const std::string& key, const Variant& value)
-{
-	LuaStackCheck check(L);
-	value.pushLua(L);
-	lua_setglobal(L, key.c_str());
-}
-
-void ScriptBridge::pushGlobal(const std::string& key) const
-{
-	LuaStackCheck check(L, 1);
-	int t = lua_getglobal(L, key.c_str());
-	CHECK(t != LUA_TNIL);
-}
-
-void ScriptBridge::nilGlobal(const std::string& key)
-{
-	LuaStackCheck check(L);
-	lua_pushnil(L);
-	lua_setglobal(L, key.c_str());
-}
-
-void ScriptBridge::callGlobalFunc(const std::string& name)
-{
-	LuaStackCheck check(L);
-	lua_getglobal(L, name.c_str());
-	lua_call(L, 0, 0);
-}
-
-void ScriptBridge::pushTable(const std::string& key, int index) const
-{
-	assert(!key.empty() || index > 0);
-	assert(lua_type(L, -1) == LUA_TTABLE);
-
-	LuaStackCheck check(L, 1);
-
-	if (!key.empty())
-		lua_pushstring(L, key.c_str());
-	else
-		lua_pushinteger(L, index);
-	lua_gettable(L, -2);
-}
-
-void ScriptBridge::pop(int n)
-{
-	lua_pop(L, n);
-}
-
-bool ScriptBridge::getBoolField(const std::string& key, std::optional<bool> def) const
-{
-	Variant v = getField(L, key, 0);
-	if (v.type == LUA_TNIL && def) return def.value();
-	assert(v.type == LUA_TBOOLEAN);
-	return v.boolean;
-}
-
-void ScriptBridge::setBoolField(const std::string& key, bool value)
-{
-	LuaStackCheck check(L);
-	assert(lua_istable(L, -1));
-	lua_pushstring(L, key.c_str());
-	lua_pushboolean(L, value);
-	lua_settable(L, -3);
-}
-
-bool ScriptBridge::hasField(const std::string& key) const
-{
-	return hasField(L, key);
-}
-
-/* static */bool ScriptBridge::hasField(lua_State* L, const std::string& key)
-{
-	Variant v = getField(L, key, 0);
-	return v.type != LUA_TNIL;
-}
-
-int ScriptBridge::getFieldType(const std::string& key) const
-{
-	Variant v = getField(L, key.c_str(), 0);
-	return v.type;
-}
-
-std::vector<std::string> ScriptBridge::getStrArray(const std::string& key) const
-{
-	std::vector<std::string> r;
-	LuaStackCheck check(L);
-
-	lua_pushstring(L, key.c_str());
-	lua_gettable(L, -2);
-
-	for (TableIt it(L, -1); !it.done(); it.next()) {
-		if (it.kType() == LUA_TNUMBER) {
-			assert(it.vType() == LUA_TSTRING);
-			std::string result = lua_tostring(L, -1);
-			r.push_back(result);
-		}
-	}
-	lua_pop(L, 1);
-	return r;
-}
-
-void ScriptBridge::setStrArray(const std::string& key, const std::vector<std::string>& values)
-{
-	LuaStackCheck check(L);
-	assert(lua_istable(L, -1));
-
-	lua_pushstring(L, key.c_str());					// -1 key
-	lua_newtable(L);								// -2 key -1 table
-	for (size_t i = 0; i < values.size(); i++) {
-		lua_pushnumber(L, int(i) + 1);				    // -3 key -2 table -1 index
-		lua_pushstring(L, values[i].c_str());		// -4 key -3 table -2 index -1 value
-		lua_settable(L, -3);						// -2 key -1 table
-	}
-	lua_settable(L, -3);							// clear
-}
-
-std::vector<int> ScriptBridge::getIntArray(const std::string& key) const
-{
-	std::vector<int> r;
-	LuaStackCheck check(L);
-	
-	lua_pushstring(L, key.c_str());
-	lua_gettable(L, -2);
-	for (TableIt it(L, -1); !it.done(); it.next()) {
-		if (it.kType() == LUA_TNUMBER) {
-			assert(it.vType() == LUA_TNUMBER);
-			int result = (int)lua_tonumber(L, -1);
-			r.push_back(result);
-		}
-	}
-	lua_pop(L, 1);
-	return r;
 }
 
 Point ScriptBridge::GetPointField(const std::string& key, const std::optional<Point>& def) const
 {
 	Point p;
-	LuaStackCheck check(L);
 
 	std::vector<int> vec = getIntArray(key);
 	if (vec.size() == 2) {
@@ -423,7 +154,6 @@ Point ScriptBridge::GetPointField(const std::string& key, const std::optional<Po
 Rect ScriptBridge::GetRectField(const std::string& key, const std::optional<Rect>& def) const
 {
 	Rect r;
-	LuaStackCheck check(L);
 
 	std::vector<int> vec = getIntArray(key);
 	if (vec.size() == 4) {
@@ -441,7 +171,6 @@ Rect ScriptBridge::GetRectField(const std::string& key, const std::optional<Rect
 Color ScriptBridge::GetColorField(const std::string& key, const std::optional<Color>& def) const
 {
 	Color c;
-	LuaStackCheck check(L);
 
 	std::vector<int> vec = getIntArray(key);
 	if (vec.size() == 4) {
@@ -456,164 +185,15 @@ Color ScriptBridge::GetColorField(const std::string& key, const std::optional<Co
 	return c;
 }
 
-void ScriptBridge::setIntArray(const std::string& key, const std::vector<int>& values)
-{
-	LuaStackCheck check(L);
-	assert(lua_istable(L, -1));
-	lua_pushstring(L, key.c_str());					// -1 key
-	lua_newtable(L);								// -2 key -1 table
-	for (size_t i = 0; i < values.size(); i++) {
-		lua_pushnumber(L, int(i) + 1);				    // -3 key -2 table -1 index
-		lua_pushnumber(L, values[i]);				// -4 key -3 table -2 index -1 value
-		lua_settable(L, -3);						// -2 key -1 table
-	}
-	lua_settable(L, -3);							// clear
-}
-
-std::vector<ScriptBridge::StringCount> ScriptBridge::getStrCountArray(const std::string& key) const
-{
-	std::vector<StringCount> r;
-	LuaStackCheck check(L);
-
-	lua_pushstring(L, key.c_str());
-	lua_gettable(L, -2);
-	for (TableIt it(L, -1); !it.done(); it.next()) {
-		if (it.kType() == LUA_TNUMBER) {
-			StringCount sc;
-			if (it.vType() == LUA_TTABLE) {
-				Variant str = getField(L, "", 1);
-				Variant num = getField(L, "", 2);
-				assert(str.type == LUA_TSTRING);
-				assert(num.type == LUA_TNUMBER);
-				sc.str = str.str;
-				sc.count = (int)num.num;
-				r.push_back(sc);
-			}
-			else {
-				sc.str = lua_tostring(L, -1);
-				sc.count = 1;
-				r.push_back(sc);
-			}
-		}
-	}
-	lua_pop(L, 1);
-	return r;
-}
-
-
-void ScriptBridge::setStrCountArray(const std::string& key, const std::vector<StringCount>& values)
-{
-	LuaStackCheck check(L);
-	assert(lua_istable(L, -1));
-
-	lua_pushstring(L, key.c_str());					// -1 key
-	lua_newtable(L);								// -2 key -1 table
-	for (int i = 0; i < (int)values.size(); i++) {
-		pushNewTable("", i + 1);
-		lua_pushstring(L, values[i].str.c_str());	
-		assert(lua_type(L, -1) == LUA_TSTRING);
-		assert(lua_type(L, -2) == LUA_TTABLE);
-		lua_seti(L, -2, 1);
-
-		lua_pushnumber(L, values[i].count);			
-		lua_seti(L, -2, 2);
-
-		pop(1);
-	}
-	lua_settable(L, -3);							// clear
-}
-
-std::string ScriptBridge::getStrField(const std::string& key, const std::optional<std::string>& def) const
-{
-	Variant v = getField(L, key, 0);
-	if (v.type == LUA_TNIL && def) return def.value();
-	if (v.type != LUA_TSTRING) {
-		throw std::runtime_error(fmt::format("Expected string for key '{}'", key));
-	}
-	return v.str;
-}
-
-void ScriptBridge::setStrField(const std::string& key, const std::string& value)
-{
-	LuaStackCheck check(L);
-	assert(lua_istable(L, -1));
-
-	lua_pushstring(L, key.c_str());
-	lua_pushstring(L, value.c_str());
-	lua_settable(L, -3);
-}
-
-/*static*/ Variant ScriptBridge::getField(lua_State* L, const std::string& key, int index, bool raw)
-{
-	assert(!key.empty() || index > 0);	// stupid 1 based index check
-
-	LuaStackCheck check(L);
-	Variant v;
-	int tMinusOne = lua_type(L, -1);
-	assert(tMinusOne == LUA_TTABLE); // -1 table
-	if (!key.empty())
-		lua_pushstring(L, key.c_str());	// -2 table -1 key
-	else
-		lua_pushnumber(L, index);		// -2 table -1 key/index
-
-	if (raw)
-		v.type = lua_rawget(L, -2);		// -2 table -1 value
-	else
-		v.type = lua_gettable(L, -2);		// -2 table -1 value
-
-	if (v.type == LUA_TSTRING) {
-		v.str = lua_tostring(L, -1);
-	}
-	else if (v.type == LUA_TNUMBER) {
-		v.num = lua_tonumber(L, -1);
-	}
-	else if (v.type == LUA_TBOOLEAN) {
-		v.boolean = lua_toboolean(L, -1) ? true : false;
-	}
-	lua_pop(L, 1);
-	return v;
-}
-
-/*static*/ int ScriptBridge::getFuncField(lua_State* L, const std::string& key)
-{
-	LuaStackCheck check(L);
-
-	assert(lua_type(L, -1) == LUA_TTABLE);  // -1 table
-	lua_pushstring(L, key.c_str());			// -2 table -1 key
-	int type = lua_gettable(L, -2);		    // -2 table -1 value
-	if (type != LUA_TFUNCTION) {
-		lua_pop(L, 1);
-		return -1;
-	}
-	int r = luaL_ref(L, LUA_REGISTRYINDEX);
-	return r;
-}
-
-int ScriptBridge::getIntField(const std::string& key, const std::optional<int>& def) const
-{
-	Variant v = getField(L, key, 0);
-	if (v.type == LUA_TNIL && def) return def.value();
-	assert(v.type == LUA_TNUMBER);
-	return (int)v.num;
-}
-
-void ScriptBridge::setIntField(const std::string& key, int value)
-{
-	LuaStackCheck check(L);
-	assert(lua_istable(L, -1));
-	lua_pushstring(L, key.c_str());
-	lua_pushnumber(L, value);
-	lua_settable(L, -3);
-}
-
 std::vector<EntityID> ScriptBridge::readObjects() const
 {
 	std::vector<EntityID> obj;
-	LuaStackCheck check(L);
 
-	for (TableIt it(L, -1); !it.done(); it.next()) {
-		if (lua_istable(L, -1)) {
-			Variant v = getField(L, "entityID", 0);
+	lua_State* state = getLuaState();
+
+	for (TableIt it(state, -1); !it.done(); it.next()) {
+		if (lua_istable(state, -1)) {
+			Variant v = getField(state, "entityID", 0);
 			assert(v.type == LUA_TSTRING);
 			obj.push_back(v.str);
 		}
@@ -624,7 +204,6 @@ std::vector<EntityID> ScriptBridge::readObjects() const
 Edge ScriptBridge::readEdge() const
 {
 	Edge re;
-	LuaStackCheck check(L);
 
 	try {
 		re.entityID = readEntityID("entityID", {});
@@ -657,14 +236,13 @@ Edge ScriptBridge::readEdge() const
 Container ScriptBridge::readContainer() const
 {
 	Container c;
-	LuaStackCheck check(L);
 
 	try {
 		c.entityID = readEntityID("entityID", {});
 		c.name = getStrField("name", {});
 		c.locked = getBoolField("locked", { false });
 		c.key = getStrField("key", { "" });
-		c.eval = getFuncField(L, "eval");
+		c.eval = getFuncField("eval");
 		c.inventory = readInventory();
 	}
 	catch (std::exception& e) {
@@ -693,7 +271,6 @@ Inventory ScriptBridge::readInventory() const
 Room ScriptBridge::readRoom() const
 {
 	Room r;
-	LuaStackCheck check(L);
 
 	try {
 		r.entityID = readEntityID("entityID", {});
@@ -710,7 +287,6 @@ Room ScriptBridge::readRoom() const
 Zone ScriptBridge::readZone() const
 {
 	Zone z;
-	LuaStackCheck check(L);
 	try {
 		z.entityID = readEntityID("entityID", {});
 		z.objects = readObjects();
@@ -725,7 +301,6 @@ Zone ScriptBridge::readZone() const
 Item ScriptBridge::readItem() const
 {
 	Item item;
-	LuaStackCheck check(L);
 	try {
 		item.entityID = readEntityID("entityID", {});
 		item.name = getStrField("name", {});
@@ -744,7 +319,6 @@ Item ScriptBridge::readItem() const
 Power ScriptBridge::readPower() const
 {
 	Power power;
-	LuaStackCheck check(L);
 	try {
 		power.entityID = readEntityID("entityID", {});
 		power.name = getStrField("name", {});
@@ -763,7 +337,6 @@ Power ScriptBridge::readPower() const
 Text ScriptBridge::readText() const
 {
 	Text text;
-	LuaStackCheck check(L);
 	try {
 		/*
 			Text {
@@ -783,9 +356,9 @@ Text ScriptBridge::readText() const
 		*/
 
 		text.entityID = readEntityID("entityID", {});
-		text.eval = getFuncField(L, "eval");
+		text.eval = getFuncField("eval");
 		text.test = getStrField("test", { "" });
-		text.code = getFuncField(L, "code");
+		text.code = getFuncField("code");
 		std::string speaker = getStrField("s", { "" });
 
 		if (hasField("md")) {
@@ -797,7 +370,7 @@ Text ScriptBridge::readText() const
 			}
 		}
 
-		for (TableIt it(L, -1); !it.done(); it.next()) {
+		for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 			if (it.kType() != LUA_TNUMBER)
 				continue;
 			if (it.vType() == LUA_TTABLE) {
@@ -809,16 +382,16 @@ Text ScriptBridge::readText() const
 					line.test = getStrField("test", {});
 				}
 				if (hasField("eval")) {
-					line.eval = getFuncField(L, "eval");
+					line.eval = getFuncField("eval");
 				}
 				if (hasField("code")) {
-					line.code = getFuncField(L, "code");
+					line.code = getFuncField("code");
 				}
 
 				// This inner loop goes through each of the strings,
 				// which are the actual text lines, assigned to the same
 				// speaker with the same eval() and code().
-				for (TableIt inner(L, -1); !inner.done(); inner.next()) {
+				for (TableIt inner(getLuaState(), -1); !inner.done(); inner.next()) {
 					if (inner.kType() != LUA_TNUMBER) continue;
 					Variant v = inner.value();
 					if (v.type != LUA_TSTRING) continue;
@@ -856,13 +429,12 @@ ScriptType ScriptBridge::toScriptType(const std::string& type) const
 Script ScriptBridge::readScript() const
 {
 	Script s;
-	LuaStackCheck check(L);
 	try {
 		s.entityID = readEntityID("entityID", {});
-		s.code = getFuncField(L, "code");
+		s.code = getFuncField("code");
 		s.npc = getStrField("npc", {""});
 
-		for (TableIt it(L, -1); !it.done(); it.next()) {
+		for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 			if (it.kType() == LUA_TNUMBER) {
 				EntityID id = readEntityID("entityID", {});
 				ScriptType type = toScriptType(getStrField("type", {}));
@@ -879,22 +451,22 @@ Script ScriptBridge::readScript() const
 EntityID ScriptBridge::readEntityID(const std::string& key, const std::optional<EntityID>& def) const
 {
 	std::string id;
-	int tMinusOne = lua_type(L, -1);
+	int tMinusOne = lua_type(getLuaState(), -1);
 	if (tMinusOne != LUA_TTABLE) {
 		assert(tMinusOne == LUA_TTABLE); // -1 table
 		throw std::runtime_error("Error parsing entity");
 	}
 	
-	Variant v = getField(L, key, 0);
+	Variant v = getField(getLuaState(), key, 0);
 	if (v.type == LUA_TSTRING) {
 		id = v.str;
 	}
 	else if (v.type == LUA_TTABLE) {
-		lua_pushstring(L, key.c_str());
-		int t = lua_gettable(L, -2);
+		lua_pushstring(getLuaState(), key.c_str());
+		int t = lua_gettable(getLuaState(), -2);
 		CHECK(t == LUA_TTABLE);
 		id = getStrField("entityID", {});
-		lua_pop(L, 1);
+		lua_pop(getLuaState(), 1);
 	}
 	else {
 		if (def) 
@@ -908,7 +480,6 @@ EntityID ScriptBridge::readEntityID(const std::string& key, const std::optional<
 Choices ScriptBridge::readChoices() const
 {
 	Choices c;
-	LuaStackCheck check(L);
 	try {
 		c.entityID = getStrField("entityID", {});
 
@@ -918,13 +489,13 @@ Choices ScriptBridge::readChoices() const
 		else if (a == "repeat") c.action = Choices::Action::kRepeat;
 		else if (a == "pop") c.action = Choices::Action::kPop;
 
-		for (TableIt it(L, -1); !it.done(); it.next()) {
+		for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 			if (it.kType() == LUA_TNUMBER) {
 				Choices::Choice choice;
 				choice.text = getStrField("text", {});
 				choice.next = readEntityID("next", { "done" });
-				choice.eval = getFuncField(L, "eval");
-				choice.code = getFuncField(L, "code");
+				choice.eval = getFuncField("eval");
+				choice.code = getFuncField("code");
 				c.choices.push_back(choice);
 			}
 		}
@@ -938,15 +509,14 @@ Choices ScriptBridge::readChoices() const
 Interaction ScriptBridge::readInteraction() const
 {
 	Interaction i;
-	LuaStackCheck check(L);
 	try {
 		i.entityID = getStrField("entityID", {});
 		i.name = getStrField("name", { "" });
 		i.next = readEntityID("next", {});
 		i.npc = readEntityID("npc", { "" });
 		i.required = getBoolField("required", { false });
-		i.eval = getFuncField(L, "eval");
-		i.code = getFuncField(L, "code");
+		i.eval = getFuncField("eval");
+		i.code = getFuncField("code");
 	}
 	catch(std::exception& e) {
 		FatalReadError(e.what(), i);
@@ -957,7 +527,6 @@ Interaction ScriptBridge::readInteraction() const
 Actor ScriptBridge::readActor() const
 {
 	Actor actor;
-	LuaStackCheck check(L);
 	try {
 		actor.entityID = getStrField("entityID", {});
 		actor.name = getStrField("name", {});
@@ -970,14 +539,14 @@ Actor ScriptBridge::readActor() const
 			actor.inventory = readInventory();
 		}
 		if (hasField("powers")) {
-			lua_pushstring(L, "powers");
-			lua_gettable(L, -2);
+			lua_pushstring(getLuaState(), "powers");
+			lua_gettable(getLuaState(), -2);
 
-			for (TableIt it(L, -1); !it.done(); it.next()) {
+			for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 				EntityID id = it.value().str;
 				actor.powers.push_back(id);
 			}
-			lua_pop(L, 1);
+			lua_pop(getLuaState(), 1);
 		}
 	}
 	catch (std::exception& e) {
@@ -989,7 +558,6 @@ Actor ScriptBridge::readActor() const
 Combatant ScriptBridge::readCombatant() const
 {
 	Combatant c;
-	LuaStackCheck check(L);
 	try {
 		c.entityID = getStrField("entityID", {});
 		c.name = getStrField("name", {});
@@ -1003,14 +571,14 @@ Combatant ScriptBridge::readCombatant() const
 		c.inventory = readInventory();
 
 		if (hasField("powers")) {
-			lua_pushstring(L, "powers");
-			lua_gettable(L, -2);
+			lua_pushstring(getLuaState(), "powers");
+			lua_gettable(getLuaState(), -2);
 
-			for (TableIt it(L, -1); !it.done(); it.next()) {
+			for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 				EntityID id = it.value().str;
 				c.powers.push_back(id);
 			}
-			lua_pop(L, 1);
+			lua_pop(getLuaState(), 1);
 		}
 	}
 	catch (std::exception& e) {
@@ -1022,22 +590,21 @@ Combatant ScriptBridge::readCombatant() const
 Battle ScriptBridge::readBattle() const
 {
 	Battle b;
-	LuaStackCheck check(L);
 
 	try {
 		b.entityID = readEntityID("entityID", {});
 		b.name = getStrField("name", {"battle"});
 
 		if (hasField("regions")) {
-			lua_pushstring(L, "regions");
-			lua_gettable(L, -2);
+			lua_pushstring(getLuaState(), "regions");
+			lua_gettable(getLuaState(), -2);
 
-			for (TableIt it(L, -1); !it.done(); it.next()) {
+			for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 				if (it.kType() == LUA_TNUMBER) {
 					lurp::swbattle::Region r;
-					r.name = getField(L, "", 1).str;
-					r.yards = (int)getField(L, "", 2).num;
-					std::string c = getField(L, "", 3).str;
+					r.name = getField(getLuaState(), "", 1).str;
+					r.yards = (int)getField(getLuaState(), "", 2).num;
+					std::string c = getField(getLuaState(), "", 3).str;
 					if (c == "light") r.cover = lurp::swbattle::Cover::kLightCover;
 					else if (c == "medium") r.cover = lurp::swbattle::Cover::kMediumCover;
 					else if (c == "heavy") r.cover = lurp::swbattle::Cover::kHeavyCover;
@@ -1045,7 +612,7 @@ Battle ScriptBridge::readBattle() const
 					b.regions.push_back(r);
 				}
 			}
-			lua_pop(L, 1);
+			lua_pop(getLuaState(), 1);
 		}
 
 		if (hasField("combatants")) {
@@ -1057,7 +624,7 @@ Battle ScriptBridge::readBattle() const
 			}
 		}
 
-		for (TableIt it(L, -1); !it.done(); it.next()) {
+		for (TableIt it(getLuaState(), -1); !it.done(); it.next()) {
 			if (it.kType() == LUA_TNUMBER) {
 				EntityID id = readEntityID("entityID", {});
 				b.combatants.push_back(id);
@@ -1073,13 +640,12 @@ Battle ScriptBridge::readBattle() const
 CallScript ScriptBridge::readCallScript() const
 {
 	CallScript cs;
-	LuaStackCheck check(L);
 	try {
 		cs.entityID = readEntityID("entityID", {});
 		cs.scriptID = readEntityID("scriptID", {});
 		cs.npc = readEntityID("npc", { "" });
-		cs.code = getFuncField(L, "code");
-		cs.eval = getFuncField(L, "eval");
+		cs.code = getFuncField("code");
+		cs.eval = getFuncField("eval");
 	}
 	catch (std::exception& e) {
 		FatalReadError(e.what(), cs);
@@ -1087,65 +653,23 @@ CallScript ScriptBridge::readCallScript() const
 	return cs;
 }
 
-ScriptBridge::FuncInfo ScriptBridge::getFuncInfo(int funcRef)
-{
-	LuaStackCheck check(L);
-
-	if (_funcInfoMap.find(funcRef) == _funcInfoMap.end()) {
-		FuncInfo info;
-		lua_rawgeti(L, LUA_REGISTRYINDEX, funcRef);
-		assert(lua_type(L, -1) == LUA_TFUNCTION);
-
-		lua_Debug ar;
-		lua_getinfo(L, ">Su", &ar);
-
-		info.srcName = ar.short_src;
-		info.srcLine = ar.linedefined;
-		info.nParams = ar.nparams;
-
-		_funcInfoMap[funcRef] = info;
-	}
-	return _funcInfoMap.at(funcRef);
-}
-
-
 // READ_ASSET(AllChoices, Choices, choices, readChoices);
 #define READ_ASSET(glob, type, member, func) \
 {  \
-	lua_getglobal(L, glob); \
-	for (TableIt it(L, -1); !it.done(); it.next()) { \
+    lua_State* state = getLuaState(); \
+	lua_getglobal(state, glob); \
+	for (TableIt it(state, -1); !it.done(); it.next()) { \
 		if (it.isTableWithKV("type", type)) { \
 			csa.member.push_back(func()); \
 		} \
 	} \
-	lua_pop(L, 1); \
+	lua_pop(state, 1); \
 }
-
-void ScriptBridge::loadLUA(const std::string& inputFilePath)
-{
-	PLOG(plog::info) << fmt::format("Loading: '{}'", inputFilePath);
-
-	LuaStackCheck check(L);
-	doFile("script/_map.lua");
-	assert(!inputFilePath.empty());
-
-	std::filesystem::path path = inputFilePath;
-
-	// game/start.lua
-	// parent_path:    `./game`
-	// need to append: 'game'
-	appendLuaPath(path.parent_path().string());
-
-	doFile(inputFilePath);
-}
-
 
 ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 {
 	assert(!inputFilePath.empty());
 	ConstScriptAssets csa;
-	LuaStackCheck check(L);
-
 	// required
 	doFile("script/_map.lua");
 
@@ -1181,7 +705,7 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 	for (auto& i : csa.combatants) i.inventory.convert(csa);
 	for (auto& i : csa.containers) i.inventory.convert(csa);
 
-	int kbytes = lua_gc(L, LUA_GCCOUNT);
+	int kbytes = lua_gc(getLuaState(), LUA_GCCOUNT);
 	PLOG(plog::info) << fmt::format("LUA memory usage: {} KB", kbytes);
 
 	return csa;
@@ -1189,10 +713,8 @@ ConstScriptAssets ScriptBridge::readCSA(const std::string& inputFilePath)
 
 std::vector<Text> ScriptBridge::LoadMD(const std::string& filename)
 {
-	LuaStackCheck check(L);
-
 	std::string text;
-	std::filesystem::path path = _currentDir / filename;
+	std::filesystem::path path = currentDir() / filename;
 	try {
 		std::ifstream stream(path);
 		std::stringstream buffer;
