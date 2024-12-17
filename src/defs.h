@@ -3,6 +3,7 @@
 #include "lua.hpp"
 #include "lurpvariant.h"
 
+#include <stdint.h>
 #include <string>
 
 namespace lurp {
