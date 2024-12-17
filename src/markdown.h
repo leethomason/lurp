@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "md4c.h"
 
+#include <stdint.h>
 #include <functional>
 
 namespace lurp {
