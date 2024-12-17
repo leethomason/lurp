@@ -1628,11 +1628,11 @@ static void TestMarkDown()
 		
 		MarkDown md;
 
-		md.headingHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
+		md.headingHandler = [&entity](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			entity = spans[0].text;
 		};
-		md.paragraphHandler = [&entity, &text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
+		md.paragraphHandler = [&text](const MarkDown&, const std::vector<MarkDown::Span>& spans, int level) {
 			TEST(level == 1);
 			text.push_back(spans[0].text);
 		};
