@@ -5,6 +5,7 @@ using namespace lurp;
 
 void ConsoleBoardDriver(const std::string& gameDir)
 {
+	(void)gameDir;
 	#if 0
 	// Loop:
 	//    - Print the board
