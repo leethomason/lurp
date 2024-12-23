@@ -187,11 +187,58 @@ void LuaBridge::nilGlobal(const std::string& key)
 	lua_setglobal(L, key.c_str());
 }
 
+/*
 void LuaBridge::callGlobalFunc(const std::string& name)
 {
 	LuaStackCheck check(L);
 	lua_getglobal(L, name.c_str());
 	lua_call(L, 0, 0);
+}
+*/
+
+bool LuaBridge::pCallFunc(int nArgs, int nResults)
+{
+	// This assumes everything is set up correctly and performs the
+	// function call w/ error checking.
+
+	LuaStackCheck check(L);
+
+	if (!lua_isfunction(L, -(1 + nArgs))) {
+		FatalError("Function not found at stack in pCallFunc");
+	}
+	int err = lua_pcall(L, nArgs, nResults, 0);
+	if (err) {
+		std::string e = lua_tostring(L, -1);
+		PLOG(plog::warning) << fmt::format("Lua error from pcall: {}", err, e);
+		assert(false);
+	}
+	return err == 0;
+}
+
+bool LuaBridge::callGlobalFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results)
+{
+	LuaStackCheck check(L);
+
+	lua_getglobal(L, name.c_str());
+	if (!lua_isfunction(L, -1)) {
+		FatalError("Function not found at stack in pCallFunc");
+	}
+	for (const Variant& v : args) {
+		v.pushLua(L);
+	}
+	int nArgs = (int)args.size();
+	int err = lua_pcall(L, nArgs, LUA_MULTRET, 0);
+	if (err) {
+		std::string e = lua_tostring(L, -1);
+		PLOG(plog::warning) << fmt::format("Lua error from pcall: {}", err, e);
+		assert(false);
+	}
+	int nResults = lua_gettop(L);
+	for (int i = 0; i < nResults; i++) {
+		results.push_back(Variant::fromLua(L, i));
+	}
+	lua_pop(L, nResults);
+	return err == 0;
 }
 
 void LuaBridge::pushTable(const std::string& key, int index) const

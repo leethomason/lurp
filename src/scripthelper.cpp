@@ -92,6 +92,7 @@ bool ScriptHelper::call(int ref, int nResult) const
 	return pcall(ref, fi.nParams, nResult);
 }
 
+/*
 bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const
 {
 	lua_State* L = _bridge.getLuaState();
@@ -108,6 +109,7 @@ bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std
 	}
 	return pcall(-1, (int)args.size(), nResult);
 }
+*/
 
 bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 {

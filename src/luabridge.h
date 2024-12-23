@@ -39,7 +39,17 @@ public:
 	void pop(int n = 1);
 
 	void nilGlobal(const std::string& key);
-	void callGlobalFunc(const std::string& name);	// no return
+	//void callGlobalFunc(const std::string& name);	
+
+	// Calling a func is a little tricky. The function ref is pushed before the args, which
+	// is awkward. The function ref is handy or it isn't. Try to wrap this up in a reasonably
+	// complete but simple interface.
+	// 
+	// Most primitive: this makes the call, but the stack has to already be set up.
+	bool pCallFunc(int nArgs, int nResults);
+	// Utility methods (but limited to Variant)
+	bool callFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results);
+	bool callGlobalFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results);
 
 	bool hasField(const std::string& key) const;
 	int getFieldType(const std::string& key) const;
