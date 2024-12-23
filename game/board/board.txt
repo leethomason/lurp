@@ -1,0 +1,40 @@
+[A]-----[B]
+ |       |
+ |       +--[ E ]
+ |       |
+[ C ]---[D]
+
+function onBoardRequested() 
+    -- data structure? should the connection parsing
+    -- be done in script?
+    -- what's a reasonable graph to return?
+    -- text and graphics compat - text implies a layout (and rendering)
+    -- whereas an image is separate from its geometry
+    return board0
+end
+
+-- meeple?
+-- player
+-- mech
+
+onMeepleMove(from, to, meeple)
+
+    return true -- false, then move failed
+end
+
+canMeepleMove(from, to, meeple)
+
+end
+
+
+                  [ Ballroom ]    [ Garden ]
+                  [          ]    [        ]
+                  [          ]    [        ] 
+                                  [        ]
+[Dining Room]     [Main Hall ]    
+[           ]     [          ]    [ Lounge ]
+[           ]     [          ]    [        ]
+                                        
+                  [ Foyer    ]
+                  [          ]
+

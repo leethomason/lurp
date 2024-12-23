@@ -1,12 +1,10 @@
 #include "consoleboard.h"
-#include "scriptbridge.h"
+#include "luabridge.h"
 
 using namespace lurp;
 
-void ConsoleBoardDriver(const std::string& gameDir)
+void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName)
 {
-	(void)gameDir;
-	#if 0
 	// Loop:
 	//    - Print the board
 	//    - Get user input
@@ -16,8 +14,9 @@ void ConsoleBoardDriver(const std::string& gameDir)
 
 	LuaBridge bridge;	// Problem #1: There's a bunch of game specific code in the scriptbridge
 						//             Create the luaBridge
-	bridge.loadLUA("./game/walk/walk.lua");	// Load the game
+	bridge.loadLUA(gameFile.c_str());	// Load the game
 
+#if 0
 	// KISS: start with a graph based board.
 	// Need a representation here to put on the pieces.
 
@@ -25,6 +24,5 @@ void ConsoleBoardDriver(const std::string& gameDir)
 	while(true) {
 		
 	}
-
-	#endif
+#endif
 }
