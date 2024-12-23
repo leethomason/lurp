@@ -462,8 +462,8 @@ int main(int argc, const char* argv[])
 	std::string log = "warning";
 	cmdl({ "-l", "--log" }, log) >> log;
 
-	std::string gameDir = GameFileToDir(scriptFile);
-	std::filesystem::path savePath = SavePath(gameDir, "saves");
+	std::string gameName = GameFileToDir(scriptFile);
+	std::filesystem::path savePath = SavePath(gameName, "saves");
 	std::filesystem::path logPath = LogPath("lurp");
 
 	plog::Severity logLevel = plog::severityFromString(log.c_str());
@@ -502,7 +502,7 @@ int main(int argc, const char* argv[])
 		Globals::debugSave = debugSave;
 
 		if (boardGame) {
-			ConsoleBoardDriver(gameDir);
+			ConsoleBoardDriver(gameFile, gameName);
 		}
 		else {
 			if (doScan && gameFile.empty()) {
@@ -519,7 +519,7 @@ int main(int argc, const char* argv[])
 
 				assets.log();
 
-				ConsoleZoneDriver(assets, bridge, startingZone, gameDir, seed);
+				ConsoleZoneDriver(assets, bridge, startingZone, gameName, seed);
 			}
 		}
 	}
