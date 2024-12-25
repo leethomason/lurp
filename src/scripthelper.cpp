@@ -55,7 +55,7 @@ void ScriptHelper::setupScriptEnv()
 		lua_pushnil(L);
 	else
 		lua_pushstring(L, _scriptEnv.room.c_str());
-	pcall(-1, 4, 0);
+	_bridge.pCallFunc(4, 0);
 
 	// Basic check everything is okay:
 	t = lua_getglobal(L, "script");
@@ -70,12 +70,11 @@ void ScriptHelper::tearDownScriptEnv()
 
 	int t = lua_getglobal(L, "ClearScriptEnv");
 	CHECK(t == LUA_TFUNCTION);
-	pcall(-1, 0, 0);
-
+	_bridge.pCallFunc(0, 0);
 	_coreData.clearScriptEnv();
 }
 
-bool ScriptHelper::call(int ref, int nResult) const
+bool ScriptHelper::boolCall(int ref) const
 {
 	if (ref < 0) {
 		return true;
@@ -85,11 +84,18 @@ bool ScriptHelper::call(int ref, int nResult) const
 	ScriptBridge::LuaStackCheck check(L);
 	ScriptBridge::FuncInfo fi = _bridge.getFuncInfo(ref);
 
-	// Push the function first, then the args. Who knew.
-	lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-	assert(lua_type(L, -1) == LUA_TFUNCTION);
+	std::vector<Variant> args;
+	args.resize(fi.nParams);
+	std::vector<Variant> results;
+	bool okay = _bridge.callFunc(ref, args, results);
+	REQUIRE(okay);
 
-	return pcall(ref, fi.nParams, nResult);
+	bool rc = false;
+	if (okay && !results.empty()) {
+		rc = results[0].isTruthy();
+	}
+	fmt::print("boolCall {}\n", rc ? "true" : "false");
+	return rc;
 }
 
 /*
@@ -111,6 +117,7 @@ bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std
 }
 */
 
+/*
 bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 {
 	ScriptBridge::FuncInfo fi;
@@ -144,5 +151,6 @@ bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
 
 	return r;
 }
+*/
 
 } // namespace lurp

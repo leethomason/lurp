@@ -37,7 +37,7 @@ ScriptDriver::ScriptDriver(const ScriptAssets& assets, MapData& mapData, ScriptB
 	_bridge.setIText(this);
 
 	_helper = std::make_unique<ScriptHelper>(bridge, _mapData.coreData, _scriptEnv);
-	_helper->call(func, 0);
+	_helper->boolCall(func);
 
 	_tree.log();
 	processTree(false);
@@ -77,16 +77,16 @@ Text ScriptDriver::filterText(const Text& text) const
 	Text result = text.copyWithoutLines();
 
 	bool outerEval = true;
-	outerEval = _helper->call(text.eval, 1);
+	outerEval = _helper->boolCall(text.eval);
 	outerEval = outerEval && textTest(text.test);
 	if (!outerEval) {
 		return result;
 	}
-	_helper->call(text.code, 0);
+	_helper->boolCall(text.code);
 
 	for (const Text::Line& line : text.lines) {
 		bool eval = true;
-		eval = _helper->call(line.eval, 1);
+		eval = _helper->boolCall(line.eval);
 		eval = eval && textTest(line.test);
 
 		if (!eval) continue;
@@ -109,7 +109,7 @@ Choices ScriptDriver::filterChoices(const Choices& choices) const
 
 		bool pass = true;
 		if (_helper && c.eval >= 0) {
-			pass = _helper->call(c.eval, 1);
+			pass = _helper->boolCall(c.eval);
 		}
 		if (pass) {
 			result.choices.push_back(c);
@@ -204,7 +204,7 @@ TextLine ScriptDriver::line()
 		textLine.alreadyRead = true;
 	}
 
-	_helper.get()->call(line.code, 0);
+	_helper.get()->boolCall(line.code);
 	return textLine;
 }
 
@@ -227,13 +227,12 @@ void ScriptDriver::processTree(bool step)
 			if (ref.type == ScriptType::kScript) {
 				const Script& script = _assets._csa.scripts[ref.index];
 				if (!script.npc.empty()) {
-					//bool okay = _helper->callGlobal("SetupNPCEnv", { script.npc }, 1);
 					std::vector<Variant> results;
 					bool okay = _bridge.callGlobalFunc("SetupNPCEnv", { script.npc }, results);
 					if (okay) 
 						_scriptEnv.npc = script.npc;
 				}
-				_helper->call(script.code, 0);
+				_helper->boolCall(script.code);
 			}
 			else if (ref.type == ScriptType::kText) {
 				const Text& text = _assets._csa.texts[ref.index];
@@ -261,16 +260,15 @@ void ScriptDriver::processTree(bool step)
 			else if (ref.type == ScriptType::kCallScript) {
 				const CallScript& callScript = _assets._csa.callScripts[ref.index];
 				bool eval = true;
-				eval = _helper->call(callScript.eval, true);
+				eval = _helper->boolCall(callScript.eval);
 				if (eval) {
 					if (!callScript.npc.empty()) {
-						//bool okay = _helper->callGlobal("SetupNPCEnv", { callScript.npc }, 1);
 						std::vector<Variant> results;
 						bool okay = _bridge.callGlobalFunc("SetupNPCEnv", { callScript.npc }, results);
 						if (okay)
 							_scriptEnv.npc = callScript.npc;
 					}
-					_helper->call(callScript.code, false);
+					_helper->boolCall(callScript.code);
 				}
 				else {
 					_treeIt.forwardTE();
@@ -363,7 +361,7 @@ void ScriptDriver::choose(int i)
 	Choices::Choice c = _mappedChoices.choices[i];
 
 	if (_helper && c.code >= 0) {
-		_helper->call(c.code, 0);
+		_helper->boolCall(c.code);
 	}
 	Choices::Action action = Choices::Action::kDone;
 	if (parseAction(c.next, action)) {

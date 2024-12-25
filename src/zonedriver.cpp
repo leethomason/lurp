@@ -164,8 +164,8 @@ ContainerVec ZoneDriver::getContainers(EntityID room)
 
 			ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), NO_ENTITY };
 			ScriptHelper helper(_bridge, mapData.coreData, env);
-			eval = helper.call(c.eval, 1);
-\
+			eval = helper.boolCall(c.eval);
+
 			if (eval)
 				result.push_back(&c);
 		}
@@ -181,7 +181,7 @@ bool ZoneDriver::filterInteraction(const Interaction& i)
 	bool eval = true;
 	ScriptEnv env = { NO_ENTITY, zoneID(), roomID(), NO_ENTITY };
 	ScriptHelper helper(_bridge, mapData.coreData, env);
-	eval = helper.call(i.eval, 1);
+	eval = helper.boolCall(i.eval);
 	return eval;
 }
 

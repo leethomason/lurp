@@ -46,9 +46,15 @@ public:
 	// complete but simple interface.
 	// 
 	// Most primitive: this makes the call, but the stack has to already be set up.
-	bool pCallFunc(int nArgs, int nResults);
+	//     funcRef
+	//     args[]
+	int pCallFunc(int nArgs, int nResults);
+	int pCallFuncMultiRet(int nArgs, int& nResults);
+
 	// Utility methods (but limited to Variant)
-	bool callFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results);
+	// 
+	bool callFunc(int funcRef, const std::vector<Variant>& args, std::vector<Variant>& results);
+	// Calls the function by name - handy! But has to be global. No changes to stack.
 	bool callGlobalFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results);
 
 	bool hasField(const std::string& key) const;

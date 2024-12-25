@@ -12,6 +12,13 @@
 		assert(false);                                          \
 	}
 
+#define REQUIRE(x)                                                \
+	if (!(x)) {	                                                \
+		PLOG(plog::error) << "REQUIRE runtime assertion failed";  \
+		assert(false);     \
+		exit(3); \
+	}
+
 inline void FatalError(const std::string & msg)
 {
 	PLOG(plog::error) << "FATAL: " << msg;

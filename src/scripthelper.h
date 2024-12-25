@@ -21,14 +21,14 @@ public:
 
 	// eval(script, player, npc) -> bool
 	// code(script, player, npc) -> nil
-	bool call(int funcRef, int nResult) const;
+	bool boolCall(int funcRef) const;
 
 	//bool callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const;
 
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:
-	bool pcall(int funcRef, int nArgs, int nResult) const;
+	//bool pcall(int funcRef, int nArgs, int nResult) const;
 	void setupScriptEnv();
 	void tearDownScriptEnv();
 
