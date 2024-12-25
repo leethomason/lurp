@@ -48,14 +48,16 @@ public:
 	// Most primitive: this makes the call, but the stack has to already be set up.
 	//     funcRef
 	//     args[]
+	// Returns: error code from Lua. 0 is no error.
 	int pCallFunc(int nArgs, int nResults);
 	int pCallFuncMultiRet(int nArgs, int& nResults);
 
-	// Utility methods (but limited to Variant)
-	// 
-	bool callFunc(int funcRef, const std::vector<Variant>& args, std::vector<Variant>& results);
+	// Takes args in, but leaves results on the stack.
+	// Returns the number of results, or -1 for error.
+	int callFunc(int funcRef, const std::vector<Variant>& args);
 	// Calls the function by name - handy! But has to be global. No changes to stack.
-	bool callGlobalFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results);
+	// Returns number of results, or -1 for error.
+	int callGlobalFunc(const std::string& name, const std::vector<Variant>& args);
 
 	bool hasField(const std::string& key) const;
 	int getFieldType(const std::string& key) const;

@@ -8,7 +8,8 @@ void BoardDriver::loadBoard()
 	//bridge.callGlobalFunc("loadBoard");
 	std::vector<Variant> args;
 	std::vector<Variant> results;
-	bridge.callGlobalFunc("loadBoard", args, results);
+	int nResults = bridge.callGlobalFunc("loadBoard", args);
+	bridge.pop(nResults);
 }
 
 } // namespace lurp

@@ -5,7 +5,12 @@
 #include "lua.hpp"
 
 namespace lurp {
-    struct Variant {
+
+// Structure to wrap up a Lua type.
+// Be warned, this only works on primitive types.
+// Tables, functions, etc. get converted to "none".
+// FIXME: rename to Primitive
+struct Variant {
 	Variant() = default;
 	Variant(const Variant&) = default;
 	Variant& operator=(const Variant&) = default;

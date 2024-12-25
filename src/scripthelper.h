@@ -23,8 +23,6 @@ public:
 	// code(script, player, npc) -> nil
 	bool boolCall(int funcRef) const;
 
-	//bool callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const;
-
 	const ScriptEnv& env() const { return _scriptEnv; }
 
 private:

@@ -232,10 +232,8 @@ int LuaBridge::pCallFuncMultiRet(int nArgs, int& nResults)
 	return err;
 }
 
-bool LuaBridge::callGlobalFunc(const std::string& name, const std::vector<Variant>& args, std::vector<Variant>& results)
+int LuaBridge::callGlobalFunc(const std::string& name, const std::vector<Variant>& args)
 {
-	LuaStackCheck check(L);
-
 	lua_getglobal(L, name.c_str());
 	if (!lua_isfunction(L, -1)) {
 		FatalError("Function not found at stack in callGlobalFunc");
@@ -251,17 +249,11 @@ bool LuaBridge::callGlobalFunc(const std::string& name, const std::vector<Varian
 		PLOG(plog::warning) << fmt::format("Lua error in {} from callGlobalFunc: {}", name, e);
 		assert(false);
 	}
-
-	for (int i = 0; i < nResults; i++) {
-		results.push_back(Variant::fromLua(L, i));
-	}
-	lua_pop(L, nResults);
-	return err == 0;
+	return nResults;
 }
 
-bool LuaBridge::callFunc(int funcRef, const std::vector<Variant>& args, std::vector<Variant>& results)
+int LuaBridge::callFunc(int funcRef, const std::vector<Variant>& args)
 {
-	LuaStackCheck check(L);
 	FuncInfo fi = getFuncInfo(funcRef);
 	if (fi.nParams != (int)args.size()) {
 		PLOG(plog::error) << fmt::format("Function call with wrong number of args: {} != {}", fi.nParams, args.size());
@@ -281,18 +273,7 @@ bool LuaBridge::callFunc(int funcRef, const std::vector<Variant>& args, std::vec
 		PLOG(plog::warning) << fmt::format("Lua error {} from '{}' at line {}", err, fi.srcName, fi.srcLine);
 		assert(false);
 	}
-	for (int i = 0; i < nResults; i++) {
-		results.push_back(Variant::fromLua(L, i));
-	}
-	for (int i = 0; i < nResults; i++) {
-		int type = lua_type(L, i);
-		bool lBool = lua_toboolean(L, i);
-		bool vBool = results[i].isTruthy();
-		assert(lBool == vBool);
-	}
-
-	lua_pop(L, nResults);
-	return err == 0;
+	return nResults;
 }
 
 void LuaBridge::pushTable(const std::string& key, int index) const

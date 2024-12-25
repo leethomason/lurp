@@ -227,9 +227,8 @@ void ScriptDriver::processTree(bool step)
 			if (ref.type == ScriptType::kScript) {
 				const Script& script = _assets._csa.scripts[ref.index];
 				if (!script.npc.empty()) {
-					std::vector<Variant> results;
-					bool okay = _bridge.callGlobalFunc("SetupNPCEnv", { script.npc }, results);
-					if (okay) 
+					int nResults = _bridge.callGlobalFunc("SetupNPCEnv", { script.npc });
+					if (nResults >= 0) 
 						_scriptEnv.npc = script.npc;
 				}
 				_helper->boolCall(script.code);
@@ -263,9 +262,8 @@ void ScriptDriver::processTree(bool step)
 				eval = _helper->boolCall(callScript.eval);
 				if (eval) {
 					if (!callScript.npc.empty()) {
-						std::vector<Variant> results;
-						bool okay = _bridge.callGlobalFunc("SetupNPCEnv", { callScript.npc }, results);
-						if (okay)
+						int nResults = _bridge.callGlobalFunc("SetupNPCEnv", { callScript.npc });
+						if (nResults >= 0)
 							_scriptEnv.npc = callScript.npc;
 					}
 					_helper->boolCall(callScript.code);

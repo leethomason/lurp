@@ -86,71 +86,16 @@ bool ScriptHelper::boolCall(int ref) const
 
 	std::vector<Variant> args;
 	args.resize(fi.nParams);
-	std::vector<Variant> results;
-	bool okay = _bridge.callFunc(ref, args, results);
-	REQUIRE(okay);
+	int nResults = _bridge.callFunc(ref, args);
+	REQUIRE(nResults >= 0);
 
 	bool rc = false;
-	if (okay && !results.empty()) {
-		rc = results[0].isTruthy();
+	if (nResults > 0) {
+		rc = lua_toboolean(L, -1);
 	}
-	fmt::print("boolCall {}\n", rc ? "true" : "false");
+	_bridge.pop(nResults);
 	return rc;
 }
 
-/*
-bool ScriptHelper::callGlobal(const std::string& funcName, const std::vector<std::string>& args, int nResult) const
-{
-	lua_State* L = _bridge.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
-
-	int t = lua_getglobal(L, funcName.c_str());
-	CHECK(t == LUA_TFUNCTION);
-
-	for (const std::string& arg : args) {
-		if (arg.empty())
-			lua_pushnil(L);
-		else
-			lua_pushstring(L, arg.c_str());
-	}
-	return pcall(-1, (int)args.size(), nResult);
-}
-*/
-
-/*
-bool ScriptHelper::pcall(int funcRef, int nArgs, int nResult) const
-{
-	ScriptBridge::FuncInfo fi;
-	if (funcRef >= 0) {
-		fi = _bridge.getFuncInfo(funcRef);
-		assert(fi.nParams == nArgs);
-	}
-
-	lua_State* L = _bridge.getLuaState();
-	int err = lua_pcall(L, nArgs, nResult, 0);
-	std::string errStr = "";
-	if (err == LUA_ERRRUN) errStr = "ERRRUN";
-	else if (err == LUA_ERRERR) errStr = "LUA_ERRERR";
-
-	if (err) {
-		PLOG(plog::warning) << fmt::format("Lua error {} '{}' from '{}' at line {}", err, errStr, fi.srcName, fi.srcLine);
-		std::string e = lua_tostring(L, -1);
-		PLOG(plog::warning) << fmt::format("Msg: {}", e);
-		assert(false);
-	}
-	bool r = false;
-	Variant vr = Variant::fromLua(L, -1);
-	if (nResult) {
-		r = lua_toboolean(L, -1) != 0;
-	}
-	lua_pop(L, nResult);
-
-	if (funcRef >= 0) {
-		PLOG(plog::debug) << fmt::format("[TRACE] Call to {} at line {} returned {}. ", fi.srcName, fi.srcLine, vr.toLuaString());
-	}
-
-	return r;
-}
-*/
 
 } // namespace lurp
