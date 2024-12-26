@@ -102,10 +102,7 @@ Zone {
             name = "The Restricted Section",
             next = Script {
                 Choices {
-                    {   eval = function() 
-                            local h = player:hasItem("HAIRPIN") 
-                            return h
-                            end,
+                    {   eval = function() return player:hasItem("HAIRPIN") end,
                         text = "Pick the lock",
                         next = Script {
                             Text {

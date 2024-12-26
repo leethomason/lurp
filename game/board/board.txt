@@ -31,7 +31,7 @@ end
                   [          ]    [        ]
                   [          ]    [        ] 
                                   [        ]
-[Dining Room]     [Main Hall ]    
+[  Dining   ]     [Main Hall ]    
 [           ]     [          ]    [ Lounge ]
 [           ]     [          ]    [        ]
                                         

@@ -38,6 +38,8 @@ public:
 	void pushNewTable(const std::string& key, int index = 0);
 	void pop(int n = 1);
 
+	bool isTable(int index) const { return lua_istable(L, index); }
+
 	void nilGlobal(const std::string& key);
 	//void callGlobalFunc(const std::string& name);	
 
