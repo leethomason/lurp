@@ -210,7 +210,7 @@ static bool ProcessMenu(const std::string& s, const std::string& dir, ZoneDriver
 	if (s == "/l" || s == "/c") {
 		fmt::print("Loading from '{}'...\n", path.string());
 		ScriptBridge loader;
-		loader.loadLUA(path.string());
+		loader.loadLUA(path.string(), {"_map.lua"});
 		zd.load(loader);
 	}
 	if (s == "/q") {

@@ -276,7 +276,7 @@ static void TestScriptSave()
 			ScriptDriver driver(assets, data, bridge, env);
 
 			ScriptBridge loader;
-			loader.loadLUA(path.string());
+			loader.loadLUA(path.string(), { "_map.lua"});
 			data.coreData.load(loader);	 // needed for filtering - must be before the driver.load()
 			bool success = driver.load(loader);
 			TEST(success);
@@ -349,7 +349,7 @@ static void TestScriptSaveMutated()
 			ScriptDriver driver(assets, data, bridge, env);
 
 			ScriptBridge loader;
-			loader.loadLUA(path.string());
+			loader.loadLUA(path.string(), {"_map.lua"});
 			data.coreData.load(loader);	 // needed for filtering - must be before the driver.load()
 			driver.load(loader);
 
@@ -420,7 +420,7 @@ static void TestZoneSave()
 			ZoneDriver zd(assets, bridge, "ZONE");
 
 			ScriptBridge loader;
-			loader.loadLUA(path.string());
+			loader.loadLUA(path.string(), {"_map.lua"});
 			zd.load(loader);
 
 			if (story == 0) {

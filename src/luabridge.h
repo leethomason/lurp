@@ -19,7 +19,7 @@ public:
 	LuaBridge();	
 	~LuaBridge();
 
-	void loadLUA(const std::string& path);
+	void loadLUA(const std::string& path, const std::optional<std::string>& scriptFile);
 
 	lua_State* getLuaState() const { return L; }
 

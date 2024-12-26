@@ -15,18 +15,22 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 
 	LuaBridge bridge;	// Problem #1: There's a bunch of game specific code in the scriptbridge
 						//             Create the luaBridge
-	bridge.loadLUA(gameFile.c_str());	// Load the game
+	bridge.loadLUA(gameFile.c_str(), "_board.lua");	// Load the game
 
 	BoardDriver driver(bridge);
 	driver.loadBoard();
 
 #if 0
-	// KISS: start with a graph based board.
-	// Need a representation here to put on the pieces.
+	// - KISS: start with a graph based board.
+	// - Need a representation here to put on the pieces.
+	// - Multi player (sigh - connections are a pain. start w/local network)
 
+	loadBoard();
+	setupBoard();
 
 	while(true) {
-		
+		playerMoves();
+		mechMoves();
 	}
 #endif
 }

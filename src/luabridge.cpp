@@ -550,11 +550,16 @@ LuaBridge::FuncInfo LuaBridge::getFuncInfo(int funcRef)
 	return _funcInfoMap.at(funcRef);
 }
 
-void LuaBridge::loadLUA(const std::string& inputFilePath)
+void LuaBridge::loadLUA(const std::string& inputFilePath, const std::optional<std::string>& scriptFile)
 {
 	PLOG(plog::info) << fmt::format("Loading: '{}'", inputFilePath);
 
-	doFile("script/_map.lua");
+	if (scriptFile) {
+		std::filesystem::path p("script");
+		p.append(scriptFile.value());
+
+		doFile(p.string().c_str());
+	}
 	assert(!inputFilePath.empty());
 
 	std::filesystem::path path = inputFilePath;
