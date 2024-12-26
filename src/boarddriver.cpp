@@ -124,6 +124,8 @@ void BoardDriver::drawLine(uint8_t* buffer, int w, int h, int x0, int y0, int x1
 	int sy = y0 < y1 ? 1 : -1;
 	int err = dx - dy;
 	while (true) {
+		assert(x0 >= 0 && x0 < w);
+		assert(y0 >= 0 && y0 < h);
 		buffer[y0 * w + x0] = uint8_t(c);
 		if (x0 == x1 && y0 == y1) {
 			break;

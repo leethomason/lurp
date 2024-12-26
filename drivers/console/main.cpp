@@ -540,7 +540,7 @@ int main(int argc, const char* argv[])
 
 	PLOG(severity) << "Memory report:";
 	PLOG(severity) << "Leak count = " << leakCount << " size = " << leakSize;
-	PLOG(severity) << "High water = " << highWater << " total allocated = " << totalAllocaton;
+	PLOG(severity) << "High water = " << highWater << "k total allocated = " << totalAllocaton;
 	assert(s3.lCounts[1] <= knownNumLeak);
 	assert(s3.lSizes[1] <= knownLeakSize);
 #endif
