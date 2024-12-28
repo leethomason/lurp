@@ -20,11 +20,26 @@ void BoardDriver::loadBoard()
 	bridge.pop(nResults);
 }
 
-void BoardDriver::fillBox()
+void BoardDriver::createGameBox()
 {
 	bridge.pushGlobal("onSetupBox");
 	bridge.pushGlobal("Box");
+	bridge.pCallFunc(1, 1);
+	_maxPlayers = bridge.toInt(-1);
+	bridge.pop();
+	REQUIRE(_maxPlayers > 0);
+}
+
+void BoardDriver::setupGame()
+{
+	bridge.pushGlobal("_createPlayers");
+	bridge.pushInt(_maxPlayers);
 	bridge.pCallFunc(1, 0);
+
+	bridge.pushGlobal("onSetupGame");
+	bridge.pushGlobal("Players");
+	bridge.pushGlobal("Box");
+	bridge.pCallFunc(2, 0);
 }
 
 void BoardDriver::parseBoardTable()
@@ -78,8 +93,8 @@ std::string BoardDriver::renderBoard()
 		width = std::max(width, cell.x + cell.w);
 		height = std::max(height, cell.y + cell.h);
 	}
-	uint8_t* board = new uint8_t[width * height];
-	memset(board, 0, width * height);
+	uint16_t* board = new uint16_t[width * height];
+	memset(board, 0, width * height * sizeof(board[0]));
 
 	for (const auto& cell : _board) {
 		int cx = cell.x + cell.w / 2;
@@ -113,7 +128,7 @@ std::string BoardDriver::renderBoard()
 	std::string result;
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			uint8_t c = board[y * width + x];
+			uint8_t c = int8_t(board[y * width + x]);
 			result += c ? c : ' ';
 		}
 		result += '\n';
@@ -123,7 +138,7 @@ std::string BoardDriver::renderBoard()
 	return result;
 }
 
-void BoardDriver::drawLine(uint8_t* buffer, int w, int h, int x0, int y0, int x1, int y1, char c)
+void BoardDriver::drawLine(uint16_t* buffer, int w, int h, int x0, int y0, int x1, int y1, char c)
 {
 	int dx = abs(x1 - x0);
 	int dy = abs(y1 - y0);
@@ -133,7 +148,7 @@ void BoardDriver::drawLine(uint8_t* buffer, int w, int h, int x0, int y0, int x1
 	while (true) {
 		assert(x0 >= 0 && x0 < w);
 		assert(y0 >= 0 && y0 < h);
-		buffer[y0 * w + x0] = uint8_t(c);
+		buffer[y0 * w + x0] = uint16_t(c);
 		if (x0 == x1 && y0 == y1) {
 			break;
 		}

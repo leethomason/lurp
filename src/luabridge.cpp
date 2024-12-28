@@ -195,7 +195,7 @@ int LuaBridge::pCallFunc(int nArgs, int nResults)
 	LuaStackCheck check(L, nResults - nArgs - 1);
 
 	if (!lua_isfunction(L, -(1 + nArgs))) {
-		FatalError("Function not found at stack in pCallFunc");
+		FatalError(fmt::format("Function not found at stack in pCallFunc at stackPos={}", -(1 + nArgs)));
 	}
 	// Pops nArgs and the function ref.
 	// Pushes the results.

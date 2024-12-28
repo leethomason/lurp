@@ -1,3 +1,5 @@
+local MAX_PLAYERS = 4
+
 function onFetchBoard()
     return {
         { name = "Ballroom", x = 19, y = 0, w = 12, h = 3, connect = { "Garden", "Main Hall" } },
@@ -9,15 +11,41 @@ function onFetchBoard()
     }
 end
 
-function printBox(box)
-    print("printBox")
-    for k, v in ipairs(box.meeples) do
-        print("meeples", k, v)
+function printMeeples(meeples)
+    print("printMeeples")
+    for _, v in ipairs(meeples) do
+        print("meeples", v.type, v.id, v.color)
     end
 end
 
-function onSetupBox(box)
-    box.meeples:push(Meeple:new())
+function printBox(box)
+    print("printBox")
+    printMeeples(box.meeples)
+end
 
-    printBox(box)
+function onSetupBox(box)
+    box.meeples:push(Meeple:new("player", "P1", "green"))
+    box.meeples:push(Meeple:new("player", "P2", "yellow"))
+    box.meeples:push(Meeple:new("player", "P3", "blue"))
+    box.meeples:push(Meeple:new("player", "P4", "red"))
+
+    box.meeples:push(Meeple:new("place", "L", "red"))
+
+    --printBox(box)
+
+    return MAX_PLAYERS
+end
+
+function onSetupGame(players, box)
+    local pm = box.meeples:filter(function(meeple) return meeple.type == "player" end)
+    assert(#pm == MAX_PLAYERS)
+
+    for i = 1, #players do
+        pm[i].pos = "Foyer"
+        pm[i].color = "green"
+        players[i].meeple = pm[i]
+    end
+
+    --print("player meeples")
+    --printMeeples(pm)
 end

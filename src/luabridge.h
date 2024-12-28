@@ -60,6 +60,12 @@ public:
 	// Returns number of results, or -1 for error.
 	int callGlobalFunc(const std::string& name, const std::vector<Variant>& args);
 
+	// Wraps the lua casts:
+	int64_t toInt(int index) const { return lua_tointeger(L, index); }
+	double toDouble(int index) const { return lua_tonumber(L, index); }
+
+	void pushInt(int64_t value) { lua_pushinteger(L, value); }
+
 	bool hasField(const std::string& key) const;
 	int getFieldType(const std::string& key) const;
 
