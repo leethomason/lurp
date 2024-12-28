@@ -20,6 +20,13 @@ void BoardDriver::loadBoard()
 	bridge.pop(nResults);
 }
 
+void BoardDriver::fillBox()
+{
+	bridge.pushGlobal("onSetupBox");
+	bridge.pushGlobal("Box");
+	bridge.pCallFunc(1, 0);
+}
+
 void BoardDriver::parseBoardTable()
 {
 	for (TableIt it(bridge.getLuaState(), -1); !it.done(); it.next()) {

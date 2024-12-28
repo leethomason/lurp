@@ -41,7 +41,6 @@ public:
 	bool isTable(int index) const { return lua_istable(L, index); }
 
 	void nilGlobal(const std::string& key);
-	//void callGlobalFunc(const std::string& name);	
 
 	// Calling a func is a little tricky. The function ref is pushed before the args, which
 	// is awkward. The function ref is handy or it isn't. Try to wrap this up in a reasonably

@@ -202,7 +202,7 @@ int LuaBridge::pCallFunc(int nArgs, int nResults)
 	int err = lua_pcall(L, nArgs, nResults, 0);
 	if (err) {
 		std::string e = lua_tostring(L, -1);
-		PLOG(plog::warning) << fmt::format("Lua error from pcall: {}", err, e);
+		PLOG(plog::warning) << fmt::format("Lua error {} from pcall: {}", err, e);
 		assert(false);
 	}
 	return err;

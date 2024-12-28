@@ -8,3 +8,16 @@ function onFetchBoard()
         { name = "Foyer", x = 19, y = 10, w = 12, h = 2, connect = {"Main Hall"}  },
     }
 end
+
+function printBox(box)
+    print("printBox")
+    for k, v in ipairs(box.meeples) do
+        print("meeples", k, v)
+    end
+end
+
+function onSetupBox(box)
+    box.meeples:push(Meeple:new())
+
+    printBox(box)
+end

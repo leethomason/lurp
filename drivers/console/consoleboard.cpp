@@ -19,6 +19,7 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 
 	BoardDriver driver(bridge);
 	driver.loadBoard();
+	driver.fillBox();
 
 #if 0
 	// - KISS: start with a graph based board.

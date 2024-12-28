@@ -12,6 +12,7 @@ public:
 	BoardDriver(LuaBridge& bridge) : bridge(bridge) {}
 
 	void loadBoard();
+	void fillBox();
 
 private:
 	struct BoardCell {
