@@ -76,7 +76,7 @@ void ScriptAssets::load(ScriptBridge& loader)
 {
 	//inventories.clear(); // fixme clear existing???
 	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	lua_getglobal(L, "Inventories");
 	assert(lua_type(L, -1) == LUA_TTABLE);

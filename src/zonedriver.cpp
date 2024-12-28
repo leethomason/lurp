@@ -480,7 +480,7 @@ EntityID ZoneDriver::load(ScriptBridge& loader)
 	ZoneDriver::loadTextRead(loader, mapData.textRead);
 
 	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	loader.pushGlobal("Map");
 	EntityID room = loader.getStrField("currentRoom", {});
@@ -518,7 +518,7 @@ void ZoneDriver::saveTextRead(std::ostream& stream, const std::unordered_set<uin
 void ZoneDriver::loadTextRead(ScriptBridge& loader, std::unordered_set<uint64_t>& text)
 {
 	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	lua_getglobal(L, "TextRead");
 	assert(lua_type(L, -1) == LUA_TTABLE);

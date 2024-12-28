@@ -45,7 +45,7 @@ void BoardDriver::parseBoardTable()
 		REQUIRE(it.vType() == LUA_TTABLE);
 		REQUIRE(bridge.hasField("name"));
 
-		BoardCell cell;
+		Cell cell;
 		cell.name = bridge.getStrField("name", {});
 		cell.x = bridge.getIntField("x", 0);
 		cell.y = bridge.getIntField("y", 0);
@@ -64,7 +64,7 @@ void BoardDriver::parseBoardTable()
 		for (TableIt c(bridge.getLuaState(), -1); !c.done(); c.next()) {
 			REQUIRE(c.vType() == LUA_TSTRING);
 			const std::string name = c.value().str;
-			auto dst = std::find_if(_board.begin(), _board.end(), [name](const BoardCell& cell) {
+			auto dst = std::find_if(_board.begin(), _board.end(), [name](const Cell& cell) {
 				return cell.name == name;
 				});
 			REQUIRE(dst != _board.end());
@@ -82,6 +82,22 @@ void BoardDriver::parseBoardTable()
 	}
 }
 
+std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard()
+{
+	std::vector<Meeple> meeples;
+	LuaStackCheck check(bridge.getLuaState());
+
+	// Need to look at Box.meeples
+	bridge.pushGlobal("Box");
+	REQUIRE(bridge.isTable(-1));
+
+	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
+
+	}
+
+	bridge.pop();
+	return meeples;
+}
 
 } // namespace lurp
 

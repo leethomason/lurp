@@ -18,7 +18,7 @@ VarBinder::~VarBinder()
 std::string VarBinder::pushPath(const std::string& path) const
 {
 	lua_State* L = _bridge.getLuaState();
-	ScriptBridge::LuaStackCheck check(L, 1);
+	LuaStackCheck check(L, 1);
 
 	std::vector<std::string_view> parts = splitSV(path, '.');
 	assert(parts.size() > 0);
@@ -115,7 +115,7 @@ Variant VarBinder::get(const std::string& in) const
 
 	// 3. lua script
 	lua_State* L = _bridge.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	std::string key = pushPath(in);
 	Variant v = ScriptBridge::getField(L, key, -1, true);

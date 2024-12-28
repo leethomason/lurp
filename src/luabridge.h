@@ -2,6 +2,7 @@
 
 #include "lua.hpp"
 #include "lurpvariant.h"
+#include "debug.h"
 
 #include <assert.h>
 #include <filesystem>
@@ -11,6 +12,22 @@
 #include <map>
 
 namespace lurp {
+
+// Make sure the stack is the same size when this object goes out of scope.
+struct LuaStackCheck {
+	LuaStackCheck(lua_State* L, int diff = 0) : _L(L) {
+		_nStack = lua_gettop(_L) + diff;
+	}
+	LuaStackCheck(const LuaStackCheck&) = delete;
+	~LuaStackCheck() {
+		bool okay = lua_gettop(_L) == _nStack;
+		assert(okay);
+		REQUIRE(okay);
+	}
+
+	lua_State* _L;
+	int _nStack = 0;
+};
 
 class LuaBridge
 {
@@ -93,20 +110,6 @@ public:
 	FuncInfo getFuncInfo(int funcRef);
 	void registerGlobalFunc(void* handler, lua_CFunction func, const std::string& funcName);
 
-	// Make sure the stack is the same size when this object goes out of scope.
-	struct LuaStackCheck {
-		LuaStackCheck(lua_State* L, int diff = 0) : _L(L) {
-			_nStack = lua_gettop(_L) + diff;
-		}
-		LuaStackCheck(const LuaStackCheck&) = delete;
-		~LuaStackCheck() {
-			assert(lua_gettop(_L) == _nStack);
-		}
-
-		lua_State* _L;
-		int _nStack = 0;
-	};
-
 	void doFile(const std::string& filename);
 	int getFuncField(const std::string& key) const {
 		return getFuncField(L, key);
@@ -130,7 +133,7 @@ private:
 
 struct TableIt
 {
-	TableIt(lua_State* L, int index);
+	TableIt(lua_State* L, int index = -1);
 	~TableIt();
 
 	bool done() const {

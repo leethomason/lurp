@@ -55,7 +55,7 @@ void GameConfig2D::load(const lurp::ScriptBridge& bridge)
 	saveLoadBackground.clear();	
 
 	lua_State* L = bridge.getLuaState();
-	lurp::ScriptBridge::LuaStackCheck check(L);
+	lurp::LuaStackCheck check(L);
 
 	bridge.pushGlobal("Config");
 	if (!lua_istable(L, -1)) {

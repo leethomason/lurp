@@ -29,7 +29,7 @@ ScriptHelper::~ScriptHelper()
 void ScriptHelper::setupScriptEnv()
 {
 	lua_State* L = _bridge.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	// Check if the context is already set up
 	int exists = lua_getglobal(L, "script");
@@ -66,7 +66,7 @@ void ScriptHelper::setupScriptEnv()
 void ScriptHelper::tearDownScriptEnv()
 {
 	lua_State* L = _bridge.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	int t = lua_getglobal(L, "ClearScriptEnv");
 	CHECK(t == LUA_TFUNCTION);
@@ -81,7 +81,7 @@ bool ScriptHelper::boolCall(int ref) const
 	}
 
 	lua_State* L = _bridge.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 	ScriptBridge::FuncInfo fi = _bridge.getFuncInfo(ref);
 
 	std::vector<Variant> args;

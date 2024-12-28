@@ -110,7 +110,7 @@ void CoreData::save(std::ostream& stream) const
 void CoreData::load(ScriptBridge& loader)
 {
 	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	loader.pushGlobal("CoreData");
 	assert(lua_type(L, -1) == LUA_TTABLE);

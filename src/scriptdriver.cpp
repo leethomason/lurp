@@ -416,7 +416,7 @@ bool ScriptDriver::allTextRead(const EntityID& id) const
 /*static*/ ScriptEnv ScriptDriver::loadScriptEnv(ScriptBridge& loader)
 {
 	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	loader.pushGlobal("ScriptEnv");
 	ScriptEnv env;
@@ -456,7 +456,7 @@ void ScriptDriver::save(std::ostream& stream) const
 bool ScriptDriver::load(ScriptBridge& loader)
 {
 	lua_State* L = loader.getLuaState();
-	ScriptBridge::LuaStackCheck check(L);
+	LuaStackCheck check(L);
 
 	_scriptEnv = loadScriptEnv(loader);
 

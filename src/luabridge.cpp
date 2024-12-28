@@ -16,10 +16,10 @@ void FatalReadError(const std::string& msg, const T& t)
 	exit(1);
 }
 
-TableIt::TableIt(lua_State* L, int index) : _L(L) {
-	assert(lua_type(_L, index) == LUA_TTABLE);
+TableIt::TableIt(lua_State* L, int atIndex) : _L(L) {
+	assert(lua_type(_L, atIndex) == LUA_TTABLE);
 	// we don't have to worry about mutating the stack.
-	lua_pushvalue(L, index);
+	lua_pushvalue(L, atIndex);
 	lua_pushnil(L);
 	lua_pushnil(L);	// the next() starts with a pop, THEN replaces the key
 	next();

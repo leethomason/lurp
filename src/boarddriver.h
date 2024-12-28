@@ -15,7 +15,7 @@ public:
 	void createGameBox();
 	void setupGame();
 
-	struct BoardCell {
+	struct Cell {
 		std::string name;
 		int x = 0;
 		int y = 0;
@@ -24,11 +24,28 @@ public:
 		std::vector<int> connections;
 	};
 
-	const std::vector<BoardCell>& board() const { return _board; }
+	enum class Color {
+		red,
+		orange,
+		yellow,
+		green,
+		blue,
+		purple,
+		white,
+	};
+
+	struct Meeple {
+		std::string name;
+		std::string location;
+		Color color;
+	};
+
+	std::vector<Meeple> queryMeeplesOnBoard();
+	const std::vector<Cell>& board() const { return _board; }
 private:
 
 	LuaBridge& bridge;
-	std::vector<BoardCell> _board;
+	std::vector<Cell> _board;
 	int64_t _maxPlayers = 0;
 
 	void parseBoardTable();

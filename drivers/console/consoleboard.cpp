@@ -36,7 +36,7 @@ static std::string renderBoard(const BoardDriver& driver)
 {
 	int width = 0;
 	int height = 0;
-	const std::vector<BoardDriver::BoardCell>& boardCells = driver.board();
+	const std::vector<BoardDriver::Cell>& boardCells = driver.board();
 
 	for (const auto& cell : boardCells) {
 		width = std::max(width, cell.x + cell.w);
