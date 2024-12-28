@@ -15,7 +15,6 @@ public:
 	void createGameBox();
 	void setupGame();
 
-private:
 	struct BoardCell {
 		std::string name;
 		int x = 0;
@@ -25,13 +24,14 @@ private:
 		std::vector<int> connections;
 	};
 
+	const std::vector<BoardCell>& board() const { return _board; }
+private:
+
 	LuaBridge& bridge;
 	std::vector<BoardCell> _board;
 	int64_t _maxPlayers = 0;
 
 	void parseBoardTable();
-	std::string renderBoard();
-	void drawLine(uint16_t* buffer, int w, int h, int x0, int y0, int x1, int y1, char c);
 };
 
 } // namespace lurp
