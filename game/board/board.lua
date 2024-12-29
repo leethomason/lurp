@@ -42,7 +42,7 @@ function onSetupGame(players, box)
 
     for i = 1, #players do
         pm[i].pos = "Foyer"
-        pm[i].color = "green"
+        --pm[i].color = "green"
         players[i].meeple = pm[i]
     end
 

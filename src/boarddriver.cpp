@@ -99,7 +99,7 @@ BoardDriver::Color BoardDriver::toColor(const std::string& s)
 	if (s == "blue") return Color::blue;
 	if (s == "purple") return Color::purple;
 	if (s == "white") return Color::white;
-	return Color::white;
+	return Color::defaultColor;
 }
 
 const BoardDriver::Cell* BoardDriver::getCell(const std::string& location) const

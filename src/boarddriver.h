@@ -25,6 +25,7 @@ public:
 	};
 
 	enum class Color {
+		defaultColor,	// needs to be zero
 		red,
 		orange,
 		yellow,

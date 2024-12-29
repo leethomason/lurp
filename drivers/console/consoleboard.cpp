@@ -3,6 +3,8 @@
 #include "boarddriver.h"
 #include "util.h"
 
+#include <ionic/ionic.h>
+
 #include <fmt/core.h>
 #include <numeric>
 
@@ -91,7 +93,7 @@ static std::string renderBoard(const BoardDriver& driver)
 		int y = cell.y + 1;
 		for (const auto& m : mHere) {
 			for (size_t i = 0; i < m.name.size(); i++) {
-				board[y * width + x + i] = m.name[i];
+				board[y * width + x + i] = m.name[i] | (uint16_t(m.color) << 8);
 			}
 			x += int(m.name.size()) + 1;
 		}
@@ -100,8 +102,24 @@ static std::string renderBoard(const BoardDriver& driver)
 	std::string result;
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			uint8_t c = int8_t(board[y * width + x]);
-			result += c ? c : ' ';
+			uint16_t c16 = board[y * width + x];
+			char c = (c16 & 0xff) ? char(c16 & 0xff) : ' ';
+
+			using Color = BoardDriver::Color;
+			Color color = Color(c16 >> 8);
+
+			switch (color) {
+			case Color::defaultColor: result += c; break;
+			case Color::red: result += ionic::Table::colorize(ionic::Color::red, std::string(1, c)); break;
+			case Color::orange: result += ionic::Table::colorize(ionic::Color::brightYellow, std::string(1, c)); break;
+			case Color::yellow: result += ionic::Table::colorize(ionic::Color::yellow, std::string(1, c)); break;
+			case Color::green: result += ionic::Table::colorize(ionic::Color::green, std::string(1, c)); break;
+			case Color::blue: result += ionic::Table::colorize(ionic::Color::brightBlue, std::string(1, c)); break;
+			case Color::purple: result += ionic::Table::colorize(ionic::Color::magenta, std::string(1, c)); break;
+			case Color::white: result += ionic::Table::colorize(ionic::Color::white, std::string(1, c)); break;
+			default:
+				assert(false);
+			}
 		}
 		result += '\n';
 	}
