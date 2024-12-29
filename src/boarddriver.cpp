@@ -117,7 +117,7 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 
 	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
 		Meeple m;
-		m.name = bridge.getStrField("type", {});
+		m.name = bridge.getStrField("id", {});
 		m.location = bridge.getStrField("pos", { "" });
 		std::string color = bridge.getStrField("color", { "white" });
 		m.color = toColor(color);

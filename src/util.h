@@ -147,6 +147,19 @@ T sign(T a) {
 	return T(0);
 }
 
+// Oh c++. why does this have to be so verbose?
+template< typename T, typename Pred>
+std::vector<T> filter(const std::vector<T>& vec, Pred p) {
+	std::vector<T> out;
+	std::copy_if(vec.begin(), vec.end(), std::back_inserter(out), p);
+	return out;
+}
+
+template< typename T, typename V, typename Pred>
+V reduce(const std::vector<T>& vec, V init, Pred p) {
+	return std::accumulate(vec.begin(), vec.end(), init, p);
+}
+
 template<typename T>
 struct Queue {
 	static constexpr size_t kMaxSize = 32;

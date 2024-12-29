@@ -1,8 +1,10 @@
 #include "consoleboard.h"
 #include "luabridge.h"
 #include "boarddriver.h"
+#include "util.h"
 
 #include <fmt/core.h>
+#include <numeric>
 
 using namespace lurp;
 
@@ -38,7 +40,6 @@ static std::string renderBoard(const BoardDriver& driver)
 	int height = 0;
 
 	const std::vector<BoardDriver::Cell>& boardCells = driver.board();
-	std::vector<BoardDriver::Meeple> meeples = driver.queryMeeplesOnBoard();
 
 	for (const auto& cell : boardCells) {
 		width = std::max(width, cell.x + cell.w);
@@ -74,7 +75,27 @@ static std::string renderBoard(const BoardDriver& driver)
 		}
 	}
 
-	//drawLine(board, width, height, 1, 1, 10, 5, '*');
+	// Draw the meeples
+	using Meeple = BoardDriver::Meeple;
+	std::vector<Meeple> meeples = driver.queryMeeplesOnBoard();
+	for (const auto& cell : boardCells) {
+		std::vector<Meeple> mHere = filter(meeples, [name = cell.name](const Meeple& m) {return m.location == name; });
+		if (mHere.empty())
+			continue;
+
+		size_t textLen = reduce(mHere, (size_t)0, [](size_t sum, const Meeple& m) { return sum + m.name.size(); });
+		REQUIRE(textLen > 0);
+		textLen += mHere.size() - 1; // spaces between names
+
+		int x = cell.x + cell.w / 2 - int(textLen) / 2;
+		int y = cell.y + 1;
+		for (const auto& m : mHere) {
+			for (size_t i = 0; i < m.name.size(); i++) {
+				board[y * width + x + i] = m.name[i];
+			}
+			x += int(m.name.size()) + 1;
+		}
+	}
 
 	std::string result;
 	for (int y = 0; y < height; y++) {
