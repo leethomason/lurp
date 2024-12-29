@@ -8,6 +8,8 @@ namespace lurp {
 
 void BoardDriver::loadBoard()
 {
+	LuaStackCheck check(bridge.getLuaState());
+
 	std::vector<Variant> args;
 	int nResults = bridge.callGlobalFunc("onFetchBoard", args);
 	
@@ -19,6 +21,8 @@ void BoardDriver::loadBoard()
 
 void BoardDriver::createGameBox()
 {
+	LuaStackCheck check(bridge.getLuaState());
+
 	bridge.pushGlobal("onSetupBox");
 	bridge.pushGlobal("Box");
 	bridge.pCallFunc(1, 1);
@@ -29,6 +33,8 @@ void BoardDriver::createGameBox()
 
 void BoardDriver::setupGame()
 {
+	LuaStackCheck check(bridge.getLuaState());
+
 	bridge.pushGlobal("_createPlayers");
 	bridge.pushInt(_maxPlayers);
 	bridge.pCallFunc(1, 0);
@@ -41,6 +47,8 @@ void BoardDriver::setupGame()
 
 void BoardDriver::parseBoardTable()
 {
+	LuaStackCheck check(bridge.getLuaState());
+
 	for (TableIt it(bridge.getLuaState(), -1); !it.done(); it.next()) {
 		REQUIRE(it.vType() == LUA_TTABLE);
 		REQUIRE(bridge.hasField("name"));

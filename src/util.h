@@ -160,6 +160,15 @@ V reduce(const std::vector<T>& vec, V init, Pred p) {
 	return std::accumulate(vec.begin(), vec.end(), init, p);
 }
 
+/*
+template< typename T, typename V, typename Pred>
+std::vector<V> map(const std::vector<T>& vec, Pred p) {
+	std::vector<V> out;
+	std::transform(vec.begin(), vec.end(), std::back_inserter(out), p);
+	return out;
+}
+*/
+
 template<typename T>
 struct Queue {
 	static constexpr size_t kMaxSize = 32;
