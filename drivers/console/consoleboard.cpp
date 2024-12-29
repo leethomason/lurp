@@ -36,7 +36,9 @@ static std::string renderBoard(const BoardDriver& driver)
 {
 	int width = 0;
 	int height = 0;
+
 	const std::vector<BoardDriver::Cell>& boardCells = driver.board();
+	std::vector<BoardDriver::Meeple> meeples = driver.queryMeeplesOnBoard();
 
 	for (const auto& cell : boardCells) {
 		width = std::max(width, cell.x + cell.w);

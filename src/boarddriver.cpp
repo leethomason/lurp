@@ -82,7 +82,29 @@ void BoardDriver::parseBoardTable()
 	}
 }
 
-std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard()
+BoardDriver::Color BoardDriver::toColor(const std::string& s)
+{
+	if (s == "red") return Color::red;
+	if (s == "orange") return Color::orange;
+	if (s == "yellow") return Color::yellow;
+	if (s == "green") return Color::green;
+	if (s == "blue") return Color::blue;
+	if (s == "purple") return Color::purple;
+	if (s == "white") return Color::white;
+	return Color::white;
+}
+
+const BoardDriver::Cell* BoardDriver::getCell(const std::string& location) const
+{
+	auto it = std::find_if(_board.begin(), _board.end(), [location](const Cell& c) {
+		return c.name == location;
+		});
+	if (it == _board.end())
+		return nullptr;
+	return &(*it);
+}
+
+std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 {
 	std::vector<Meeple> meeples;
 	LuaStackCheck check(bridge.getLuaState());
@@ -90,12 +112,23 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard()
 	// Need to look at Box.meeples
 	bridge.pushGlobal("Box");
 	REQUIRE(bridge.isTable(-1));
+	bridge.pushTable("meeples");
+	REQUIRE(bridge.isTable(-1));
 
 	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
+		Meeple m;
+		m.name = bridge.getStrField("type", {});
+		m.location = bridge.getStrField("pos", { "" });
+		std::string color = bridge.getStrField("color", { "white" });
+		m.color = toColor(color);
 
+		const Cell* cell = getCell(m.location);
+		if (cell) {
+			meeples.push_back(m);
+		}
 	}
 
-	bridge.pop();
+	bridge.pop(2);
 	return meeples;
 }
 

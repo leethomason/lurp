@@ -34,14 +34,19 @@ public:
 		white,
 	};
 
+	static Color toColor(const std::string&);
+
 	struct Meeple {
 		std::string name;
 		std::string location;
 		Color color;
 	};
 
-	std::vector<Meeple> queryMeeplesOnBoard();
+	std::vector<Meeple> queryMeeplesOnBoard() const;
+
 	const std::vector<Cell>& board() const { return _board; }
+	const Cell* getCell(const std::string& name) const;
+
 private:
 
 	LuaBridge& bridge;

@@ -44,7 +44,7 @@ end
 Meeple = {
     x = 0,
     y = 0,
-    pos = "",
+    pos = "",           -- is this the best name? location? FIXME
     type = "player",
     id = "",
     color = "blue",
