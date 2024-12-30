@@ -24,7 +24,7 @@ end
 function printMeeples(meeples)
     print("printMeeples")
     for _, v in ipairs(meeples) do
-        print("meeples", v.type, v.id, v.color)
+        print("meeples", v.name, v.color)
     end
 end
 
@@ -34,12 +34,12 @@ function printBox(box)
 end
 
 function onSetupBox(box)
-    box.meeples:push(Meeple:new("player", "P1", "green"))
-    box.meeples:push(Meeple:new("player", "P2", "yellow"))
-    box.meeples:push(Meeple:new("player", "P3", "blue"))
-    box.meeples:push(Meeple:new("player", "P4", "red"))
+    box.meeples:push(Meeple:new("player", "P0", "green"))
+    box.meeples:push(Meeple:new("player", "P1", "yellow"))
+    box.meeples:push(Meeple:new("player", "P2", "blue"))
+    box.meeples:push(Meeple:new("player", "P3", "red"))
 
-    box.meeples:push(Meeple:new("place", "L", "red"))
+    box.meeples:push(Meeple:new("place", "red"))
 
     --printBox(box)
 
@@ -47,13 +47,12 @@ function onSetupBox(box)
 end
 
 function onSetupGame(players, box)
-    local pm = box.meeples:filter(function(meeple) return meeple.type == "player" end)
-    assert(#pm == MAX_PLAYERS)
+    local meeples = box.meeples:filter(function(meeple) return meeple.name == "player" end)
+    assert(#meeples == MAX_PLAYERS)  -- not generally true, but is for this game
 
     for i = 1, #players do
-        pm[i].pos = "Foyer"
-        --pm[i].color = "green"
-        players[i].meeple = pm[i]
+        meeples[i].pos = "Foyer"
+        players[i].meeples:push(meeples[i])
     end
 
     --print("player meeples")

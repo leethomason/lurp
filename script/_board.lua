@@ -42,21 +42,25 @@ function Table:filter(func)
 end
 
 Meeple = {
-    x = 0,
-    y = 0,
-    pos = "",           -- is this the best name? location? FIXME
-    type = "player",
-    id = "",
+    -- Location.
+    -- x,y for grid, pos for graph/room based boards
+    -- note that x,y is 0 based. -1 means not on board
+    x = -1,
+    y = -1,
+    pos = "",
+
+    name = "",          -- name of the meeple
+    label = "",         -- label to display
     color = "blue",
 }
 
-function Meeple:new(type, str, color)
+function Meeple:new(name, label, color)
     local o = {}
     setmetatable(o, self)
     self.__index = self
 
-    o.type = type
-    o.id = str
+    o.name = name
+    o.label = label
     o.color = color
 
     return o
@@ -67,7 +71,10 @@ Box.meeples = Table:new()
 
 Players = Table:new()
 
-Player = {}
+Player = {
+    index = 0,
+    meeples = {},
+}
 
 function Player:new(index)
     local o = {}
@@ -75,11 +82,15 @@ function Player:new(index)
     self.__index = self
 
     o.index = index
+    o.meeples = Table:new()
     return o
 end
 
 function _createPlayers(nPlayers)
     for i = 1, nPlayers do
-        Players:push(Player:new(i))
+        local p = Player:new(i)
+        assert(type(p) == "table")
+        Players:push(p)
     end
+    print("Players", #Players)
 end

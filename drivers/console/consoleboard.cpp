@@ -81,21 +81,21 @@ static std::string renderBoard(const BoardDriver& driver)
 	using Meeple = BoardDriver::Meeple;
 	std::vector<Meeple> meeples = driver.queryMeeplesOnBoard();
 	for (const auto& cell : boardCells) {
-		std::vector<Meeple> mHere = filter(meeples, [name = cell.name](const Meeple& m) {return m.location == name; });
+		std::vector<Meeple> mHere = filter(meeples, [name = cell.name](const Meeple& m) {return m.pos == name; });
 		if (mHere.empty())
 			continue;
 
-		size_t textLen = reduce(mHere, (size_t)0, [](size_t sum, const Meeple& m) { return sum + m.name.size(); });
+		size_t textLen = reduce(mHere, (size_t)0, [](size_t sum, const Meeple& m) { return sum + m.label.size(); });
 		REQUIRE(textLen > 0);
 		textLen += mHere.size() - 1; // spaces between names
 
 		int x = cell.x + cell.w / 2 - int(textLen) / 2;
 		int y = cell.y + 1;
 		for (const auto& m : mHere) {
-			for (size_t i = 0; i < m.name.size(); i++) {
-				board[y * width + x + i] = m.name[i] | (uint16_t(m.color) << 8);
+			for (size_t i = 0; i < m.label.size(); i++) {
+				board[y * width + x + i] = m.label[i] | (uint16_t(m.color) << 8);
 			}
-			x += int(m.name.size()) + 1;
+			x += int(m.label.size()) + 1;
 		}
 	}
 
@@ -149,23 +149,10 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	std::string b = renderBoard(driver);
 	fmt::print("{}", b);
 
-	while (!driver.done()) {
+	/*while (!driver.done()) {
 		for (int i = 0; i < driver.nPlayers(); i++) {
 			std::vector<BoardDriver::Cell> moves = driver.queryMoves(i);
 		}
 	}
-
-#if 0
-	// - KISS: start with a graph based board.
-	// - Need a representation here to put on the pieces.
-	// - Multi player (sigh - connections are a pain. start w/local network)
-
-	loadBoard();
-	setupBoard();
-
-	while(true) {
-		playerMoves();
-		mechMoves();
-	}
-#endif
+	*/
 }

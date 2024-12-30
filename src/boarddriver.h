@@ -38,9 +38,15 @@ public:
 	static Color toColor(const std::string&);
 
 	struct Meeple {
+		// Reflection of Lua:
 		std::string name;
-		std::string location;
+		std::string label;
+		std::string pos;
 		Color color;
+
+		// Convenience! If owned by a player, this is the player number.
+		// 0 is the first player.
+		int player = -1;
 	};
 
 	std::vector<Meeple> queryMeeplesOnBoard() const;
@@ -50,7 +56,14 @@ public:
 
 	bool done() const { return false; }	// FIXME
 	int nPlayers() const { return _numPlayers; }
-	std::vector<BoardDriver::Cell> queryMoves(int player) const;
+
+	struct Move {
+		int player = 0;
+		const Meeple* meeple = nullptr;
+		const Cell* from = nullptr;
+		const Cell* to = nullptr;
+	};
+	std::vector<Move> queryMoves(int player) const;
 
 private:
 

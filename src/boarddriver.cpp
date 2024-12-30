@@ -26,7 +26,7 @@ void BoardDriver::createGameBox()
 	bridge.pushGlobal("onSetupBox");
 	bridge.pushGlobal("Box");
 	bridge.pCallFunc(1, 1);
-	_maxPlayers = bridge.toInt(-1);
+	_maxPlayers = (int)bridge.toInt(-1);
 	bridge.pop();
 	REQUIRE(_maxPlayers > 0);
 }
@@ -127,12 +127,13 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 
 	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
 		Meeple m;
-		m.name = bridge.getStrField("id", {});
-		m.location = bridge.getStrField("pos", { "" });
+		m.name = bridge.getStrField("name", {});
+		m.label = bridge.getStrField("label", {"M"});
+		m.pos = bridge.getStrField("pos", { "" });
 		std::string color = bridge.getStrField("color", { "white" });
 		m.color = toColor(color);
 
-		const Cell* cell = getCell(m.location);
+		const Cell* cell = getCell(m.pos);
 		if (cell) {
 			meeples.push_back(m);
 		}
@@ -142,10 +143,14 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 	return meeples;
 }
 
-std::vector<BoardDriver::Cell> BoardDriver::queryMoves(int player) const
+std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 {
-	std::vector<Cell> moves;
+	std::vector<Move> moves;
 
+	// Meeples are what moves (not the player)
+	//const std::vector<Meeple> allMeeples = queryMeeplesOnBoard();
+	//const std::vector<Meeple> meeples = filter(allMeeples, [player](const Meeple& m) { return m.player == player; });
+	return moves;
 }
 
 
