@@ -36,7 +36,9 @@ void BoardDriver::setupGame()
 	LuaStackCheck check(bridge.getLuaState());
 
 	bridge.pushGlobal("_createPlayers");
-	bridge.pushInt(_maxPlayers);
+	// FIXME: need to set the number of players correctly.
+	_numPlayers = std::min(2, int(_maxPlayers));
+	bridge.pushInt(_numPlayers);
 	bridge.pCallFunc(1, 0);
 
 	bridge.pushGlobal("onSetupGame");
@@ -139,6 +141,13 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 	bridge.pop(2);
 	return meeples;
 }
+
+std::vector<BoardDriver::Cell> BoardDriver::queryMoves(int player) const
+{
+	std::vector<Cell> moves;
+
+}
+
 
 } // namespace lurp
 

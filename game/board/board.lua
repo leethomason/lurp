@@ -1,14 +1,24 @@
+-- Rules / assumptions
+-- 1. a. The board is a graph of rooms. OR
+--    b. The board is a grid of rooms. 
+--    Can't mix graphs and grids.
+-- 2. The board is static. Rooms don't move. Although the can be blocked. See onMoveMeeple()
+-- 3. A player can have n meeples. TBD: move each meeple? actions per meeple?
+
+
 local MAX_PLAYERS = 4
 
+local board = {
+    { name = "Ballroom", x = 19, y = 0, w = 12, h = 3, connect = { "Garden", "Main Hall" } },
+    { name = "Garden", x = 36, y = 0, w = 10, h = 3, connect = { "Ballroom", "Main Hall", "Lounge" } },
+    { name = "Dining", x = 0, y = 5, w = 13, h = 3, connect = { "Main Hall" } },
+    { name = "Main Hall", x = 19, y = 5, w = 12, h = 3, connect = { "Ballroom", "Garden", "Lounge", "Foyer", "Dining" } },
+    { name = "Lounge", x = 36, y = 5, w = 10, h = 3, connect = {"Garden", "Main Hall"} },
+    { name = "Foyer", x = 19, y = 10, w = 12, h = 2, connect = {"Main Hall"}  },
+}
+
 function onFetchBoard()
-    return {
-        { name = "Ballroom", x = 19, y = 0, w = 12, h = 3, connect = { "Garden", "Main Hall" } },
-        { name = "Garden", x = 36, y = 0, w = 10, h = 3, connect = { "Ballroom", "Main Hall", "Lounge" } },
-        { name = "Dining", x = 0, y = 5, w = 13, h = 3, connect = { "Main Hall" } },
-        { name = "Main Hall", x = 19, y = 5, w = 12, h = 3, connect = { "Ballroom", "Garden", "Lounge", "Foyer", "Dining" } },
-        { name = "Lounge", x = 36, y = 5, w = 10, h = 3, connect = {"Garden", "Main Hall"} },
-        { name = "Foyer", x = 19, y = 10, w = 12, h = 2, connect = {"Main Hall"}  },
-    }
+    return board
 end
 
 function printMeeples(meeples)
@@ -48,4 +58,11 @@ function onSetupGame(players, box)
 
     --print("player meeples")
     --printMeeples(pm)
+end
+
+function isMoveAllowed(player, meeple, start, dst)
+    return true
+end
+
+function onMoveMeeple(player, meeple, start, dst)
 end

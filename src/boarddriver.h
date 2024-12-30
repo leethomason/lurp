@@ -48,11 +48,16 @@ public:
 	const std::vector<Cell>& board() const { return _board; }
 	const Cell* getCell(const std::string& name) const;
 
+	bool done() const { return false; }	// FIXME
+	int nPlayers() const { return _numPlayers; }
+	std::vector<BoardDriver::Cell> queryMoves(int player) const;
+
 private:
 
 	LuaBridge& bridge;
 	std::vector<Cell> _board;
-	int64_t _maxPlayers = 0;
+	int _maxPlayers = 0;
+	int _numPlayers = 0;
 
 	void parseBoardTable();
 };

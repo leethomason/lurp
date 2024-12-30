@@ -149,6 +149,12 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	std::string b = renderBoard(driver);
 	fmt::print("{}", b);
 
+	while (!driver.done()) {
+		for (int i = 0; i < driver.nPlayers(); i++) {
+			std::vector<BoardDriver::Cell> moves = driver.queryMoves(i);
+		}
+	}
+
 #if 0
 	// - KISS: start with a graph based board.
 	// - Need a representation here to put on the pieces.
