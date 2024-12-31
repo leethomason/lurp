@@ -41,6 +41,13 @@ function Table:filter(func)
     return t
 end
 
+local uidCounter = 0
+
+function getUID()
+    uidCounter = uidCounter + 1
+    return uidCounter
+end
+
 Meeple = {
     -- Location.
     -- x,y for grid, pos for graph/room based boards
@@ -62,6 +69,7 @@ function Meeple:new(name, label, color)
     o.name = name
     o.label = label
     o.color = color
+    o.uid = getUID()
 
     return o
 end
@@ -92,5 +100,5 @@ function _createPlayers(nPlayers)
         assert(type(p) == "table")
         Players:push(p)
     end
-    print("Players", #Players)
+    --print("Players", #Players)
 end

@@ -133,6 +133,9 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 		std::string color = bridge.getStrField("color", { "white" });
 		m.color = toColor(color);
 
+		// For convenience, if owned by a player, this is the player number.
+
+
 		const Cell* cell = getCell(m.pos);
 		if (cell) {
 			meeples.push_back(m);
