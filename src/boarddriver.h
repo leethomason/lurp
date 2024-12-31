@@ -9,12 +9,6 @@ class LuaBridge;
 
 class BoardDriver {
 public:
-	BoardDriver(LuaBridge& bridge) : bridge(bridge) {}
-
-	void loadBoard();
-	void createGameBox();
-	void setupGame();
-
 	struct Cell {
 		std::string name;
 		int x = 0;
@@ -35,13 +29,18 @@ public:
 		white,
 	};
 
-	static Color toColor(const std::string&);
+	struct Player {
+		// Reflection of Lua:
+		int index = 0;					// 0 is the first player in C++, 1 is the first in Lua 
+		std::vector<int> meepleUIDs;
+	};
 
 	struct Meeple {
 		// Reflection of Lua:
 		std::string name;
 		std::string label;
 		std::string pos;
+		int uid = 0;
 		Color color;
 
 		// Convenience! If owned by a player, this is the player number.
@@ -49,6 +48,16 @@ public:
 		int player = -1;
 	};
 
+	BoardDriver(LuaBridge& bridge) : bridge(bridge) {}
+
+	void loadBoard();
+	void createGameBox();
+	void setupGame();
+
+	static Color toColor(const std::string&);
+
+	std::vector<Player> queryPlayers() const;
+	std::vector<Meeple> queryAllMeeples() const;
 	std::vector<Meeple> queryMeeplesOnBoard() const;
 
 	const std::vector<Cell>& board() const { return _board; }

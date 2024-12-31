@@ -1,6 +1,7 @@
 #include "boarddriver.h"
 #include "luabridge.h"
 #include "debug.h"
+#include "util.h"
 
 #include <fmt/core.h>
 
@@ -114,10 +115,40 @@ const BoardDriver::Cell* BoardDriver::getCell(const std::string& location) const
 	return &(*it);
 }
 
-std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
+std::vector<BoardDriver::Player> BoardDriver::queryPlayers() const
+{
+	std::vector<Player> players;
+	LuaStackCheck check(bridge.getLuaState());
+
+	bridge.pushGlobal("Players");
+	REQUIRE(bridge.isTable(-1));
+
+	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
+		Player p;
+		p.index = bridge.getIntField("index", 0);
+		REQUIRE(p.index > 0);
+		p.index--;	// Lua is 1-based, C++ is 0-based
+
+		bridge.pushTable("meeples");
+		REQUIRE(bridge.isTable(-1));
+
+		for (TableIt m(bridge.getLuaState()); !m.done(); m.next()) {
+			int64_t uid = bridge.getIntField("uid", {});
+			p.meepleUIDs.push_back((int)uid);
+		}
+		
+		bridge.pop();
+		players.push_back(p);
+	}
+	bridge.pop();
+	return players;
+}
+
+std::vector<BoardDriver::Meeple> BoardDriver::queryAllMeeples() const
 {
 	std::vector<Meeple> meeples;
 	LuaStackCheck check(bridge.getLuaState());
+	std::vector<Player> players = queryPlayers();
 
 	// Need to look at Box.meeples
 	bridge.pushGlobal("Box");
@@ -128,22 +159,30 @@ std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
 	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
 		Meeple m;
 		m.name = bridge.getStrField("name", {});
-		m.label = bridge.getStrField("label", {"M"});
+		m.label = bridge.getStrField("label", { "M" });
 		m.pos = bridge.getStrField("pos", { "" });
+		m.uid = bridge.getIntField("uid", { 0 });
+
 		std::string color = bridge.getStrField("color", { "white" });
 		m.color = toColor(color);
 
 		// For convenience, if owned by a player, this is the player number.
-
-
-		const Cell* cell = getCell(m.pos);
-		if (cell) {
-			meeples.push_back(m);
+		for (size_t i = 0; i < players.size(); i++) {
+			if (std::find(players[i].meepleUIDs.begin(), players[i].meepleUIDs.end(), m.uid) != players[i].meepleUIDs.end()) {
+				m.player = (int)i;
+				break;
+			}
 		}
+		meeples.push_back(m);
 	}
-
 	bridge.pop(2);
 	return meeples;
+}
+
+std::vector<BoardDriver::Meeple> BoardDriver::queryMeeplesOnBoard() const
+{
+	std::vector<Meeple> meeples = queryAllMeeples();
+	return filter(meeples, [](const Meeple& m) { return !m.pos.empty(); });
 }
 
 std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
@@ -151,8 +190,13 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 	std::vector<Move> moves;
 
 	// Meeples are what moves (not the player)
-	//const std::vector<Meeple> allMeeples = queryMeeplesOnBoard();
-	//const std::vector<Meeple> meeples = filter(allMeeples, [player](const Meeple& m) { return m.player == player; });
+	const std::vector<Meeple> allMeeples = queryMeeplesOnBoard();
+	const std::vector<Meeple> meeples = filter(allMeeples, [player](const Meeple& m) { return m.player == player; });
+
+	for (const auto& meeple : meeples) {
+		fmt::print("Meeple {} at {}\n", meeple.label, meeple.pos);
+	}
+
 	return moves;
 }
 

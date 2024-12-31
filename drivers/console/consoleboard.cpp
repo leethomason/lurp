@@ -149,6 +149,8 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	std::string b = renderBoard(driver);
 	fmt::print("{}", b);
 
+	driver.queryMoves(0);
+
 	/*while (!driver.done()) {
 		for (int i = 0; i < driver.nPlayers(); i++) {
 			std::vector<BoardDriver::Cell> moves = driver.queryMoves(i);
