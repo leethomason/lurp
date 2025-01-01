@@ -12,11 +12,12 @@ void BoardDriver::loadBoard()
 	LuaStackCheck check(bridge.getLuaState());
 
 	std::vector<Variant> args;
-	int nResults = bridge.callGlobalFunc("onFetchBoard", args);
+	int nResults = bridge.callGlobalFunc("_onFetchBoard", args);
 	
 	REQUIRE(nResults == 1);
 	REQUIRE(bridge.isTable(-1));
 	parseBoardTable();
+	
 	bridge.pop(nResults);
 }
 
@@ -193,8 +194,37 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 	const std::vector<Meeple> allMeeples = queryMeeplesOnBoard();
 	const std::vector<Meeple> meeples = filter(allMeeples, [player](const Meeple& m) { return m.player == player; });
 
-	for (const auto& meeple : meeples) {
-		fmt::print("Meeple {} at {}\n", meeple.label, meeple.pos);
+	// Just supporting adjacent moves for now.
+	for (const auto& m : meeples) {
+		const Cell* cell = getCell(m.pos);
+		REQUIRE(cell != nullptr);
+		for (int c : cell->connections) {
+			const Cell* dst = &_board[c];
+
+			Move move;
+			move.player = player;
+			move.meeple = &m;
+			move.from = cell;
+			move.to = dst;
+
+			int nRet = 0;
+			bridge.pushGlobal("isMoveAllowed");									// function ref
+			bridge.pushInt(player + 1);	// Lua is 1-based						// player index
+			nRet = bridge.callGlobalFunc("_queryMeepleFromUID", { m.uid });		// meeple table
+			REQUIRE(nRet == 1);
+			nRet = bridge.callGlobalFunc("_queryCellFromName", { m.pos });		// cell table
+			REQUIRE(nRet == 1);
+			nRet = bridge.callGlobalFunc("_queryCellFromName", { dst->name });	// cell table
+			REQUIRE(nRet == 1);
+
+			bridge.pCallFunc(4, 1);
+			if (bridge.toBool(-1)) {
+				moves.push_back(move);
+			}
+			bridge.pop();
+
+			moves.push_back(move);
+		}
 	}
 
 	return moves;

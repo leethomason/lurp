@@ -80,6 +80,7 @@ public:
 	// Wraps the lua casts:
 	int64_t toInt(int index) const { return lua_tointeger(L, index); }
 	double toDouble(int index) const { return lua_tonumber(L, index); }
+	bool toBool(int index) const { return lua_toboolean(L, index) ? true : false; }
 
 	void pushInt(int64_t value) { lua_pushinteger(L, value); }
 

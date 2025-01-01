@@ -84,6 +84,8 @@ Player = {
     meeples = {},
 }
 
+Board = {}
+
 function Player:new(index)
     local o = {}
     setmetatable(o, self)
@@ -101,4 +103,29 @@ function _createPlayers(nPlayers)
         Players:push(p)
     end
     --print("Players", #Players)
+end
+
+function _onFetchBoard()
+    Board = onFetchBoard()
+    return Board;
+end
+
+function _queryMeepleFromUID(uid)
+    for _, v in ipairs(Box.meeples) do
+        if v.uid == uid then
+            return v
+        end
+    end
+    assert(false)
+    return nil
+end
+
+function _queryCellFromName(name)
+    for _, v in ipairs(Board) do
+        if v.name == name then
+            return v
+        end
+    end
+    assert(false)
+    return nil
 end
