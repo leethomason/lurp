@@ -203,7 +203,7 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 
 			Move move;
 			move.player = player;
-			move.meeple = &m;
+			move.meeple = m;
 			move.from = cell;
 			move.to = dst;
 
@@ -222,15 +222,10 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 				moves.push_back(move);
 			}
 			bridge.pop();
-
-			moves.push_back(move);
 		}
 	}
-
 	return moves;
 }
-
-
 } // namespace lurp
 
 

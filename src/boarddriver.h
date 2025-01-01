@@ -68,7 +68,7 @@ public:
 
 	struct Move {
 		int player = 0;
-		const Meeple* meeple = nullptr;
+		Meeple meeple;
 		const Cell* from = nullptr;
 		const Cell* to = nullptr;
 	};

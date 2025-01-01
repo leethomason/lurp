@@ -137,9 +137,8 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 
 	// Should the representation of the board be here or in the script code?
 
-	LuaBridge bridge;	// Problem #1: There's a bunch of game specific code in the scriptbridge
-						//             Create the luaBridge
-	bridge.loadLUA(gameFile.c_str(), "_board.lua");	// Load the game
+	LuaBridge bridge;
+	bridge.loadLUA(gameFile.c_str(), "_board.lua");
 
 	BoardDriver driver(bridge);
 	driver.loadBoard();
@@ -149,12 +148,17 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	std::string b = renderBoard(driver);
 	fmt::print("{}", b);
 
-	driver.queryMoves(0);
+	std::vector<BoardDriver::Move> moves = driver.queryMoves(0);
+	for (const auto& m : moves) {
+		fmt::print("Player {} meeple {} from {} to {}\n", 0, m.meeple.label, m.from->name, m.to->name);
+	}
 
-	/*while (!driver.done()) {
+	/*
+	while (!driver.done()) {
 		for (int i = 0; i < driver.nPlayers(); i++) {
-			std::vector<BoardDriver::Cell> moves = driver.queryMoves(i);
+			std::vector<BoardDriver::Move> moves = driver.queryMoves(i);
 		}
+		break;
 	}
 	*/
 }
