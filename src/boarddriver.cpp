@@ -194,9 +194,20 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 	const std::vector<Meeple> meeples = filter(allMeeples, [player](const Meeple& m) { return m.player == player; });
 
 	for (const auto& meeple : meeples) {
-		fmt::print("Meeple {} at {}\n", meeple.label, meeple.pos);
-	}
+		const Cell* from = getCell(meeple.pos);
+		REQUIRE(from != nullptr);
 
+		for (int c : from->connections) {
+			const Cell* to = &_board[c];
+
+			Move move;
+			move.player = player;
+			move.meeple = &meeple;
+			move.from = from;
+			move.to = to;
+			moves.push_back(move);
+		}
+	}
 	return moves;
 }
 
