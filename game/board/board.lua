@@ -25,11 +25,13 @@ function printBox(box)
     printMeeples(box.meeples)
 end
 
+-- Game creation: yes, 1st
+-- Game load: no
 function onSetupBox(box)
-    box.meeples:push(Meeple:new("player", "P0", "green"))
-    box.meeples:push(Meeple:new("player", "P1", "yellow"))
-    box.meeples:push(Meeple:new("player", "P2", "blue"))
-    box.meeples:push(Meeple:new("player", "P3", "red"))
+    local colors = { "red", "green", "blue", "yellow" }
+    for i=1, MAX_PLAYERS do
+        box.meeples:push(Meeple:new("player", "P" .. i, colors[i]))
+    end
 
     box.meeples:push(Meeple:new("place", "red"))
 
@@ -38,24 +40,41 @@ function onSetupBox(box)
     return MAX_PLAYERS
 end
 
+-- Game creation: yes, 2nd
+-- Game load: no
 function onSetupGame(players, box)
     local meeples = box.meeples:filter(function(meeple) return meeple.name == "player" end)
     assert(#meeples == MAX_PLAYERS)  -- not generally true, but is for this game
 
-    for i = 1, #players do
+    for i=1, #players do
         meeples[i].pos = "Foyer"
         players[i].meeples:push(meeples[i])
+        --players[i].fear = Counter:new("fear", 0, 4, 1)
     end
 
     --print("player meeples")
     --printMeeples(pm)
 end
 
+-- Game creation: yes, 3rd
+-- Game load: yes, 1st
+function onInit(players, box)
+    for i = 1, #players do
+        players[i].fear.onMax = function() 
+            print("Game Over for " .. players[i].name)
+            --gameOver()
+            --playerOver(players[i])
+        end
+    end
+end
+
 function isMoveAllowed(player, meeple, start, dst)
-    --print("Lua isMoveAllowed", player, meeple.name, start.name, dst.name)
+    print("Lua isMoveAllowed", player.index, meeple.name, start.name, dst.name)
     return true
 end
 
 function onMeepleMoved(player, meeple, start, dst)
-    --print("Lua onMoveMeeple", player, meeple.name, start.name, dst.name)
+    print("Lua onMoveMeeple", player.index, meeple.name, start.name, dst.name)
+    --player.fear:inc()
 end
+

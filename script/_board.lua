@@ -123,6 +123,16 @@ end
 
 Board = {}
 
+------ Counter ------
+
+Counter = {
+    name = "",
+    value = 0,
+    min = 0,
+    max = 1,
+    inc = 1,
+}
+
 ------ Internal API Functions ------
 
 function _createPlayers(nPlayers)
@@ -137,6 +147,11 @@ end
 function _onFetchBoard()
     Board = onFetchBoard()
     return Board;
+end
+
+function _queryPlayerFromIndex(index)
+    assert(index > 0 and index <= #Players)
+    return Players[index]
 end
 
 function _queryMeepleFromUID(uid)
