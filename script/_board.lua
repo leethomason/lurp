@@ -1,36 +1,52 @@
-Table = {}
+-- Rules / assumptions
+-- 1. a. The board is a graph of rooms. OR
+--    b. The board is a grid of rooms. 
+--    Can't mix graphs and grids.
+-- 2. The board is static. Rooms don't move. Although the can be blocked. See onMoveMeeple()
+-- 3. A player can have n meeples. TBD: move each meeple? actions per meeple?
 
-function Table:new()
+-- Pieces:
+--   - Meeple - markers, mini-figs, etc.
+--   - Card 
+--   - Tiles - TBD. "My First Carcassonne" has tiles. etc.
+--   - Plate - character card? What to call this?
+--   - Counter - some number tracker. e.g. money, points, etc.
+
+------ List ------
+
+List = {}
+
+function List:new()
     local o = {}
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function Table:add(key, value)
+function List:add(key, value)
     assert(key)
     assert(value)
     self[key] = value
 end
 
-function Table:remove(key)
+function List:remove(key)
     self[key] = nil
 end
 
-function Table:has(key)
+function List:has(key)
     return self[key] ~= nil
 end
 
-function Table:get(key)
+function List:get(key)
     return self[key]
 end
 
-function Table:push(value)
+function List:push(value)
     table.insert(self, value)
 end
 
-function Table:filter(func)
-    local t = Table:new()
+function List:filter(func)
+    local t = List:new()
     local index = 1
     for _,v in ipairs(self) do
         if func(v) then
@@ -41,12 +57,16 @@ function Table:filter(func)
     return t
 end
 
+------ Utility ------
+
 local uidCounter = 0
 
 function getUID()
     uidCounter = uidCounter + 1
     return uidCounter
 end
+
+------ Meeple ------
 
 Meeple = {
     -- Location.
@@ -74,17 +94,20 @@ function Meeple:new(name, label, color)
     return o
 end
 
-Box = {}
-Box.meeples = Table:new()
+------ Box ------
 
-Players = Table:new()
+Box = {}
+Box.meeples = List:new()
+
+------ Player ------
+
+Players = List:new()
 
 Player = {
     index = 0,
-    meeples = {},
+    meeples = List:new(),
+    counters = List:new(),
 }
-
-Board = {}
 
 function Player:new(index)
     local o = {}
@@ -92,9 +115,15 @@ function Player:new(index)
     self.__index = self
 
     o.index = index
-    o.meeples = Table:new()
+    o.meeples = List:new()
     return o
 end
+
+------ Board ------
+
+Board = {}
+
+------ Internal API Functions ------
 
 function _createPlayers(nPlayers)
     for i = 1, nPlayers do

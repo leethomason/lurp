@@ -1,11 +1,3 @@
--- Rules / assumptions
--- 1. a. The board is a graph of rooms. OR
---    b. The board is a grid of rooms. 
---    Can't mix graphs and grids.
--- 2. The board is static. Rooms don't move. Although the can be blocked. See onMoveMeeple()
--- 3. A player can have n meeples. TBD: move each meeple? actions per meeple?
-
-
 local MAX_PLAYERS = 4
 
 local board = {
@@ -64,6 +56,6 @@ function isMoveAllowed(player, meeple, start, dst)
     return true
 end
 
-function onMoveMeeple(player, meeple, start, dst)
+function onMeepleMoved(player, meeple, start, dst)
     --print("Lua onMoveMeeple", player, meeple.name, start.name, dst.name)
 end

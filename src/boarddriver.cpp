@@ -39,7 +39,7 @@ void BoardDriver::setupGame()
 
 	bridge.pushGlobal("_createPlayers");
 	// FIXME: need to set the number of players correctly.
-	_numPlayers = std::min(2, int(_maxPlayers));
+	_numPlayers = std::min(1, int(_maxPlayers));
 	bridge.pushInt(_numPlayers);
 	bridge.pCallFunc(1, 0);
 
@@ -231,14 +231,14 @@ void BoardDriver::move(const BoardDriver::Move& move)
 {
 	LuaStackCheck check(bridge.getLuaState());
 
-	// onMoveMeeple() has no return code.
-	// We can therefore call it *after* the actual move.
-	bridge.callGlobalFunc("_queryMeepleFromUID", { move.meeple.uid });		// meeple table
+	// Do the move.
+	bridge.callGlobalFunc("_queryMeepleFromUID", { move.meeple.uid });				// meeple table
 	bridge.setStrField("pos", move.to->name);
 	bridge.pop();
 
+	// Callback
 	int nRet = 0;
-	bridge.pushGlobal("onMoveMeeple");
+	bridge.pushGlobal("onMeepleMoved");	
 	bridge.pushInt(move.player + 1);	// Lua is 1-based							// player index
 	nRet = bridge.callGlobalFunc("_queryMeepleFromUID", { move.meeple.uid });		// meeple table
 	REQUIRE(nRet == 1);
