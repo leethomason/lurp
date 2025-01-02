@@ -2,6 +2,7 @@
 #include "luabridge.h"
 #include "boarddriver.h"
 #include "util.h"
+#include "consoleutil.h"
 
 #include <ionic/ionic.h>
 
@@ -145,20 +146,40 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	driver.createGameBox();
 	driver.setupGame();
 
-	std::string b = renderBoard(driver);
-	fmt::print("{}", b);
+	//std::vector<BoardDriver::Move> moves = driver.queryMoves(0);
+	//for (const auto& m : moves) {
+	//	fmt::print("Player {} meeple {} from {} to {}\n", 0, m.meeple.label, m.from->name, m.to->name);
+	//}
 
-	std::vector<BoardDriver::Move> moves = driver.queryMoves(0);
-	for (const auto& m : moves) {
-		fmt::print("Player {} meeple {} from {} to {}\n", 0, m.meeple.label, m.from->name, m.to->name);
-	}
-
-	/*
 	while (!driver.done()) {
+		std::string b = renderBoard(driver);
+		fmt::print("{}", b);
+
 		for (int i = 0; i < driver.nPlayers(); i++) {
 			std::vector<BoardDriver::Move> moves = driver.queryMoves(i);
+
+			fmt::print("Player {}'s turn\n", i);
+			int index = 1;
+			fmt::print("  0: End turn\n");
+			for (const auto& m : moves) {
+				fmt::print("  {}: Meeple {} from {} to {}\n", index++, m.meeple.label, m.from->name, m.to->name);
+			}
+
+			while (true) {
+				fmt::print(">> ");
+				std::string input = ReadString();
+				Value v = Value::ParseValue(input);
+
+				if (v.type == Value::Type::kInt && v.intInRange((int)(moves.size() + 1))) {
+					if (v.intVal == 0)
+						break;
+					driver.move(moves[v.intVal - 1]);
+					break;
+				}
+				else {
+					fmt::print("Invalid move\n");
+				}
+			}
 		}
-		break;
 	}
-	*/
 }

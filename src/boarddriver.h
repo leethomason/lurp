@@ -48,6 +48,13 @@ public:
 		int player = -1;
 	};
 
+	struct Move {
+		int player = 0;
+		Meeple meeple;
+		const Cell* from = nullptr;
+		const Cell* to = nullptr;
+	};
+
 	BoardDriver(LuaBridge& bridge) : bridge(bridge) {}
 
 	void loadBoard();
@@ -65,13 +72,8 @@ public:
 
 	bool done() const { return false; }	// FIXME
 	int nPlayers() const { return _numPlayers; }
+	void move(const Move& move);
 
-	struct Move {
-		int player = 0;
-		Meeple meeple;
-		const Cell* from = nullptr;
-		const Cell* to = nullptr;
-	};
 	std::vector<Move> queryMoves(int player) const;
 
 private:

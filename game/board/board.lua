@@ -60,8 +60,10 @@ function onSetupGame(players, box)
 end
 
 function isMoveAllowed(player, meeple, start, dst)
+    --print("Lua isMoveAllowed", player, meeple.name, start.name, dst.name)
     return true
 end
 
 function onMoveMeeple(player, meeple, start, dst)
+    --print("Lua onMoveMeeple", player, meeple.name, start.name, dst.name)
 end
