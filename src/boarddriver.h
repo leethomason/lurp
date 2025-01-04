@@ -29,10 +29,19 @@ public:
 		white,
 	};
 
+	struct Counter {
+		std::string name;				// note this is the value on the player class: player.gold -> name = "gold"
+		int value = 0;
+		int min = 0;
+		int max = 0;
+		int inc = 0;
+	};
+
 	struct Player {
 		// Reflection of Lua:
 		int index = 0;					// 0 is the first player in C++, 1 is the first in Lua 
 		std::vector<int> meepleUIDs;
+		std::vector<Counter> counters;
 	};
 
 	struct Meeple {
@@ -63,6 +72,7 @@ public:
 
 	static Color toColor(const std::string&);
 
+	Player queryPlayer(int player) const;
 	std::vector<Player> queryPlayers() const;
 	std::vector<Meeple> queryAllMeeples() const;
 	std::vector<Meeple> queryMeeplesOnBoard() const;

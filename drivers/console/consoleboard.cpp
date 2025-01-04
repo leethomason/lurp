@@ -129,6 +129,12 @@ static std::string renderBoard(const BoardDriver& driver)
 	return result;
 }
 
+void PrintPlayer(const BoardDriver& driver, int playerIndex)
+{
+	fmt::print("Player {}:\n", playerIndex + 1);
+
+}
+
 void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName)
 {
 	// Loop:
@@ -158,7 +164,8 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 		for (int i = 0; i < driver.nPlayers(); i++) {
 			std::vector<BoardDriver::Move> moves = driver.queryMoves(i);
 
-			fmt::print("Player {}'s turn\n", i);
+			//fmt::print("Player {}'s turn\n", i);
+			PrintPlayer(driver, i);
 			int index = 1;
 			fmt::print("  0: End turn\n");
 			for (const auto& m : moves) {

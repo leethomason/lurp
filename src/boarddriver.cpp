@@ -121,32 +121,60 @@ const BoardDriver::Cell* BoardDriver::getCell(const std::string& location) const
 	return &(*it);
 }
 
+BoardDriver::Player BoardDriver::queryPlayer(int player) const
+{
+	LuaStackCheck check(bridge.getLuaState());
+
+	bridge.pushGlobal("Players");
+	REQUIRE(bridge.isTable(-1));
+	bridge.pushTable("", player + 1);
+	REQUIRE(bridge.isTable(-1));
+
+	Player p;
+	p.index = player;
+
+	// Meeples
+	bridge.pushTable("meeples");
+	REQUIRE(bridge.isTable(-1));
+
+	for (TableIt m(bridge.getLuaState()); !m.done(); m.next()) {
+		int64_t uid = bridge.getIntField("uid", {});
+		p.meepleUIDs.push_back((int)uid);
+	}
+
+	bridge.pop();
+
+	// Counters
+	bridge.pushTable("counters");
+	REQUIRE(bridge.isTable(-1));
+
+	for (TableIt c(bridge.getLuaState()); !c.done(); c.next()) {
+		Counter counter;
+		counter.name = c.key().str;
+		counter.value = bridge.getIntField("value", 0);
+		counter.min = bridge.getIntField("min", 0);
+		counter.max = bridge.getIntField("max", 0);
+		counter.inc = bridge.getIntField("incValue", 0);
+		p.counters.push_back(counter);
+	}
+
+	bridge.pop();
+
+	// Clean up.
+	bridge.pop(2);
+	return p;
+}
+
+
 std::vector<BoardDriver::Player> BoardDriver::queryPlayers() const
 {
 	std::vector<Player> players;
 	LuaStackCheck check(bridge.getLuaState());
 
-	bridge.pushGlobal("Players");
-	REQUIRE(bridge.isTable(-1));
-
-	for (TableIt it(bridge.getLuaState()); !it.done(); it.next()) {
-		Player p;
-		p.index = bridge.getIntField("index", 0);
-		REQUIRE(p.index > 0);
-		p.index--;	// Lua is 1-based, C++ is 0-based
-
-		bridge.pushTable("meeples");
-		REQUIRE(bridge.isTable(-1));
-
-		for (TableIt m(bridge.getLuaState()); !m.done(); m.next()) {
-			int64_t uid = bridge.getIntField("uid", {});
-			p.meepleUIDs.push_back((int)uid);
-		}
-		
-		bridge.pop();
-		players.push_back(p);
+	for (int i = 0; i < _numPlayers; i++) {
+		players.push_back(queryPlayer(i));
 	}
-	bridge.pop();
+
 	return players;
 }
 
