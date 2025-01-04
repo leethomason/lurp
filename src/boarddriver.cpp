@@ -47,6 +47,11 @@ void BoardDriver::setupGame()
 	bridge.pushGlobal("Players");
 	bridge.pushGlobal("Box");
 	bridge.pCallFunc(2, 0);
+
+	bridge.pushGlobal("onInit");
+	bridge.pushGlobal("Players");
+	bridge.pushGlobal("Box");
+	bridge.pCallFunc(2, 0);
 }
 
 void BoardDriver::parseBoardTable()
@@ -209,7 +214,7 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 
 			int nRet = 0;
 			bridge.pushGlobal("isMoveAllowed");											// function ref
-			nRet = bridge.callGlobalFunc("_queryPlayerFromIndex", { player + 1 } );	// player table (one based)
+			nRet = bridge.callGlobalFunc("_queryPlayerFromIndex", { player + 1 } );		// player table (one based)
 			REQUIRE(nRet == 1 && bridge.isTable(-1));
 			nRet = bridge.callGlobalFunc("_queryMeepleFromUID", { m.uid });				// meeple table
 			REQUIRE(nRet == 1 && bridge.isTable(-1));

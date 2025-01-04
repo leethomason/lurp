@@ -126,12 +126,44 @@ Board = {}
 ------ Counter ------
 
 Counter = {
-    name = "",
+    --name = "",
     value = 0,
     min = 0,
     max = 1,
-    inc = 1,
+    incValue = 1,
 }
+
+function Counter:new(value, min, max, incValue)
+    local o = {}
+    setmetatable(o, self)
+    self.__index = self
+
+    --o.name = name
+    o.value = value 
+    o.min = min
+    o.max = max
+    o.incValue = inc or 1
+
+    assert(o.value >= o.min)
+    assert(o.value <= o.max)
+    return o
+end
+
+function Counter:inc(onMax)
+    self.value = self.value + self.incValue
+    if self.value >= self.max then
+        self.value = self.max
+        if onMax then onMax() end
+    end
+end
+
+function Counter:dec(onMin)
+    self.value = self.value - self.incValue
+    if self.value <= self.min then
+        self.value = self.min
+        if onMin then onMin() end
+    end
+end
 
 ------ Internal API Functions ------
 

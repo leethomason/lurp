@@ -1,8 +1,9 @@
-[A]-----[B]
- |       |
- |       +--[ E ]
- |       |
-[ C ]---[D]
+Todo
+- print the counters associated w/ owner
+- gameOver()
+- playerOut()
+- serialize
+- tests
 
 function onBoardRequested() 
     -- data structure? should the connection parsing
