@@ -149,19 +149,19 @@ function Counter:new(value, min, max, incValue)
     return o
 end
 
-function Counter:inc(onMax)
+function Counter:inc()
     self.value = self.value + self.incValue
     if self.value >= self.max then
         self.value = self.max
-        if onMax then onMax() end
+        if self.onMax then self.onMax() end
     end
 end
 
-function Counter:dec(onMin)
+function Counter:dec()
     self.value = self.value - self.incValue
     if self.value <= self.min then
         self.value = self.min
-        if onMin then onMin() end
+        if self.onMin then self.onMin() end
     end
 end
 

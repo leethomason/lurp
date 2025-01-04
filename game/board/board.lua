@@ -59,6 +59,13 @@ end
 -- Game creation: yes, 3rd
 -- Game load: yes, 1st
 function onInit(players, box)
+    for i=1, #players do
+        players[i].fear.onMax = function() 
+            print("'fear' max: Game Over for player " .. i)
+            --gameOver()
+            --playerOver(players[i])
+        end
+    end
 end
 
 function isMoveAllowed(player, meeple, start, dst)
@@ -68,10 +75,6 @@ end
 
 function onMeepleMoved(player, meeple, start, dst)
     print("Lua onMoveMeeple", player.index, meeple.name, start.name, dst.name)
-    player.fear:inc(function() 
-        print("'fear' max: Game Over for player " .. player.index)
-        --gameOver()
-        --playerOver(players[i])
-    end)
+    player.fear:inc()
 end
 
