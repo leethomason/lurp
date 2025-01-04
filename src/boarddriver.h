@@ -80,7 +80,7 @@ public:
 	const std::vector<Cell>& board() const { return _board; }
 	const Cell* getCell(const std::string& name) const;
 
-	bool done() const { return false; }	// FIXME
+	bool done() const;
 	int nPlayers() const { return _numPlayers; }
 	void move(const Move& move);
 

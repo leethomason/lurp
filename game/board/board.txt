@@ -1,7 +1,7 @@
 Todo
-- print the counters associated w/ owner
-- gameOver()
-- playerOut()
+x print the counters associated w/ owner
+x gameOver()
+x playerOut()
 - serialize
 - tests
 

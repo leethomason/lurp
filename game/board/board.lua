@@ -62,8 +62,8 @@ function onInit(players, box)
     for i=1, #players do
         players[i].fear.onMax = function() 
             print("'fear' max: Game Over for player " .. i)
-            --gameOver()
-            --playerOver(players[i])
+            --GameOver()
+            PlayerOver(players[i].index)
         end
     end
 end

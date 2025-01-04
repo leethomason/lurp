@@ -105,6 +105,7 @@ Players = List:new()
 
 Player = {
     index = 0,
+    inPlay = true,
     meeples = List:new(),
     counters = List:new(),
 }
@@ -165,7 +166,33 @@ function Counter:dec()
     end
 end
 
+------ API Functions ------
+
+local gameOver = false
+
+function GameOver()
+    gameOver = true
+end
+
+function PlayerOver(index)
+    Players[index].inPlay = false
+    local anyInPlay = false
+    for _, v in ipairs(Players) do
+        if v.inPlay then
+            anyInPlay = true
+            break
+        end
+    end
+    if not anyInPlay then
+        GameOver()
+    end
+end
+
 ------ Internal API Functions ------
+
+function _isGameOver()
+    return gameOver
+end
 
 function _createPlayers(nPlayers)
     for i = 1, nPlayers do

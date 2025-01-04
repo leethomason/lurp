@@ -290,6 +290,17 @@ void BoardDriver::move(const BoardDriver::Move& move)
 	bridge.pCallFunc(4, 0);
 }
 
+bool BoardDriver::done() const
+{
+	LuaStackCheck check(bridge.getLuaState());
+
+	int nRet = bridge.callGlobalFunc("_isGameOver", {});
+	REQUIRE(nRet == 1);
+	bool gameOver = bridge.toBool(-1);
+	bridge.pop();
+	return gameOver;
+}
+
 } // namespace lurp
 
 
