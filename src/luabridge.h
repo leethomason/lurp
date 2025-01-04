@@ -56,6 +56,7 @@ public:
 	void pop(int n = 1);
 
 	bool isTable(int index) const { return lua_istable(L, index); }
+	int typeOf(int index) const { return lua_type(L, index); }
 
 	void nilGlobal(const std::string& key);
 

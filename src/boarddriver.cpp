@@ -145,10 +145,17 @@ BoardDriver::Player BoardDriver::queryPlayer(int player) const
 	bridge.pop();
 
 	// Counters
-	bridge.pushTable("counters");
-	REQUIRE(bridge.isTable(-1));
+	// Tricky - these are named, not indexed.
 
 	for (TableIt c(bridge.getLuaState()); !c.done(); c.next()) {
+		if (c.key().type != LUA_TSTRING)
+			continue;
+		if (bridge.typeOf(-1) != LUA_TTABLE)
+			continue;
+		// Look for 'incValue' as a field.
+		if (!bridge.hasField("incValue"))
+			continue;
+
 		Counter counter;
 		counter.name = c.key().str;
 		counter.value = bridge.getIntField("value", 0);
@@ -157,8 +164,6 @@ BoardDriver::Player BoardDriver::queryPlayer(int player) const
 		counter.inc = bridge.getIntField("incValue", 0);
 		p.counters.push_back(counter);
 	}
-
-	bridge.pop();
 
 	// Clean up.
 	bridge.pop(2);

@@ -131,8 +131,13 @@ static std::string renderBoard(const BoardDriver& driver)
 
 void PrintPlayer(const BoardDriver& driver, int playerIndex)
 {
-	fmt::print("Player {}:\n", playerIndex + 1);
+	using Player = BoardDriver::Player;
 
+	fmt::print("Player {}:\n", playerIndex + 1);
+	Player p = driver.queryPlayer(playerIndex);
+	for (const auto& c : p.counters) {
+		fmt::print("  {}: {} ({} - {})\n", c.name, c.value, c.min, c.max);
+	}
 }
 
 void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName)
@@ -166,10 +171,11 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 
 			//fmt::print("Player {}'s turn\n", i);
 			PrintPlayer(driver, i);
+			
 			int index = 1;
-			fmt::print("  0: End turn\n");
+			fmt::print("\n0: End turn\n");
 			for (const auto& m : moves) {
-				fmt::print("  {}: Meeple {} from {} to {}\n", index++, m.meeple.label, m.from->name, m.to->name);
+				fmt::print("{}: Meeple {} from {} to {}\n", index++, m.meeple.label, m.from->name, m.to->name);
 			}
 
 			while (true) {
