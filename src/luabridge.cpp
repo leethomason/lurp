@@ -290,7 +290,7 @@ void LuaBridge::pushTable(const std::string& key, int index) const
 	lua_gettable(L, -2);
 }
 
-void LuaBridge::pop(int n)
+void LuaBridge::pop(int n) const
 {
 	lua_pop(L, n);
 }
@@ -321,6 +321,17 @@ bool LuaBridge::hasField(const std::string& key) const
 {
 	Variant v = getField(L, key, 0);
 	return v.type != LUA_TNIL;
+}
+
+int LuaBridge::getLen() const
+{
+	assert(lua_istable(L, -1));
+
+	LuaStackCheck check(L);
+	lua_len(L, -1);
+	int len = (int)lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	return len;
 }
 
 int LuaBridge::getFieldType(const std::string& key) const

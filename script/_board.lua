@@ -107,7 +107,6 @@ Player = {
     index = 0,
     inPlay = true,
     meeples = List:new(),
-    counters = List:new(),
 }
 
 function Player:new(index)
@@ -231,4 +230,46 @@ function _queryCellFromName(name)
     end
     assert(false)
     return nil
+end
+
+local function serialize(x, stk, depth)
+    stk = stk or {}
+    depth = depth or 0
+
+    local t = type(x)
+
+    if t == "number" or t == "boolean" then
+        return tostring(x)
+    elseif t == "string" then    
+        return string.format("%q", x)
+    elseif t == "table" then
+        if stk[x] then
+            return string.rep("  ", depth) .. "nil --[[ circular reference ]]"
+        else
+            stk[x] = true
+            local s = "{\n"
+            for k,v in pairs(x) do
+                s = s .. string.rep("  ", depth + 1) .. "[" .. serialize(k, stk, depth + 1) .. "] = " .. serialize(v, stk, depth + 1) .. ",\n"
+            end
+            return s .. string.rep("  ", depth) .. "}"
+        end
+    else
+        return "nil --[[ " .. t .. " ]]"
+    end
+end
+
+function _serialize()
+    local s = ""
+
+    s = s .. "Players = \n"
+    s = s .. serialize(Players) .. "\n"
+    s = s .. "\nBox = \n"
+    s = s .. serialize(Box) .. "\n"
+    return s
+end
+
+function _postLoad()
+    for _, p in Players do
+        setmetatable(p, Player)
+    end 
 end

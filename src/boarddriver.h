@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <filesystem>
 
 namespace lurp {
 
@@ -66,9 +67,14 @@ public:
 
 	BoardDriver(LuaBridge& bridge) : bridge(bridge) {}
 
+	bool started() const { return _started; }
+
 	void loadBoard();
 	void createGameBox();
 	void setupGame();
+
+	void load(const std::filesystem::path& p);
+	void save(const std::filesystem::path& p);
 
 	static Color toColor(const std::string&);
 
@@ -92,6 +98,7 @@ private:
 	std::vector<Cell> _board;
 	int _maxPlayers = 0;
 	int _numPlayers = 0;
+	bool _started = false;
 
 	void parseBoardTable();
 };

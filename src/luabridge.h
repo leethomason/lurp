@@ -53,7 +53,7 @@ public:
 	void pushTable(const std::string& key, int index = 0) const;
 	void pushNewGlobalTable(const std::string& key);
 	void pushNewTable(const std::string& key, int index = 0);
-	void pop(int n = 1);
+	void pop(int n = 1) const;
 
 	bool isTable(int index) const { return lua_istable(L, index); }
 	int typeOf(int index) const { return lua_type(L, index); }
@@ -82,11 +82,13 @@ public:
 	int64_t toInt(int index) const { return lua_tointeger(L, index); }
 	double toDouble(int index) const { return lua_tonumber(L, index); }
 	bool toBool(int index) const { return lua_toboolean(L, index) ? true : false; }
+	std::string toString(int index) const { return lua_tostring(L, index); }
 
 	void pushInt(int64_t value) { lua_pushinteger(L, value); }
 
 	bool hasField(const std::string& key) const;
 	int getFieldType(const std::string& key) const;
+	int getLen() const;
 
 	std::string getStrField(const std::string& key, const std::optional<std::string>& def) const;
 	int getIntField(const std::string& key, const std::optional<int>& def) const;
@@ -124,7 +126,7 @@ public:
 		return _currentDir;
 	}
 
-private:
+protected:
 	lua_State* L = 0;
 	std::map<int, FuncInfo> _funcInfoMap;
 	std::filesystem::path _currentDir;

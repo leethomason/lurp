@@ -16,6 +16,7 @@ std::filesystem::path LogPath(const std::string& stem);
 
 // --- General functions ---
 // Gets the 'stem' for saving from the path to the game file.
+// FIXME: how are these useful???
 std::string GameFileToDir(const std::string& gameFile);
 std::ofstream OpenSaveStream(const std::filesystem::path& path);
 std::ifstream OpenLoadStream(const std::filesystem::path& path);

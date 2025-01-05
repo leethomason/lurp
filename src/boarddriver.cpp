@@ -4,8 +4,42 @@
 #include "util.h"
 
 #include <fmt/core.h>
+#include <fstream>
 
 namespace lurp {
+
+void BoardDriver::load(const std::filesystem::path& p)
+{
+	LuaStackCheck check(bridge.getLuaState());
+
+	bridge.doFile(p.string());
+	_started = true;
+	bridge.pushGlobal("onInit");
+	bridge.pushGlobal("Players");
+	bridge.pushGlobal("Box");
+	bridge.pCallFunc(2, 0);
+
+	bridge.pushGlobal("Players");
+	_numPlayers = bridge.getLen();
+	bridge.pop();
+}
+
+void BoardDriver::save(const std::filesystem::path& p)
+{
+	std::ofstream fp(p);
+	if (!fp.is_open()) {
+		std::string msg = fmt::format("Could not open file '{}' for writing", p.string());
+		FatalError(msg);
+	}
+
+	LuaStackCheck check(bridge.getLuaState());
+	int nRet = bridge.callGlobalFunc("_serialize", {});
+	REQUIRE(nRet == 1);
+	std::string s = bridge.toString(-1);
+	bridge.pop();
+
+	fp << s << "\n";
+}
 
 void BoardDriver::loadBoard()
 {
@@ -23,6 +57,9 @@ void BoardDriver::loadBoard()
 
 void BoardDriver::createGameBox()
 {
+	REQUIRE(!_started);
+	_started = true;
+
 	LuaStackCheck check(bridge.getLuaState());
 
 	bridge.pushGlobal("onSetupBox");
@@ -39,7 +76,7 @@ void BoardDriver::setupGame()
 
 	bridge.pushGlobal("_createPlayers");
 	// FIXME: need to set the number of players correctly.
-	_numPlayers = std::min(1, int(_maxPlayers));
+	_numPlayers = std::min(2, int(_maxPlayers));
 	bridge.pushInt(_numPlayers);
 	bridge.pCallFunc(1, 0);
 

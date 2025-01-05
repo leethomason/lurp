@@ -3,6 +3,7 @@
 #include "boarddriver.h"
 #include "util.h"
 #include "consoleutil.h"
+#include "../platform.h"
 
 #include <ionic/ionic.h>
 
@@ -151,20 +152,38 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 
 	LuaBridge bridge;
 	bridge.loadLUA(gameFile.c_str(), "_board.lua");
-
 	BoardDriver driver(bridge);
-	driver.loadBoard();
-	driver.createGameBox();
-	driver.setupGame();
+
+	{
+		std::filesystem::path path = SavePath(gameName, "autosave");
+		if (std::filesystem::exists(path)) {
+			fmt::print("Load (y/n)>> ");
+			std::string input = ReadString();
+			if (input == "y") {
+				driver.loadBoard();
+				driver.load(path);
+			}
+		}
+	}
+	if (!driver.started()) {
+		driver.loadBoard();
+		driver.createGameBox();
+		driver.setupGame();
+	}
 
 	//std::vector<BoardDriver::Move> moves = driver.queryMoves(0);
 	//for (const auto& m : moves) {
 	//	fmt::print("Player {} meeple {} from {} to {}\n", 0, m.meeple.label, m.from->name, m.to->name);
 	//}
 
-	while (!driver.done()) {
+	bool save = false;
+
+	while (!driver.done() && !save) {
 		std::string b = renderBoard(driver);
 		fmt::print("{}", b);
+
+		bool moveEntered = false;
+		REQUIRE(driver.nPlayers() > 0);
 
 		for (int i = 0; i < driver.nPlayers(); i++) {
 			std::vector<BoardDriver::Move> moves = driver.queryMoves(i);
@@ -181,11 +200,20 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 			while (true) {
 				fmt::print(">> ");
 				std::string input = ReadString();
+				if (input == "/s") {
+					save = true;
+					if (moveEntered)
+						break;
+					else
+						continue;
+				}
+
 				Value v = Value::ParseValue(input);
 
 				if (v.type == Value::Type::kInt && v.intInRange((int)(moves.size() + 1))) {
 					if (v.intVal == 0)
 						break;
+					moveEntered = true;
 					driver.move(moves[v.intVal - 1]);
 					break;
 				}
@@ -193,6 +221,10 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 					fmt::print("Invalid move\n");
 				}
 			}
+		}
+		if (save) {
+			std::filesystem::path path = SavePath(gameName, "autosave");
+			driver.save(path);
 		}
 	}
 }
