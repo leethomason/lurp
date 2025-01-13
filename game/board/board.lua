@@ -1,3 +1,5 @@
+local lume = require "lume"
+
 local MAX_PLAYERS = 4
 
 local board = {
@@ -30,10 +32,10 @@ end
 function onSetupBox(box)
     local colors = { "red", "green", "blue", "yellow" }
     for i=1, MAX_PLAYERS do
-        box.meeples:push(Meeple:new("player", "P" .. i, colors[i]))
+        table.insert(box.meeples, Meeple:new("player", "P" .. i, colors[i]))
     end
 
-    box.meeples:push(Meeple:new("place", "red"))
+    table.insert(box.meeples, Meeple:new("place", "green"))
 
     --printBox(box)
 
@@ -43,12 +45,12 @@ end
 -- Game creation: yes, 2nd
 -- Game load: no
 function onSetupGame(players, box)
-    local meeples = box.meeples:filter(function(meeple) return meeple.name == "player" end)
+    local meeples = lume.filter(box.meeples, function(meeple) return meeple.name == "player" end)
     assert(#meeples == MAX_PLAYERS)  -- not generally true, but is for this game
 
     for i=1, #players do
         meeples[i].pos = "Foyer"
-        players[i].meeples:push(meeples[i])
+        lume.push(players[i].meeples, meeples[i])
         players[i].fear = Counter:new(0, 0, 4)
     end
 

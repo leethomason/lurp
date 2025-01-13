@@ -1,3 +1,5 @@
+local lume = require "lume"
+
 -- Rules / assumptions
 -- 1. a. The board is a graph of rooms. OR
 --    b. The board is a grid of rooms. 
@@ -12,144 +14,259 @@
 --   - Plate - character card? What to call this?
 --   - Counter - some number tracker. e.g. money, points, etc.
 
------- List ------
+------ Game ------
+_Game = {}
 
-List = {}
+function _Game.init(o)
+    -- struct
+    o.struct = "Game"
 
-function List:new()
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
+    -- data 
+    o._uidCounter = 0
+
+    -- methods
+    o.new = _Game.new
+    o.load = _Game.load
+    o.getUID = _Game.getUID
+
     return o
 end
 
-function List:add(key, value)
-    assert(key)
-    assert(value)
-    self[key] = value
+function _Game:new()
+    local o = {}
+    _Game.init(o)
+    return o
 end
 
-function List:remove(key)
-    self[key] = nil
-end
+function _Game:load(g)
+    local o = _Game.init({})
 
-function List:has(key)
-    return self[key] ~= nil
-end
-
-function List:get(key)
-    return self[key]
-end
-
-function List:push(value)
-    table.insert(self, value)
-end
-
-function List:filter(func)
-    local t = List:new()
-    local index = 1
-    for _,v in ipairs(self) do
-        if func(v) then
-            t[index] = v
-            index = index + 1
-        end
+    assert(type(g) == "table")
+    for k, v in pairs(g) do
+        o[k] = _factory(v)
     end
-    return t
+    return o
 end
 
------- Utility ------
-
-local uidCounter = 0
-
-function getUID()
-    uidCounter = uidCounter + 1
-    return uidCounter
+function _Game:getUID()
+    self._uidCounter = self._uidCounter + 1
+    return self._uidCounter
 end
+
+Game = _Game:new()
 
 ------ Meeple ------
 
-Meeple = {
+_Meeple = {}
+
+function _Meeple.init(o)
+    o.struct = "Meeple"
+
     -- Location.
     -- x,y for grid, pos for graph/room based boards
     -- note that x,y is 0 based. -1 means not on board
-    x = -1,
-    y = -1,
-    pos = "",
+    o.x = -1
+    o.y = -1
+    o.pos = ""
 
-    name = "",          -- name of the meeple
-    label = "",         -- label to display
-    color = "blue",
-}
+    o.name = ""      -- name of the meeple
+    o.label = ""     -- label to display
+    o.color = "blue"
 
-function Meeple:new(name, label, color)
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
+    o.new = _Meeple.new
+    o.load = _Meeple.load
+    o.moveTo = _Meeple.moveTo
+
+    return o
+end
+
+function _Meeple:load(obj)
+    assert(type(self) == "table")
+    assert(type(obj) == "table")
+
+    local o = _Meeple.init({})
+    for k, v in pairs(obj) do
+        o[k] = v
+    end
+    return o
+end
+
+function _Meeple:new(name, label, color)
+    assert(type(self) == "table")
+
+    local o = Meeple.init({})
 
     o.name = name
     o.label = label
     o.color = color
-    o.uid = getUID()
+    o.uid = Game:getUID()
 
     return o
 end
+
+function _Meeple:moveTo(x, y)
+    assert(type(self) == "table")
+    self.x = x
+    self.y = y
+end
+
+Meeple = _Meeple
 
 ------ Box ------
 
-Box = {}
-Box.meeples = List:new()
+_Box = {}
+
+function _Box.init(o)
+    o.struct = "Box"
+
+    o.meeples = {}
+
+    o.new = _Box.new
+    o.load = _Box.load
+
+    return o
+end
+
+function _Box:new()
+    assert(type(self) == "table")
+    local o = {}
+    _Box.init(o)
+    return o
+end
+
+function _Box:load(obj)
+    assert(type(self) == "table")
+    assert(type(obj) == "table")
+    _Box.init(self)
+
+    for k, v in ipairs(obj.meeples) do
+        local m = Meeple:load(v)
+        lume.push(self.meeples, m)
+    end
+end
+
+Box = _Box:new()
+
+------ Players ------
+
+_Players = {}
+
+function _Players.init(o)
+    o.struct = "Players"
+
+    o.new = _Players.new
+    o.load = _Players.load
+
+    return o
+end
+
+function _Players:new()
+    assert(type(self) == "table")
+    local o = {}
+    _Players.init(o)
+    return o
+end
+
+function _Players:load(loader)
+    assert(type(self) == "table")
+    assert(type(loader) == "table")
+
+    self.struct = "Players"
+    for k, v in ipairs(loader) do
+        local p = Player:load(v)
+        lume.push(self, p)
+    end
+end
+
+Players = _Players:new()
 
 ------ Player ------
 
-Players = List:new()
+_Player = {}
 
-Player = {
-    index = 0,
-    inPlay = true,
-    meeples = List:new(),
-}
+function _Player.init(n)
+    n.struct = "Player"
 
-function Player:new(index)
+    n.index = 0
+    n.inPlay = true
+    n.meeples = {}
+    
+    n.new = _Player.new
+    n.load = _Player.load
+    return n
+end
+
+function _Player:load(obj)
+    assert(type(self) == "table")
     local o = {}
-    setmetatable(o, self)
-    self.__index = self
+    _Player.init(o)
 
-    o.index = index
-    o.meeples = List:new()
+    for k, v in pairs(obj) do
+        o[k] = _factory(v)
+    end
     return o
 end
+
+function _Player:new(index)
+    assert(type(self) == "table")
+    local o = {}
+    _Player.init(o)
+    return o
+end
+
+Player = _Player
 
 ------ Board ------
 
 Board = {}
+Board.struct = "Board"
 
 ------ Counter ------
 
-Counter = {
-    --name = "",
-    value = 0,
-    min = 0,
-    max = 1,
-    incValue = 1,
-}
+_Counter = {}
 
-function Counter:new(value, min, max, incValue)
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
+function _Counter.init(o)
+    o.struct = "Counter"
 
-    --o.name = name
-    o.value = value 
+    o.value = 0
+    o.min = 0
+    o.max = 1
+    o.incValue = 1
+
+    o.init = _Counter.init
+    o.load = _Counter.load
+    o.inc = _Counter.inc
+    o.dec = _Counter.dec
+
+    return o
+end
+
+function _Counter:new(value, min, max, incValue)
+    assert(type(self) == "table")
+
+    local o = _Counter.init({})
+
+    o.value = value
     o.min = min
     o.max = max
-    o.incValue = inc or 1
+    o.incValue = incValue or 1
 
     assert(o.value >= o.min)
     assert(o.value <= o.max)
     return o
 end
 
-function Counter:inc()
+function _Counter:load(obj)
+    assert(type(self) == "table")
+    local o = _Counter.init({})
+    for k, v in pairs(obj) do
+        o[k] = v
+    end
+    return o
+end
+
+function _Counter:inc()
+    assert(type(self) == "table")
     self.value = self.value + self.incValue
     if self.value >= self.max then
         self.value = self.max
@@ -157,13 +274,16 @@ function Counter:inc()
     end
 end
 
-function Counter:dec()
+function _Counter:dec()
+    assert(type(self) == "table")
     self.value = self.value - self.incValue
     if self.value <= self.min then
         self.value = self.min
         if self.onMin then self.onMin() end
     end
 end
+
+Counter = _Counter
 
 ------ API Functions ------
 
@@ -187,6 +307,25 @@ function PlayerOver(index)
     end
 end
 
+------ General Struct Handing ------
+
+function _factory(obj)
+    if type(obj) ~= "table" then
+        return obj
+    end
+    if not obj.struct then
+        print("Warning: Nil struct found during load")
+        return nil
+    end
+
+    if (obj.struct == "Counter") then
+        return Counter:load(obj)
+    else
+        assert(false, "Unexpected struct: " .. obj.struct)
+    end
+    return nil
+end
+
 ------ Internal API Functions ------
 
 function _isGameOver()
@@ -197,7 +336,7 @@ function _createPlayers(nPlayers)
     for i = 1, nPlayers do
         local p = Player:new(i)
         assert(type(p) == "table")
-        Players:push(p)
+        lume.push(Players, p)
     end
     --print("Players", #Players)
 end
@@ -259,17 +398,20 @@ local function serialize(x, stk, depth)
 end
 
 function _serialize()
-    local s = ""
+    local s = "local loader = {}\n"
 
-    s = s .. "Players = \n"
+    s = s .. "loader.Game =\n"
+    s = s .. serialize(Game) .. "\n"
+    s = s .. "\nloader.Players =\n"
     s = s .. serialize(Players) .. "\n"
-    s = s .. "\nBox = \n"
+    s = s .. "\nloader.Box =\n"
     s = s .. serialize(Box) .. "\n"
+    s = s .. "\nreturn loader"
     return s
 end
 
-function _postLoad()
-    for _, p in Players do
-        setmetatable(p, Player)
-    end 
+function _deserialize(loader)
+    Game:load(loader.Game)
+    Players:load(loader.Players)
+    Box.load(loader.Box)
 end

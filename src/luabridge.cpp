@@ -105,8 +105,6 @@ void LuaBridge::appendLuaPath(const std::string& path)
 
 void LuaBridge::doFile(const std::string& filename)
 {
-	LuaStackCheck check(L);
-
 	std::string cwd;
 	CheckPath(filename, cwd);
 	int error = luaL_loadfile(L, filename.c_str());

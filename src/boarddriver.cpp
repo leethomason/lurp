@@ -13,6 +13,16 @@ void BoardDriver::load(const std::filesystem::path& p)
 	LuaStackCheck check(bridge.getLuaState());
 
 	bridge.doFile(p.string());
+	REQUIRE(bridge.isTable(-1));
+	{
+		// Awkward function calls.
+		bridge.pushGlobal("_deserialize");
+		REQUIRE(bridge.isFunc(-1));
+		bridge.dup(-2);
+		bridge.pCallFunc(1, 0);
+		bridge.pop(1);
+	}
+
 	_started = true;
 	bridge.pushGlobal("onInit");
 	bridge.pushGlobal("Players");
@@ -35,6 +45,7 @@ void BoardDriver::save(const std::filesystem::path& p)
 	LuaStackCheck check(bridge.getLuaState());
 	int nRet = bridge.callGlobalFunc("_serialize", {});
 	REQUIRE(nRet == 1);
+	REQUIRE(bridge.isString(-1));
 	std::string s = bridge.toString(-1);
 	bridge.pop();
 

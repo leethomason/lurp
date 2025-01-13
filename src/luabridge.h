@@ -53,9 +53,13 @@ public:
 	void pushTable(const std::string& key, int index = 0) const;
 	void pushNewGlobalTable(const std::string& key);
 	void pushNewTable(const std::string& key, int index = 0);
+
 	void pop(int n = 1) const;
+	void dup(int index = -1) const { lua_pushvalue(L, index); }
 
 	bool isTable(int index) const { return lua_istable(L, index); }
+	bool isString(int index) const { return lua_isstring(L, index); }
+	bool isFunc(int index) const { return lua_isfunction(L, index); }
 	int typeOf(int index) const { return lua_type(L, index); }
 
 	void nilGlobal(const std::string& key);
