@@ -14,6 +14,10 @@ local lume = require "lume"
 --   - Plate - character card? What to call this?
 --   - Counter - some number tracker. e.g. money, points, etc.
 
+local function isMeeple(m)
+    return type(m) == "table" and m.struct == "Meeple"
+end
+
 ------ Game ------
 _Game = {}
 
@@ -203,6 +207,12 @@ function _Player:load(obj)
 
     for k, v in pairs(obj) do
         o[k] = _factory(v)
+
+        -- Meeples are in the Box, not the player. Connect it up to the Box table.
+        if isMeeple(o[k]) then
+            local m = _queryMeepleFromUID(o[k].uid)
+            o[k] = m
+        end
     end
     return o
 end
@@ -315,6 +325,9 @@ function _factory(obj)
     end
     if not obj.struct then
         print("Warning: Nil struct found during load")
+        for k,v in pairs(obj) do
+            print("    ", k, v)
+        end
         return nil
     end
 
@@ -402,16 +415,21 @@ function _serialize()
 
     s = s .. "loader.Game =\n"
     s = s .. serialize(Game) .. "\n"
-    s = s .. "\nloader.Players =\n"
-    s = s .. serialize(Players) .. "\n"
     s = s .. "\nloader.Box =\n"
     s = s .. serialize(Box) .. "\n"
+    s = s .. "\nloader.Players =\n"
+    s = s .. serialize(Players) .. "\n"
     s = s .. "\nreturn loader"
     return s
 end
 
 function _deserialize(loader)
-    Game:load(loader.Game)
-    Players:load(loader.Players)
-    Box.load(loader.Box)
+    assert(type(loader) == "table")
+    assert(type(loader.Game) == "table")
+    assert(type(loader.Box) == "table")
+    assert(type(loader.Players) == "table")
+
+    Game = _Game:load(loader.Game)
+    Box = _Box:load(loader.Box)
+    Players = _Players:load(loader.Players, Box)
 end
