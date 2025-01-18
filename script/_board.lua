@@ -14,8 +14,58 @@ local lume = require "lume"
 --   - Plate - character card? What to call this?
 --   - Counter - some number tracker. e.g. money, points, etc.
 
-local function isMeeple(m)
-    return type(m) == "table" and m.struct == "Meeple"
+local _tableCache = {}
+
+local function serialize(x, stk, depth)
+    stk = stk or {}
+    depth = depth or 0
+
+    local t = type(x)
+
+    if t == "number" or t == "boolean" then
+        return tostring(x)
+    elseif t == "string" then    
+        return string.format("%q", x)
+    elseif t == "table" then
+        if stk[x] then
+            return string.rep("  ", depth) .. "nil --[[ circular reference ]]"
+        else
+            stk[x] = true
+            local s = "{\n"
+            for k,v in pairs(x) do
+                s = s .. string.rep("  ", depth + 1) .. "[" .. serialize(k, stk, depth + 1) .. "] = " .. serialize(v, stk, depth + 1) .. ",\n"
+            end
+            return s .. string.rep("  ", depth) .. "}"
+        end
+    else
+        return "nil --[[ " .. t .. " ]]"
+    end
+end
+
+-- serialize goes from a values to a string.
+-- deserialize, on the other hand, has a table loaded in memory,
+-- and needs to copy to a different one.
+local function deserialize(s, stk)
+    local t = type(s)
+    if t == "number" or t == "boolean" or t == "string" then
+        return s
+    elseif t == "table" then
+        if s.uid then
+            if stk[s.uid] then
+                return stk[s.uid]
+            end
+
+            local o = {}
+            for k,v in pairs(s) do
+                o[k] = deserialize(v, stk)
+            end
+            stk[s.uid] = o
+            return o
+        end
+    else
+        return nil
+    end
+
 end
 
 ------ Game ------
@@ -47,7 +97,7 @@ function _Game:load(g)
 
     assert(type(g) == "table")
     for k, v in pairs(g) do
-        o[k] = _factory(v)
+        o[k] = deserialize(v, _tableCache)
     end
     return o
 end
@@ -141,12 +191,13 @@ end
 function _Box:load(obj)
     assert(type(self) == "table")
     assert(type(obj) == "table")
-    _Box.init(self)
+    local o = _Box.init({})
 
     for k, v in ipairs(obj.meeples) do
         local m = Meeple:load(v)
-        lume.push(self.meeples, m)
+        lume.push(o.meeples, m)
     end
+    return o
 end
 
 Box = _Box:new()
@@ -175,11 +226,14 @@ function _Players:load(loader)
     assert(type(self) == "table")
     assert(type(loader) == "table")
 
-    self.struct = "Players"
-    for k, v in ipairs(loader) do
-        local p = Player:load(v)
-        lume.push(self, p)
+    local o = {}
+    o.struct = "Players"
+
+    for _, v in ipairs(loader) do
+        local p = _Player:load(v)
+        lume.push(o, p)
     end
+    return o
 end
 
 Players = _Players:new()
@@ -206,13 +260,7 @@ function _Player:load(obj)
     _Player.init(o)
 
     for k, v in pairs(obj) do
-        o[k] = _factory(v)
-
-        -- Meeples are in the Box, not the player. Connect it up to the Box table.
-        if isMeeple(o[k]) then
-            local m = _queryMeepleFromUID(o[k].uid)
-            o[k] = m
-        end
+        o[k] = deserialize(v, _tableCache)
     end
     return o
 end
@@ -317,28 +365,6 @@ function PlayerOver(index)
     end
 end
 
------- General Struct Handing ------
-
-function _factory(obj)
-    if type(obj) ~= "table" then
-        return obj
-    end
-    if not obj.struct then
-        print("Warning: Nil struct found during load")
-        for k,v in pairs(obj) do
-            print("    ", k, v)
-        end
-        return nil
-    end
-
-    if (obj.struct == "Counter") then
-        return Counter:load(obj)
-    else
-        assert(false, "Unexpected struct: " .. obj.struct)
-    end
-    return nil
-end
-
 ------ Internal API Functions ------
 
 function _isGameOver()
@@ -384,32 +410,6 @@ function _queryCellFromName(name)
     return nil
 end
 
-local function serialize(x, stk, depth)
-    stk = stk or {}
-    depth = depth or 0
-
-    local t = type(x)
-
-    if t == "number" or t == "boolean" then
-        return tostring(x)
-    elseif t == "string" then    
-        return string.format("%q", x)
-    elseif t == "table" then
-        if stk[x] then
-            return string.rep("  ", depth) .. "nil --[[ circular reference ]]"
-        else
-            stk[x] = true
-            local s = "{\n"
-            for k,v in pairs(x) do
-                s = s .. string.rep("  ", depth + 1) .. "[" .. serialize(k, stk, depth + 1) .. "] = " .. serialize(v, stk, depth + 1) .. ",\n"
-            end
-            return s .. string.rep("  ", depth) .. "}"
-        end
-    else
-        return "nil --[[ " .. t .. " ]]"
-    end
-end
-
 function _serialize()
     local s = "local loader = {}\n"
 
@@ -429,7 +429,8 @@ function _deserialize(loader)
     assert(type(loader.Box) == "table")
     assert(type(loader.Players) == "table")
 
+    _tableCache = {}
     Game = _Game:load(loader.Game)
     Box = _Box:load(loader.Box)
-    Players = _Players:load(loader.Players, Box)
+    Players = _Players:load(loader.Players)
 end

@@ -1,8 +1,42 @@
 require "_board"
 
-local function assertIsType(t, expected)
+local function assertIsType(t, expected, n)
     assert(t ~= nil, "Expected non-nil value")
     assert(type(t) == expected, "Expected type " .. expected .. ", got " .. type(t))
+    if n then
+        assert(#t == n, "Expected table length " .. n .. ", got " .. #t)
+    end
+end
+
+local function structCompare(t1, t2)
+    if type(t1) ~= type(t2) then
+        return false
+    end
+
+    -- skip functions
+    if (type(t1) == "function") then
+        return true
+    end
+
+    if type(t1) ~= "table" then
+        return t1 == t2
+    end
+
+    for k, v in pairs(t1) do
+        if not structCompare(v, t2[k]) then
+            print("#1 k:", k, "v:", v, "t2[k]:", t2[k])
+            return false
+        end
+    end
+
+    for k, v in pairs(t2) do
+        if not structCompare(v, t1[k]) then
+            print("#2 k:", k, "v:", v, "t2[k]:", t2[k])
+            return false
+        end
+    end
+
+    return true
 end
 
 local function dTable(n, t)
@@ -60,19 +94,33 @@ local function meepleTests()
     assert(m1.y == 10)
 end
 
+local function cycleTestAssert(t)
+    assertIsType(t, "table", 2)
+    assertIsType(t[1], "table")
+    assertIsType(t[1].meeples, "table", 1)
+    assertIsType(t[1].fear, "table")
+end
+
 local function cycleTest()
     initState()
     local data = dofile("boardsave.lua")
+    cycleTestAssert(data.Players)
+
     _deserialize(data)
 
     assertIsType(Game, "table")
     assertIsType(Box, "table")
     assertIsType(Players, "table")
+    assertIsType(Box.meeples, "table", 5)
+    cycleTestAssert(Players)
 
     local s = _serialize()
     local fp = io.open("boardsaveCycle.lua", "w")
     fp:write(s)
     fp:close()
+
+    local data2 = dofile("boardsaveCycle.lua")
+    assert(structCompare(data, data2))
 end
 
 local function loadTest()
