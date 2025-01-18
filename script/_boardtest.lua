@@ -108,16 +108,16 @@ local function cycleTest()
 
     _deserialize(data)
 
+    local s = _serialize()
+    local fp = io.open("boardsaveCycle.lua", "w")
+    fp:write(s)
+    fp:close()
+
     assertIsType(Game, "table")
     assertIsType(Box, "table")
     assertIsType(Players, "table")
     assertIsType(Box.meeples, "table", 5)
     cycleTestAssert(Players)
-
-    local s = _serialize()
-    local fp = io.open("boardsaveCycle.lua", "w")
-    fp:write(s)
-    fp:close()
 
     local data2 = dofile("boardsaveCycle.lua")
     assert(structCompare(data, data2))
