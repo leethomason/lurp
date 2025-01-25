@@ -123,7 +123,7 @@ function _Meeple.init(o)
 
     o.name = ""      -- name of the meeple
     o.label = ""     -- label to display
-    o.color = "blue"
+    o.color = nil    -- color of the meeple (optional)
 
     o.new = _Meeple.new
     o.load = _Meeple.load

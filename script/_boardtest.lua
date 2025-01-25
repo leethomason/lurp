@@ -94,16 +94,35 @@ local function meepleTests()
     assert(m1.y == 10)
 end
 
-local function serializeTest()
+local function serializeTest1()
     local test = {
         value = 1,
         valueStr = "str",
         valueBool = true
     }
     local s = serialize(test, {}, 0)
-    print(s)
     local tbl = load("return " .. s)()
-    print(tbl)
+    assert(type(tbl) == "table")
+    local t = deserialize(tbl, {})
+
+    assert(t.value == 1)
+    assert(t.valueStr == "str")
+    assert(t.valueBool == true)
+end
+
+local function serializeTest2()
+    local test = {
+        value = 1,
+        valueStr = "str",
+        valueBool = true,
+        inner = {
+            value = 2,
+            valueStr = "str2",
+            valueBool = false
+        }
+    }
+    local s = serialize(test, {}, 0)
+    local tbl = load("return " .. s)()
     assert(type(tbl) == "table")
     local t = deserialize(tbl, {})
 
@@ -111,6 +130,9 @@ local function serializeTest()
     assert(t.valueStr == "str")
     assert(t.valueBool == true)
 
+    assert(t.inner.value == 2)
+    assert(t.inner.valueStr == "str2")
+    assert(t.inner.valueBool == false)
 end
 
 local function cycleTestAssert(t)
@@ -152,7 +174,8 @@ local function loadTest()
 end
 
 meepleTests()
-serializeTest()
+serializeTest1()
+serializeTest2()
 cycleTest()
 loadTest()
 
