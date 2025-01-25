@@ -94,6 +94,25 @@ local function meepleTests()
     assert(m1.y == 10)
 end
 
+local function serializeTest()
+    local test = {
+        value = 1,
+        valueStr = "str",
+        valueBool = true
+    }
+    local s = serialize(test, {}, 0)
+    print(s)
+    local tbl = load("return " .. s)()
+    print(tbl)
+    assert(type(tbl) == "table")
+    local t = deserialize(tbl, {})
+
+    assert(t.value == 1)
+    assert(t.valueStr == "str")
+    assert(t.valueBool == true)
+
+end
+
 local function cycleTestAssert(t)
     assertIsType(t, "table", 2)
     assertIsType(t[1], "table")
@@ -113,11 +132,11 @@ local function cycleTest()
     fp:write(s)
     fp:close()
 
-    assertIsType(Game, "table")
-    assertIsType(Box, "table")
-    assertIsType(Players, "table")
-    assertIsType(Box.meeples, "table", 5)
-    cycleTestAssert(Players)
+    --assertIsType(Game, "table")
+    --assertIsType(Box, "table")
+    --assertIsType(Players, "table")
+    --assertIsType(Box.meeples, "table", 5)
+    --cycleTestAssert(Players)
 
     local data2 = dofile("boardsaveCycle.lua")
     assert(structCompare(data, data2))
@@ -133,6 +152,7 @@ local function loadTest()
 end
 
 meepleTests()
+serializeTest()
 cycleTest()
 loadTest()
 

@@ -14,9 +14,7 @@ local lume = require "lume"
 --   - Plate - character card? What to call this?
 --   - Counter - some number tracker. e.g. money, points, etc.
 
-local _tableCache = {}
-
-local function serialize(x, stk, depth)
+function serialize(x, stk, depth)
     stk = stk or {}
     depth = depth or 0
 
@@ -45,27 +43,27 @@ end
 -- serialize goes from a values to a string.
 -- deserialize, on the other hand, has a table loaded in memory,
 -- and needs to copy to a different one.
-local function deserialize(s, stk)
+function deserialize(s, stk)
     local t = type(s)
+    
     if t == "number" or t == "boolean" or t == "string" then
         return s
     elseif t == "table" then
-        if s.uid then
-            if stk[s.uid] then
-                return stk[s.uid]
-            end
-
-            local o = {}
-            for k,v in pairs(s) do
-                o[k] = deserialize(v, stk)
-            end
-            stk[s.uid] = o
-            return o
+        if s.uid and stk[s.uid] then
+            return stk[s.uid]
         end
+        local o = {}
+        for k,v in pairs(s) do
+            o[k] = deserialize(v, stk)
+        end
+        if s.uid then
+            stk[s.uid] = o
+        end
+        return o
     else
         return nil
     end
-
+    assert(false)
 end
 
 ------ Game ------
