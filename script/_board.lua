@@ -30,7 +30,16 @@ function serialize(x, stk, depth)
         else
             stk[x] = true
             local s = "{\n"
-            for k,v in pairs(x) do
+
+            -- The unsorted k values are annoying. Sort them.
+            local keys = {}
+            for k, _ in pairs(x) do
+                table.insert(keys, k)
+            end
+            table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+
+            for i, k in ipairs(keys) do
+                local v = x[k]
                 s = s .. string.rep("  ", depth + 1) .. "[" .. serialize(k, stk, depth + 1) .. "] = " .. serialize(v, stk, depth + 1) .. ",\n"
             end
             return s .. string.rep("  ", depth) .. "}"
