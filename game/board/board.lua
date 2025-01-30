@@ -11,6 +11,8 @@ local board = {
     { name = "Foyer", x = 19, y = 10, w = 12, h = 2, connect = {"Main Hall"}  },
 }
 
+-- Can be called any time.
+-- Note: conistency; the board can expand, but not change. (true? fixme)
 function onFetchBoard()
     return board
 end
@@ -68,6 +70,19 @@ function onInit(players, box)
             PlayerOver(players[i].index)
         end
     end
+end
+
+-- Calls when a player starts their turn.
+function onStartTurn(player, index)
+    print("Lua onStartTurn", player.index)
+end
+
+-- Called when a turn is ending. 
+-- @return index of the next player to take a turn or nil to pass to the next player.
+--         if a player isn't active, will pass to the next active player.
+function onEndTurn(player, index)
+    print("Lua onEndTurn", player.index)
+    return nil
 end
 
 function isMoveAllowed(player, meeple, start, dst)

@@ -154,6 +154,7 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	bridge.loadLUA(gameFile.c_str(), "_board.lua");
 	BoardDriver driver(bridge);
 
+	// Load a file if present & desired.
 	{
 		std::filesystem::path path = SavePath(gameName, "autosave");
 		if (std::filesystem::exists(path)) {
@@ -165,11 +166,13 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 			}
 		}
 	}
+	// If not loaded, start a new game.
 	if (!driver.started()) {
 		driver.loadBoard();
 		driver.createGameBox();
 		driver.setupGame();
 	}
+	driver.initGame();
 
 	//std::vector<BoardDriver::Move> moves = driver.queryMoves(0);
 	//for (const auto& m : moves) {
@@ -184,6 +187,8 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 
 		bool moveEntered = false;
 		REQUIRE(driver.nPlayers() > 0);
+
+
 
 		for (int i = 0; i < driver.nPlayers(); i++) {
 			std::vector<BoardDriver::Move> moves = driver.queryMoves(i);
@@ -206,6 +211,9 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 						break;
 					else
 						continue;
+				}
+				else if (input == "/q") {
+					return;
 				}
 
 				Value v = Value::ParseValue(input);

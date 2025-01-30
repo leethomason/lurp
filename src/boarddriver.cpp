@@ -24,10 +24,6 @@ void BoardDriver::load(const std::filesystem::path& p)
 	}
 
 	_started = true;
-	bridge.pushGlobal("onInit");
-	bridge.pushGlobal("Players");
-	bridge.pushGlobal("Box");
-	bridge.pCallFunc(2, 0);
 
 	bridge.pushGlobal("Players");
 	_numPlayers = bridge.getLen();
@@ -95,7 +91,11 @@ void BoardDriver::setupGame()
 	bridge.pushGlobal("Players");
 	bridge.pushGlobal("Box");
 	bridge.pCallFunc(2, 0);
+}
 
+void BoardDriver::initGame()
+{
+	LuaStackCheck check(bridge.getLuaState());
 	bridge.pushGlobal("onInit");
 	bridge.pushGlobal("Players");
 	bridge.pushGlobal("Box");

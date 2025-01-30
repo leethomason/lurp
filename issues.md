@@ -1,5 +1,10 @@
 # Issues
 
+## Board Issues
+
+* Player-Over, Game-Over
+* Current Turn, Start- End-Turn
+
 ## Open Issues
 
 ## Open / Next

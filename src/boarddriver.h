@@ -72,6 +72,7 @@ public:
 	void loadBoard();
 	void createGameBox();
 	void setupGame();
+	void initGame();
 
 	void load(const std::filesystem::path& p);
 	void save(const std::filesystem::path& p);
@@ -97,7 +98,7 @@ private:
 	LuaBridge& bridge;
 	std::vector<Cell> _board;
 	int _maxPlayers = 0;
-	int _numPlayers = 0;
+	int _numPlayers = 0;		// fixme: this should go away
 	bool _started = false;
 
 	void parseBoardTable();

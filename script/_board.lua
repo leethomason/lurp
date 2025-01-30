@@ -84,6 +84,7 @@ function _Game.init(o)
 
     -- data 
     o._uidCounter = 0
+    o._currentTurn = 1
 
     -- methods
     o.new = _Game.new
