@@ -1,6 +1,7 @@
 local loader = {}
 loader.Game =
 {
+  ["_currentTurn"] = 1,
   ["_uidCounter"] = 5,
   ["new"] = nil --[[ function ]],
   ["struct"] = "Game",
@@ -43,6 +44,8 @@ loader.Players =
     ["struct"] = "Player",
     ["load"] = nil --[[ function ]],
     ["new"] = nil --[[ function ]],
+    ["repeatTurn"] = 0,
+    ["skipTurn"] = 0,
   },
   [2] = {
     ["inPlay"] = true,
@@ -77,7 +80,9 @@ loader.Players =
     ["struct"] = "Player",
     ["load"] = nil --[[ function ]],
     ["new"] = nil --[[ function ]],
-  },
+    ["repeatTurn"] = 0,
+    ["skipTurn"] = 0,
+    },
   ["struct"] = "Players",
   ["load"] = nil --[[ function ]],
   ["new"] = nil --[[ function ]],

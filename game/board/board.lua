@@ -31,6 +31,7 @@ end
 
 -- Game creation: yes, 1st
 -- Game load: no
+-- @return maximum number of players
 function onSetupBox(box)
     local colors = { "red", "green", "blue", "yellow" }
     for i=1, MAX_PLAYERS do
@@ -38,8 +39,6 @@ function onSetupBox(box)
     end
 
     table.insert(box.meeples, Meeple:new("place", "green"))
-
-    --printBox(box)
 
     return MAX_PLAYERS
 end
@@ -55,9 +54,6 @@ function onSetupGame(players, box)
         lume.push(players[i].meeples, meeples[i])
         players[i].fear = Counter:new(0, 0, 4)
     end
-
-    --print("player meeples")
-    --printMeeples(pm)
 end
 
 -- Game creation: yes, 3rd
@@ -73,14 +69,12 @@ function onInit(players, box)
 end
 
 -- Calls when a player starts their turn.
-function onStartTurn(player, index)
+function onStartTurn(player)
     print("Lua onStartTurn", player.index)
 end
 
 -- Called when a turn is ending. 
--- @return index of the next player to take a turn or nil to pass to the next player.
---         if a player isn't active, will pass to the next active player.
-function onEndTurn(player, index)
+function onEndTurn(player)
     print("Lua onEndTurn", player.index)
     return nil
 end

@@ -69,9 +69,8 @@ void BoardDriver::createGameBox()
 
 	LuaStackCheck check(bridge.getLuaState());
 
-	bridge.pushGlobal("onSetupBox");
-	bridge.pushGlobal("Box");
-	bridge.pCallFunc(1, 1);
+	bridge.pushGlobal("_onSetupBox");
+	bridge.pCallFunc(0, 1);
 	_maxPlayers = (int)bridge.toInt(-1);
 	bridge.pop();
 	REQUIRE(_maxPlayers > 0);
@@ -87,19 +86,15 @@ void BoardDriver::setupGame()
 	bridge.pushInt(_numPlayers);
 	bridge.pCallFunc(1, 0);
 
-	bridge.pushGlobal("onSetupGame");
-	bridge.pushGlobal("Players");
-	bridge.pushGlobal("Box");
-	bridge.pCallFunc(2, 0);
+	bridge.pushGlobal("_onSetupGame");
+	bridge.pCallFunc(0, 0);
 }
 
 void BoardDriver::initGame()
 {
 	LuaStackCheck check(bridge.getLuaState());
-	bridge.pushGlobal("onInit");
-	bridge.pushGlobal("Players");
-	bridge.pushGlobal("Box");
-	bridge.pCallFunc(2, 0);
+	bridge.pushGlobal("_onInit");
+	bridge.pCallFunc(0, 0);
 }
 
 void BoardDriver::parseBoardTable()
@@ -217,7 +212,6 @@ BoardDriver::Player BoardDriver::queryPlayer(int player) const
 	bridge.pop(2);
 	return p;
 }
-
 
 std::vector<BoardDriver::Player> BoardDriver::queryPlayers() const
 {
@@ -347,6 +341,16 @@ bool BoardDriver::done() const
 	bool gameOver = bridge.toBool(-1);
 	bridge.pop();
 	return gameOver;
+}
+
+int BoardDriver::currentMove() const
+{
+	LuaStackCheck check(bridge.getLuaState());
+	int nRet = bridge.callGlobalFunc("_queryCurrentPlayerIndex", {});
+	REQUIRE(nRet == 1);
+	int player = (int)bridge.toInt(-1) - 1;
+	bridge.pop();
+	return player;
 }
 
 } // namespace lurp

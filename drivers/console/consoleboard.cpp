@@ -174,65 +174,45 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	}
 	driver.initGame();
 
-	//std::vector<BoardDriver::Move> moves = driver.queryMoves(0);
-	//for (const auto& m : moves) {
-	//	fmt::print("Player {} meeple {} from {} to {}\n", 0, m.meeple.label, m.from->name, m.to->name);
-	//}
-
-	bool save = false;
-
-	while (!driver.done() && !save) {
+	while (!driver.done()) {
 		std::string b = renderBoard(driver);
 		fmt::print("{}", b);
 
-		bool moveEntered = false;
 		REQUIRE(driver.nPlayers() > 0);
 
+		int currentPlayer = driver.currentMove();
+		std::vector<BoardDriver::Move> moves = driver.queryMoves(currentPlayer);
 
-
-		for (int i = 0; i < driver.nPlayers(); i++) {
-			std::vector<BoardDriver::Move> moves = driver.queryMoves(i);
-
-			//fmt::print("Player {}'s turn\n", i);
-			PrintPlayer(driver, i);
+		PrintPlayer(driver, currentPlayer);
 			
-			int index = 1;
-			fmt::print("\n0: End turn\n");
-			for (const auto& m : moves) {
-				fmt::print("{}: Meeple {} from {} to {}\n", index++, m.meeple.label, m.from->name, m.to->name);
-			}
-
-			while (true) {
-				fmt::print(">> ");
-				std::string input = ReadString();
-				if (input == "/s") {
-					save = true;
-					if (moveEntered)
-						break;
-					else
-						continue;
-				}
-				else if (input == "/q") {
-					return;
-				}
-
-				Value v = Value::ParseValue(input);
-
-				if (v.type == Value::Type::kInt && v.intInRange((int)(moves.size() + 1))) {
-					if (v.intVal == 0)
-						break;
-					moveEntered = true;
-					driver.move(moves[v.intVal - 1]);
-					break;
-				}
-				else {
-					fmt::print("Invalid move\n");
-				}
-			}
+		int index = 1;
+		fmt::print("\n0: End turn\n");
+		for (const auto& m : moves) {
+			fmt::print("{}: Meeple {} from {} to {}\n", index++, m.meeple.label, m.from->name, m.to->name);
 		}
-		if (save) {
-			std::filesystem::path path = SavePath(gameName, "autosave");
-			driver.save(path);
+
+		while (true) {
+			fmt::print(">> ");
+			std::string input = ReadString();
+
+			if (input == "/s") {
+				std::filesystem::path path = SavePath(gameName, "autosave");
+				driver.save(path);
+			}
+			else if (input == "/q") {
+				return;
+			}
+
+			Value v = Value::ParseValue(input);
+
+			if (v.type == Value::Type::kInt && v.intInRange((int)(moves.size() + 1))) {
+				if (v.intVal == 0)
+					break;
+				driver.move(moves[v.intVal - 1]);
+			}
+			else {
+				fmt::print("Invalid move\n");
+			}
 		}
 	}
 }

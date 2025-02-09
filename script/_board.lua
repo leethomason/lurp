@@ -1,4 +1,5 @@
 local lume = require "lume"
+require "_util"
 
 -- Rules / assumptions
 -- 1. a. The board is a graph of rooms. OR
@@ -90,6 +91,9 @@ function _Game.init(o)
     o.new = _Game.new
     o.load = _Game.load
     o.getUID = _Game.getUID
+    o.currentPlayer = _Game.currentPlayer
+    o.getPlayerFromIndex = _Game.getPlayerFromIndex
+    o.nextTurn = _Game.nextTurn
 
     return o
 end
@@ -113,6 +117,58 @@ end
 function _Game:getUID()
     self._uidCounter = self._uidCounter + 1
     return self._uidCounter
+end
+
+-- returns the current Player or nil if the current player isn't inPlay
+function _Game:currentPlayer()
+    return self:getPlayerFromIndex(self._currentTurn)
+end
+
+function _Game:getPlayerFromIndex(index)
+    assert(index > 0 and index <= #Players)
+    local p = Players[index]
+    if p.inPlay then
+        return p
+    end
+    return nil
+end
+
+function _Game:nextTurn()
+    local current = self:currentPlayer()
+    local startIdx = self._currentTurn
+
+    if current then
+        assert(current.skipTurn >= 0)
+        assert(current.repeatTurn >= 0)
+
+        onEndTurn(current)
+
+        if current.repeatTurn > 0 then
+            current.repeatTurn = current.repeatTurn - 1
+            onStartTurn(current)
+            return
+        end
+    end
+
+    while true do
+        self._currentTurn = incMod(self._currentTurn, #Players)
+        if self._currentTurn == startIdx then
+            -- No need to skip: BUT, may need to call actors. TBD.
+            local p = self:currentPlayer()
+            if p then
+                p.skipTurn = 0
+            end
+            break
+        end
+        local p = self:currentPlayer()
+        assert(p)
+        if p.skipTurn > 0 then
+            p.skipTurn = p.skipTurn - 1
+        else
+            break
+        end
+    end
+    onStartTurn(self:currentPlayer())
 end
 
 Game = _Game:new()
@@ -255,6 +311,10 @@ function _Player.init(n)
 
     n.index = 0
     n.inPlay = true
+    -- Note that both skip and repeat can be set. Repeat takes precedence.
+    -- and then skip will kick in when the turn comes around.
+    n.skipTurn = 0  -- skip turn counter
+    n.repeatTurn = 0  -- repeat turn counter
     n.meeples = {}
     
     n.new = _Player.new
@@ -375,6 +435,33 @@ end
 
 ------ Internal API Functions ------
 
+function _onSetupBox()
+    assert(Box)
+    
+    if onSetupBox then
+        return onSetupBox(Box)
+    end
+    return 0
+end
+
+function _onSetupGame()
+    assert(Players)
+    assert(Box)
+
+    if onSetupGame then
+        onSetupGame(Players, Box)
+    end
+end
+
+function _onInit()
+    assert(Players)
+    assert(Box)
+
+    if onInit then
+        onInit(Players, Box)
+    end
+end
+
 function _isGameOver()
     return gameOver
 end
@@ -416,6 +503,10 @@ function _queryCellFromName(name)
     end
     assert(false)
     return nil
+end
+
+function _queryCurrentPlayerIndex()
+    return Game._currentTurn
 end
 
 function _serialize()

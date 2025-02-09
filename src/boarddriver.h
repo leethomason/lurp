@@ -87,11 +87,16 @@ public:
 	const std::vector<Cell>& board() const { return _board; }
 	const Cell* getCell(const std::string& name) const;
 
+	// state
 	bool done() const;
 	int nPlayers() const { return _numPlayers; }
-	void move(const Move& move);
+	int currentMove() const;
 
+	// query
 	std::vector<Move> queryMoves(int player) const;
+
+	// action
+	void move(const Move& move);
 
 private:
 

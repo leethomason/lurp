@@ -2,6 +2,7 @@
 #include "zonedriver.h"
 #include "scriptdriver.h"
 #include "test.h"
+#include "boardtest.h"
 #include "consoleutil.h"
 
 #include "consolebattle.h"
@@ -488,6 +489,7 @@ int main(int argc, const char* argv[])
 		if (runTests) {
 			RunTests();
 			RunConsoleTests();
+			RunBoardTests();
 			rc = TestReturnCode();
 			LogTestResults();
 			if (rc == 0)

@@ -179,4 +179,7 @@ serializeTest2()
 cycleTest()
 loadTest()
 
+-- Tests needed:
+--   - Turn test: skip, repeat, single player
+
 print("Board tests complete.")
