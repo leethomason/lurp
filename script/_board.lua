@@ -463,19 +463,17 @@ function _nextTurn()
     end
 
     local current = Game:currentPlayer()
-
-    assert(current)
-    assert(current.skipTurn >= 0)
-    assert(current.repeatTurn >= 0)
-
-    _onEndTurn()
+    -- if the current player had a PlayerOver, then current will be nil
+    if current then
+        _onEndTurn()
+    end
 
     -- Turn is ended. The real question is who's turn is it?
     local active = lume.filter(Players, function(p) return p.inPlay end)
     if #active == 0 then return end
 
     -- Someone's turn, at least
-    if current.repeatTurn > 0 then
+    if current and current.repeatTurn > 0 then
         current.repeatTurn = current.repeatTurn - 1
         _onStartTurn()
         return

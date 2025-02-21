@@ -67,6 +67,14 @@ local function sequenceTest1()
 
     assert(Players[1].start == 1)
     assert(Players[2].start == 0)
+
+    -- now a player leaves (on their own turn)
+    assert(not GameOver())
+    PlayerOver(1)
+    _nextTurn()
+    assert(Game:currentPlayer().index == 2)
+    _nextTurn()
+    assert(Game:currentPlayer().index == 2)
 end
 
 sequenceTest1()
