@@ -2,8 +2,15 @@
 
 ## Board Issues
 
-* Player-Over, Game-Over
+* Over
+  * Game over
+  * Player over
 * Current Turn, Start- End-Turn
+  * make sure onStartTurn() is called at startup. And load??
+* Serialize
+  * Between turns - allows onStart etc. to work correctly. Or is that way harder?
+    Only save during a turn, and then the state is known?
+  * Fix game loop
 
 ## Open Issues
 

@@ -8,6 +8,12 @@ require "_util"
 -- 2. The board is static. Rooms don't move. Although the can be blocked. See onMoveMeeple()
 -- 3. A player can have n meeples. TBD: move each meeple? actions per meeple?
 
+-- Main Parts
+--    - Game: main object, general state
+--    - Box: all the stuff of the game (Meeples, cards, etc.) 
+--    - Players: ar array w/ utility
+--    - Player: model a game's player (human or sim-human)
+
 -- Pieces:
 --   - Meeple - markers, mini-figs, etc.
 --   - Card 
@@ -85,7 +91,7 @@ function _Game.init(o)
 
     -- data 
     o._uidCounter = 0
-    o._currentTurn = 1
+    o._currentTurn = nil  -- will get initialized to "1" on the first _nextTurn
 
     -- methods
     o.new = _Game.new
@@ -93,7 +99,6 @@ function _Game.init(o)
     o.getUID = _Game.getUID
     o.currentPlayer = _Game.currentPlayer
     o.getPlayerFromIndex = _Game.getPlayerFromIndex
-    o.nextTurn = _Game.nextTurn
 
     return o
 end
@@ -121,6 +126,9 @@ end
 
 -- returns the current Player or nil if the current player isn't inPlay
 function _Game:currentPlayer()
+    if not self._currentTurn then
+        return nil
+    end
     return self:getPlayerFromIndex(self._currentTurn)
 end
 
@@ -133,43 +141,6 @@ function _Game:getPlayerFromIndex(index)
     return nil
 end
 
-function _Game:nextTurn()
-    local current = self:currentPlayer()
-    local startIdx = self._currentTurn
-
-    if current then
-        assert(current.skipTurn >= 0)
-        assert(current.repeatTurn >= 0)
-
-        onEndTurn(current)
-
-        if current.repeatTurn > 0 then
-            current.repeatTurn = current.repeatTurn - 1
-            onStartTurn(current)
-            return
-        end
-    end
-
-    while true do
-        self._currentTurn = incMod(self._currentTurn, #Players)
-        if self._currentTurn == startIdx then
-            -- No need to skip: BUT, may need to call actors. TBD.
-            local p = self:currentPlayer()
-            if p then
-                p.skipTurn = 0
-            end
-            break
-        end
-        local p = self:currentPlayer()
-        assert(p)
-        if p.skipTurn > 0 then
-            p.skipTurn = p.skipTurn - 1
-        else
-            break
-        end
-    end
-    onStartTurn(self:currentPlayer())
-end
 
 Game = _Game:new()
 
@@ -309,7 +280,7 @@ _Player = {}
 function _Player.init(n)
     n.struct = "Player"
 
-    n.index = 0
+    n.index = nil
     n.inPlay = true
     -- Note that both skip and repeat can be set. Repeat takes precedence.
     -- and then skip will kick in when the turn comes around.
@@ -337,6 +308,7 @@ function _Player:new(index)
     assert(type(self) == "table")
     local o = {}
     _Player.init(o)
+    o.index = index
     return o
 end
 
@@ -436,30 +408,91 @@ end
 ------ Internal API Functions ------
 
 function _onSetupBox()
+    assert(Game)
     assert(Box)
-    
-    if onSetupBox then
-        return onSetupBox(Box)
-    end
-    return 0
+    assert(onSetupBox)
+    return onSetupBox(Game, Box)
 end
 
 function _onSetupGame()
+    assert(Game)
     assert(Players)
     assert(Box)
+    assert(onSetupGame)
 
-    if onSetupGame then
-        onSetupGame(Players, Box)
-    end
+    onSetupGame(Game, Players, Box)
 end
 
 function _onInit()
+    assert(Game)
     assert(Players)
     assert(Box)
+    assert(onInit)
 
-    if onInit then
-        onInit(Players, Box)
+    onInit(Game, Players, Box)
+end
+
+function _onStartTurn()
+    assert(Game)
+    assert(Box)
+    assert(Players)
+    assert(Game._currentTurn > 0 and Game._currentTurn <= #Players)
+
+    local player = Players[Game._currentTurn]
+    assert(player.inPlay)
+    onStartTurn(Game, player)
+end
+
+function _onEndTurn()
+    assert(Game)
+    assert(Game._currentTurn > 0 and Game._currentTurn <= #Players)
+    assert(Box)
+    assert(Players)
+
+    local player = Players[Game._currentTurn]
+    onEndTurn(Game, player)
+end
+
+-- API functions --
+
+function _nextTurn()
+    if not Game._currentTurn then
+        Game._currentTurn = 1
+        _onStartTurn()
+        return
     end
+
+    local current = Game:currentPlayer()
+
+    assert(current)
+    assert(current.skipTurn >= 0)
+    assert(current.repeatTurn >= 0)
+
+    _onEndTurn()
+
+    -- Turn is ended. The real question is who's turn is it?
+    local active = lume.filter(Players, function(p) return p.inPlay end)
+    if #active == 0 then return end
+
+    -- Someone's turn, at least
+    if current.repeatTurn > 0 then
+        current.repeatTurn = current.repeatTurn - 1
+        _onStartTurn()
+        return
+    end
+
+    while true do
+        Game._currentTurn = incMod(Game._currentTurn, #Players)
+        local p = Game:currentPlayer()
+        if p then 
+            if p.skipTurn > 0 then
+                p.skipTurn = p.skipTurn - 1
+            else
+                break  -- found a player
+            end
+        end
+    end
+    _onStartTurn()
 end
 
 function _isGameOver()
@@ -472,7 +505,6 @@ function _createPlayers(nPlayers)
         assert(type(p) == "table")
         lume.push(Players, p)
     end
-    --print("Players", #Players)
 end
 
 function _onFetchBoard()
