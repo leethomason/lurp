@@ -388,10 +388,14 @@ Counter = _Counter
 local gameOver = false
 
 function GameOver()
+    return gameOver
+end
+
+function SetGameOver()
     gameOver = true
 end
 
-function PlayerOver(index)
+function SetPlayerOver(index)
     Players[index].inPlay = false
     local anyInPlay = false
     for _, v in ipairs(Players) do
@@ -401,7 +405,7 @@ function PlayerOver(index)
         end
     end
     if not anyInPlay then
-        GameOver()
+        SetGameOver()
     end
 end
 
