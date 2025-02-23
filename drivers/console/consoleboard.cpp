@@ -153,6 +153,7 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 	LuaBridge bridge;
 	bridge.loadLUA(gameFile.c_str(), "_board.lua");
 	BoardDriver driver(bridge);
+	bool didLoad = false;
 
 	// Load a file if present & desired.
 	{
@@ -163,6 +164,7 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 			if (input == "y") {
 				driver.loadBoard();
 				driver.load(path);
+				didLoad = true;
 			}
 		}
 	}
@@ -173,6 +175,10 @@ void ConsoleBoardDriver(const std::string& gameFile, const std::string& gameName
 		driver.setupGame();
 	}
 	driver.initGame();
+	if (!didLoad) {
+		driver.nextTurn();
+	}
+	CHECK(driver.currentMove() >= 0);
 
 	while (!driver.done()) {
 		std::string b = renderBoard(driver);

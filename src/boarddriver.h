@@ -73,6 +73,7 @@ public:
 	void createGameBox();
 	void setupGame();
 	void initGame();
+	void nextTurn();
 
 	void load(const std::filesystem::path& p);
 	void save(const std::filesystem::path& p);

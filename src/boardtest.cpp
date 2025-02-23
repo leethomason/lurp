@@ -15,9 +15,10 @@ static void BasicTest()
 	driver.createGameBox();
 	driver.setupGame();
 	driver.initGame();
+	driver.nextTurn();
 
 	TEST(driver.nPlayers() == 2);
-	TEST(driver.currentMove() == 0);
+	TEST(driver.currentMove() == 0);	// player 1, index 0
 }
 
 
