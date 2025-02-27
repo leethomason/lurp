@@ -183,3 +183,4 @@ loadTest()
 --   - Turn test: skip, repeat, single player
 
 print("Board tests complete.")
+dofile("_boardtestmock.lua")
