@@ -21,7 +21,7 @@ function onSetupBox(game, box)
 end
 
 -- called once at start of game, after onSetupBox
--- fill in players
+-- 'players' table is passed in empty, and should be filled with Player objects
 function onSetupGame(game, box, players)
     game.setup = true
 
