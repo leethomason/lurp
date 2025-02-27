@@ -438,7 +438,7 @@ function _onSetupGame()
     assert(Box)
     assert(onSetupGame)
 
-    onSetupGame(Game, Players, Box)
+    onSetupGame(Game, Box, Players)
 end
 
 function _onInit()
@@ -447,7 +447,7 @@ function _onInit()
     assert(Box)
     assert(onInit)
 
-    onInit(Game, Players, Box)
+    onInit(Game, Box, Players)
 end
 
 function _onStartTurn()

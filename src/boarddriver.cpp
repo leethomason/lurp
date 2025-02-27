@@ -97,6 +97,13 @@ void BoardDriver::initGame()
 	bridge.pCallFunc(0, 0);
 }
 
+void BoardDriver::nextTurn()
+{
+	LuaStackCheck check(bridge.getLuaState());
+	bridge.pushGlobal("_nextTurn");
+	bridge.pCallFunc(0, 0);
+}
+
 void BoardDriver::parseBoardTable()
 {
 	LuaStackCheck check(bridge.getLuaState());
@@ -287,8 +294,10 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 			move.from = cell;
 			move.to = dst;
 
+			// isMoveAllowed(game, player, meeple, start, dst)
 			int nRet = 0;
 			bridge.pushGlobal("isMoveAllowed");											// function ref
+			bridge.pushGlobal("Game");
 			nRet = bridge.callGlobalFunc("_queryPlayerFromIndex", { player + 1 } );		// player table (one based)
 			REQUIRE(nRet == 1 && bridge.isTable(-1));
 			nRet = bridge.callGlobalFunc("_queryMeepleFromUID", { m.uid });				// meeple table
@@ -298,7 +307,7 @@ std::vector<BoardDriver::Move> BoardDriver::queryMoves(int player) const
 			nRet = bridge.callGlobalFunc("_queryCellFromName", { dst->name });			// cell table
 			REQUIRE(nRet == 1 && bridge.isTable(-1));
 
-			bridge.pCallFunc(4, 1);
+			bridge.pCallFunc(5, 1);
 			if (bridge.toBool(-1)) {
 				moves.push_back(move);
 			}
@@ -317,9 +326,10 @@ void BoardDriver::move(const BoardDriver::Move& move)
 	bridge.setStrField("pos", move.to->name);
 	bridge.pop();
 
-	// Callback
+	// onMeepleMoved(game, player, meeple, start, dst)
 	int nRet = 0;
 	bridge.pushGlobal("onMeepleMoved");	
+	bridge.pushGlobal("Game");
 	nRet = bridge.callGlobalFunc("_queryPlayerFromIndex", { move.player + 1 } );	// player table (one based)
 	REQUIRE(nRet == 1 && bridge.isTable(-1));
 	nRet = bridge.callGlobalFunc("_queryMeepleFromUID", { move.meeple.uid });		// meeple table
@@ -329,7 +339,7 @@ void BoardDriver::move(const BoardDriver::Move& move)
 	nRet = bridge.callGlobalFunc("_queryCellFromName", { move.to->name });			// cell table
 	REQUIRE(nRet == 1);
 
-	bridge.pCallFunc(4, 0);
+	bridge.pCallFunc(5, 0);
 }
 
 bool BoardDriver::done() const

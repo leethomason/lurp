@@ -32,7 +32,7 @@ end
 -- Game creation: yes, 1st
 -- Game load: no
 -- @return maximum number of players
-function onSetupBox(box)
+function onSetupBox(game, box)
     local colors = { "red", "green", "blue", "yellow" }
     for i=1, MAX_PLAYERS do
         table.insert(box.meeples, Meeple:new("player", "P" .. i, colors[i]))
@@ -45,7 +45,7 @@ end
 
 -- Game creation: yes, 2nd
 -- Game load: no
-function onSetupGame(players, box)
+function onSetupGame(game, box, players)
     local meeples = lume.filter(box.meeples, function(meeple) return meeple.name == "player" end)
     assert(#meeples == MAX_PLAYERS)  -- not generally true, but is for this game
 
@@ -58,7 +58,7 @@ end
 
 -- Game creation: yes, 3rd
 -- Game load: yes, 1st
-function onInit(players, box)
+function onInit(game, box, players)
     for i=1, #players do
         players[i].fear.onMax = function() 
             print("'fear' max: Game Over for player " .. i)
@@ -69,22 +69,22 @@ function onInit(players, box)
 end
 
 -- Calls when a player starts their turn.
-function onStartTurn(player)
+function onStartTurn(game, player)
     print("Lua onStartTurn", player.index)
 end
 
 -- Called when a turn is ending. 
-function onEndTurn(player)
+function onEndTurn(game, player)
     print("Lua onEndTurn", player.index)
     return nil
 end
 
-function isMoveAllowed(player, meeple, start, dst)
+function isMoveAllowed(game, player, meeple, start, dst)
     print("Lua isMoveAllowed", player.index, meeple.name, start.name, dst.name)
     return true
 end
 
-function onMeepleMoved(player, meeple, start, dst)
+function onMeepleMoved(game, player, meeple, start, dst)
     print("Lua onMoveMeeple", player.index, meeple.name, start.name, dst.name)
     player.fear:inc()
 end
