@@ -1,7 +1,15 @@
 require "_board"
 require "_boardmock"
 
+local function initState()
+    Game = _Game:new()
+    Box = _Box:new()
+    Players = _Players:new()
+end
+
 local function sequenceTest1()
+    initState()
+
     -- new game
     local b = _onFetchBoard()
     assert(type(b) == "table")

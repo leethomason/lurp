@@ -21,6 +21,20 @@ require "_util"
 --   - Plate - character card? What to call this?
 --   - Counter - some number tracker. e.g. money, points, etc.
 
+-- Turn, Round, Actions, Moves (the tricky part)
+--   - Round: a sequence of Turns, starting w/ P1 and touching all players
+--     - onRoundStart, onRoundEnd
+--   - Turn: a player's opportunity to take Actions
+--     - onTurnStart, onTurnEnd
+--     - getActions() -> MOVE, END_TURN, etc.
+--   - Action: a player's choice to do something. There can be multiple actions per turn. Types of actions:
+--    - Move: move a meeple
+--    - Play: play a card
+--    - Buy: buy something
+--    - Draw: draw a card
+--    - Discard: discard a card
+--    - End Turn
+
 function serialize(x, stk, depth)
     stk = stk or {}
     depth = depth or 0

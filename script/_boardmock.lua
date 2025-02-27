@@ -12,11 +12,16 @@ function onFetchBoard()
     return board
 end
 
+-- called as needed
+function onMaxPlayers()
+    return MAX_PLAYERS
+end
+
 -- called once at start of game
 function onSetupBox(game, box)
     box.init = true
     for i=1, MAX_PLAYERS do
-        table.insert(box.meeples, Meeple:new("player", "P" .. i, "gray"))
+        table.insert(box.meeples, Meeple:new("player", "Pn", "gray"))
     end
 end
 
@@ -26,7 +31,6 @@ function onSetupGame(game, box, players)
     game.setup = true
 
     for i=1, #players do
-        box.meeples[i].pos = "Foyer"
         lume.push(players[i].meeples, box.meeples[i])
     end
 end

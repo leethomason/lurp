@@ -8,7 +8,6 @@ loader.Game =
   ["getUID"] = nil --[[ function ]],
   ["load"] = nil --[[ function ]],
   ["new"] = nil --[[ function ]],
-  ["nextTurn"] = nil --[[ function ]],
   ["struct"] = "Game",
 }
 
