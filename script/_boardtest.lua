@@ -173,11 +173,22 @@ local function loadTest()
     _deserialize(data)
 end
 
+function cardHandler()
+    return 17
+end
+
+local function cardTest()
+    initState()
+    local card = Card:new("testCard", "A Test Card", "no desc", cardHandler)
+    assert(card.handler() == 17)
+end
+
 meepleTests()
 serializeTest1()
 serializeTest2()
 cycleTest()
 loadTest()
+--cardTest()
 
 -- Tests needed:
 --   - Turn test: skip, repeat, single player

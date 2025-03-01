@@ -1,4 +1,5 @@
 local lume = require "lume"
+local lurp = require "lurp"
 require "_util"
 
 -- Rules / assumptions
@@ -35,6 +36,15 @@ require "_util"
 --    - Discard: discard a card
 --    - End Turn
 
+-- Returns 'x' serialized to a string that is itself a lua script.
+-- Can handle sub-tables but will skip circular refs.
+-- example: `local s = serialize(test)`
+--[[
+    local s = serialize(test, {}, 0)
+    local tbl = load("return " .. s)()
+    assert(type(tbl) == "table")
+    local t = deserialize(tbl, {})
+]]--
 function serialize(x, stk, depth)
     stk = stk or {}
     depth = depth or 0
@@ -73,7 +83,14 @@ end
 -- serialize goes from a values to a string.
 -- deserialize, on the other hand, has a table loaded in memory,
 -- and needs to copy to a different one.
+--[[
+    local s = serialize(test, {}, 0)
+    local tbl = load("return " .. s)()
+    assert(type(tbl) == "table")
+    local t = deserialize(tbl, {})
+]]--
 function deserialize(s, stk)
+    stk = stk or {}
     local t = type(s)
     
     if t == "number" or t == "boolean" or t == "string" then
@@ -396,6 +413,53 @@ function _Counter:dec()
 end
 
 Counter = _Counter
+
+------ Counter ------
+
+_Card = {}
+
+function _Card.init(o)
+    o = o or {}
+    o.struct = "Card"
+
+    o.cardType = ""
+    o.title = ""
+    o.desc = ""
+    o.handler = nil
+    o.handlerName = nil
+
+    o.new = _Card.new
+    o.init = _Card.init
+    o.load = _Card.load
+
+    return o
+end
+
+function _Card:new(cardType, title, desc, handlerName)
+    assert(type(self) == "table")
+
+    local o = _Card.init()
+
+    o.cardType = cardType
+    o.title = title
+    o.desc = desc
+    o.handlerName = handlerName
+    o.handler = handler
+
+    return o
+end
+
+function _Card:load(obj)
+    assert(type(self) == "table")
+   
+    local o = _Card.init()
+    lurp.deepClone(obj, o)
+
+    o.handler = _G[o.handlerName]
+    return o
+end
+
+Card = _Card
 
 ------ API Functions ------
 
