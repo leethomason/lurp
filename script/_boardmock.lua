@@ -53,5 +53,11 @@ function isMoveAllowed(game, player, meeple, start, dst)
     return true
 end
 
+-- other possible interpretation:
+function getAllowedMoves(game, player, meeple, start)
+    -- return a list of coordinates or cells
+    return {}
+end
+
 function onMeepleMoved(game, player, meeple, start, dst)
 end
