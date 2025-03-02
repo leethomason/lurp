@@ -204,7 +204,7 @@ serializeTest1()
 serializeTest2()
 cycleTest()
 loadTest()
---cardTest()
+cardTest()
 
 -- Tests needed:
 --   - Turn test: skip, repeat, single player

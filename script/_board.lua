@@ -485,7 +485,6 @@ function _Card.init(o)
     o.title = ""
     o.desc = ""
     o.handler = nil
-    o.handlerName = nil
 
     o.new = _Card.new
     o.init = _Card.init
@@ -494,7 +493,7 @@ function _Card.init(o)
     return o
 end
 
-function _Card:new(cardType, title, desc, handlerName)
+function _Card:new(cardType, title, desc, handler)
     assert(type(self) == "table")
 
     local o = _Card.init()
@@ -502,7 +501,6 @@ function _Card:new(cardType, title, desc, handlerName)
     o.cardType = cardType
     o.title = title
     o.desc = desc
-    o.handlerName = handlerName
     o.handler = handler
 
     return o
@@ -513,8 +511,6 @@ function _Card:load(obj)
    
     local o = _Card.init()
     lurp.deepClone(obj, o)
-
-    o.handler = _G[o.handlerName]
     return o
 end
 
