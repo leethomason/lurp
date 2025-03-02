@@ -51,6 +51,7 @@ local function initState()
     Game = _Game:new()
     Box = _Box:new()
     Players = _Players:new()
+    JumpTable = _JumpTable:new()
 end
 
 local function meepleTests()
@@ -94,20 +95,35 @@ local function meepleTests()
     assert(m1.y == 10)
 end
 
+local function serialTestFunc()
+    return 17
+end
+
 local function serializeTest1()
+    initState() -- need the jump table
+
+    JumpTable:add("serialTestFunc", serialTestFunc)
+    assert(JumpTable:getFn("serialTestFunc") == serialTestFunc)
+    assert(JumpTable:getName(serialTestFunc) == "serialTestFunc")
+
     local test = {
         value = 1,
         valueStr = "str",
-        valueBool = true
+        valueBool = true,
+        handler = serialTestFunc
     }
-    local s = serialize(test, {}, 0)
+    assert(JumpTable)
+    local s = serialize(test, {}, 0, JumpTable)
     local tbl = load("return " .. s)()
-    assert(type(tbl) == "table")
-    local t = deserialize(tbl, {})
 
+    assert(type(tbl) == "table")
+    local t = deserialize(tbl, {}, JumpTable)
+
+    assert(t)
     assert(t.value == 1)
     assert(t.valueStr == "str")
     assert(t.valueBool == true)
+    assert(t.handler() == 17)
 end
 
 local function serializeTest2()

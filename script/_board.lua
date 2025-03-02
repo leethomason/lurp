@@ -45,7 +45,7 @@ require "_util"
     assert(type(tbl) == "table")
     local t = deserialize(tbl, {})
 ]]--
-function serialize(x, stk, depth)
+function serialize(x, stk, depth, jumpTable)
     stk = stk or {}
     depth = depth or 0
 
@@ -71,10 +71,13 @@ function serialize(x, stk, depth)
 
             for i, k in ipairs(keys) do
                 local v = x[k]
-                s = s .. string.rep("  ", depth + 1) .. "[" .. serialize(k, stk, depth + 1) .. "] = " .. serialize(v, stk, depth + 1) .. ",\n"
+                s = s .. string.rep("  ", depth + 1) .. "[" .. serialize(k, stk, depth + 1, jumpTable) .. "] = " .. serialize(v, stk, depth + 1, jumpTable) .. ",\n"
             end
             return s .. string.rep("  ", depth) .. "}"
         end
+    elseif t == "function" and jumpTable then
+        local name = jumpTable:getName(x)   -- jumpTable will assert if not present
+        return string.format("%q", "function_"..name)
     else
         return "nil --[[ " .. t .. " ]]"
     end
@@ -89,9 +92,18 @@ end
     assert(type(tbl) == "table")
     local t = deserialize(tbl, {})
 ]]--
-function deserialize(s, stk)
+function deserialize(s, stk, jumpTable)
     stk = stk or {}
     local t = type(s)
+
+    -- special code to detect function
+    if t == "string" and jumpTable then
+        local fnPre = string.sub(s, 1, 9)
+        local fnName = string.sub(s, 10)
+        if fnPre == "function_" then
+            return jumpTable:getFn(fnName)
+        end
+    end
     
     if t == "number" or t == "boolean" or t == "string" then
         return s
@@ -101,7 +113,7 @@ function deserialize(s, stk)
         end
         local o = {}
         for k,v in pairs(s) do
-            o[k] = deserialize(v, stk)
+            o[k] = deserialize(v, stk, jumpTable)
         end
         if s.uid then
             stk[s.uid] = o
@@ -112,6 +124,53 @@ function deserialize(s, stk)
     end
     assert(false)
 end
+
+----- JumpTable -----
+
+-- A solution - a good one? - to serializing and deserializing functions.
+
+_JumpTable = {}
+
+function _JumpTable:new()
+    local o = {}
+    o.struct = "JumpTable"
+
+    o.add = _JumpTable.add
+    o.getFn = _JumpTable.getFn
+    o.getName = _JumpTable.getName
+
+    return o
+end
+
+function _JumpTable:add(name, fn)
+    assert(type(self) == "table")
+    assert(type(name) == "string")
+    assert(type(fn) == "function")
+
+    self.names = self.name or {}
+    self.funcs = self.funcs or {}
+
+    self.names[name] = fn
+    self.funcs[fn] = name
+end
+
+function _JumpTable:getFn(name)
+    assert(type(self) == "table")
+    assert(type(name) == "string")
+    local fn = self.names[name]
+    assert(type(fn) == "function")
+    return fn
+end
+
+function _JumpTable:getName(fn)
+    assert(type(self) == "table")
+    assert(type(fn) == "function")
+    local n = self.funcs[fn]
+    assert(type(n) == "string")
+    return n
+end
+
+JumpTable = _JumpTable
 
 ------ Game ------
 _Game = {}
