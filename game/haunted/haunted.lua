@@ -35,6 +35,36 @@ function onMaxPlayers()
     return MAX_PLAYERS
 end
 
+local eventCardOnDraw = callback( "eventCardOnDraw",
+    function(game, card, player)
+        player.fear:inc(card.data.fear)
+        discard(card)
+    end
+)
+
+local itemCardOnIntercept = callback( "itemCardOnIntercept",
+    function(game, card, player, draw)
+        if (draw.cardType == "event") then
+            if (card.name == "Holy Water") then
+                if (draw.name == "Ghost" or draw.name == "Poltergeist") then
+                    discard(draw)
+                    discard(card)
+                end
+            elseif (card.name == "Ward") then
+                if (draw.name == "Ghost") then
+                    discard(draw)
+                    discard(card)
+                end
+            elseif (card.name == "Salt") then
+                if (draw.name == "Poltergeist") then
+                    discard(draw)
+                    discard(card)
+                end
+            end
+        end
+    end
+)
+
 function onSetupBox(game, box)
     -- create the player meeples
     local colors = { "red", "green", "blue", "yellow" }
@@ -49,23 +79,30 @@ function onSetupBox(game, box)
 
     -- create the event cards    
     for i=1, 4 do
-        table.insert(box.eventCards, Card:new("event", "Poltergeist", "white")) -- fear +1
+        table.insert(box.eventCards, Card:new("event", "Poltergeist", "Scary", {fear = 1}, {onDraw = eventCardOnDraw}))
     end
     for i=1, 4 do
-        table.insert(box.eventCards, Card:new("event", "Ghost", "white")) -- fear +2
+        table.insert(box.eventCards, Card:new("event", "Ghost", "Very scary", { fear = 2}, {onDraw = eventCardOnDraw}))
     end
     for i=1, 4 do
-        table.insert(box.eventCards, Card:new("event", "Just a noise...", "white"))
+        table.insert(box.eventCards, Card:new("event", "Just a noise...", "Relax", {fear = 0}, {onDraw = eventCardOnDraw}))
     end
 
     -- create the chits
-    table.insert(box.greenItemChits, Card:new("Green Item", "Holy Water", {}))  -- destroy a ghost or poltergeist
-    table.insert(box.greenItemChits, Card:new("Green Item", "Ward", {}))  -- destroy a ghost
-    table.insert(box.greenItemChits, Card:new("Green Item", "Light", {}))  -- fear -1
-    table.insert(box.greenItemChits, Card:new("Green Item", "Salt", {}))  -- destroy a poltergeist
+    table.insert(box.greenItemChits, Card:new("item", "Holy Water", 
+        { target = { "Ghost", "Poltergeist" }},
+        { onIntercept = itemCardOnIntercept} ))
+    table.insert(box.greenItemChits, Card:new("item", "Ward",
+        { target = { "Ghost"}},
+        { onIntercept = itemCardOnIntercept }))
+    table.insert(box.greenItemChits, Card:new("item", "Salt",
+        { target = { "Poltergeist"}},
+        { onIntercept = itemCardOnIntercept }))
 
-    table.insert(box.redItemChits, Card:new("Red Item", "Magic Grimoire", {}))  -- win the game
-    table.insert(box.redItemChits, Card:new("Red Item", "Cursed Doll", {}))  -- fear +1
+    table.insert(box.greenItemChits, Card:new("item", "Light", {}))  -- fear -1
+
+    table.insert(box.redItemChits, Card:new("item", "Magic Grimoire", {}))  -- win the game
+    table.insert(box.redItemChits, Card:new("item", "Cursed Doll", {}))  -- fear +1
 end
 
 function onSetupGame(game, box, players)
@@ -87,13 +124,5 @@ end
 function onInit(game, box, players)
     --math.randomseed(os.time())
     math.randomseed(1357)
-    registerCard("event", handleEventCard)
 end
 
-function handleEventCard(game, box, players, player, card)
-    if card.name == "Poltergeist" then
-        player.fear = player.fear + 1
-    elseif card.name == "Ghost" then
-        player.fear = player.fear + 2
-    end
-end

@@ -346,7 +346,7 @@ bool BoardDriver::done() const
 {
 	LuaStackCheck check(bridge.getLuaState());
 
-	int nRet = bridge.callGlobalFunc("_isGameOver", {});
+	int nRet = bridge.callGlobalFunc("isGameOver", {});
 	REQUIRE(nRet == 1);
 	bool gameOver = bridge.toBool(-1);
 	bridge.pop();

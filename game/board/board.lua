@@ -43,6 +43,13 @@ function onSetupBox(game, box)
     return MAX_PLAYERS
 end
 
+local onFearMaxCB = callback("onFearMaxCB",
+    function(game, object, player)
+        print("'fear' max: Game Over for player " .. player.index)
+        PlayerOver(player)
+    end
+)
+
 -- Game creation: yes, 2nd
 -- Game load: no
 function onSetupGame(game, box, players)
@@ -53,20 +60,25 @@ function onSetupGame(game, box, players)
         meeples[i].pos = "Foyer"
         lume.push(players[i].meeples, meeples[i])
         players[i].fear = Counter:new(0, 0, 4)
+        players[1].fear.onMax = onFearMaxCB
     end
 end
 
+function onInit(game, box, players)
+end
+
+
 -- Game creation: yes, 3rd
 -- Game load: yes, 1st
-function onInit(game, box, players)
-    for i=1, #players do
-        players[i].fear.onMax = function() 
-            print("'fear' max: Game Over for player " .. i)
-            --GameOver()
-            PlayerOver(players[i].index)
-        end
-    end
-end
+-- function onInit(game, box, players)
+--     for i=1, #players do
+--         players[i].fear.onMax = function()
+--             print("'fear' max: Game Over for player " .. i)
+--             --GameOver()
+--             PlayerOver(players[i])
+--         end
+--     end
+-- end
 
 -- Calls when a player starts their turn.
 function onStartTurn(game, player)

@@ -154,6 +154,14 @@ function _JumpTable:add(name, fn)
     self.funcs[fn] = name
 end
 
+function _JumpTable:validate(fn)
+    assert(type(self) == "table")
+    assert(type(fn) == "function")
+    assert(self.funcs)
+    local name = self.funcs[fn]
+    assert(type(name) == "string")
+end
+
 function _JumpTable:getFn(name)
     assert(type(self) == "table")
     assert(type(name) == "string")
@@ -453,8 +461,9 @@ function _Counter:load(obj)
     return o
 end
 
-function _Counter:inc()
+function _Counter:inc(n)
     assert(type(self) == "table")
+    n = n or 1
     self.value = self.value + self.incValue
     if self.value >= self.max then
         self.value = self.max
@@ -462,8 +471,9 @@ function _Counter:inc()
     end
 end
 
-function _Counter:dec()
+function _Counter:dec(n)
     assert(type(self) == "table")
+    n = n or 1
     self.value = self.value - self.incValue
     if self.value <= self.min then
         self.value = self.min
@@ -484,7 +494,8 @@ function _Card.init(o)
     o.cardType = ""
     o.title = ""
     o.desc = ""
-    o.handler = nil
+    o.callbacks = {}
+    o.data = {}
 
     o.new = _Card.new
     o.init = _Card.init
@@ -493,7 +504,7 @@ function _Card.init(o)
     return o
 end
 
-function _Card:new(cardType, title, desc, handler)
+function _Card:new(cardType, title, desc, data, callbacks)
     assert(type(self) == "table")
 
     local o = _Card.init()
@@ -501,7 +512,12 @@ function _Card:new(cardType, title, desc, handler)
     o.cardType = cardType
     o.title = title
     o.desc = desc
-    o.handler = handler
+    o.callbacks = callbacks
+    o.data = data
+
+    for _, v in pairs(callbacks) do
+        JumpTable:validate(v)
+    end
 
     return o
 end
@@ -528,7 +544,8 @@ function SetGameOver()
     gameOver = true
 end
 
-function SetPlayerOver(index)
+function SetPlayerOver(player)
+    local index = player.index
     Players[index].inPlay = false
     local anyInPlay = false
     for _, v in ipairs(Players) do
@@ -630,10 +647,6 @@ function _nextTurn()
     _onStartTurn()
 end
 
-function _isGameOver()
-    return gameOver
-end
-
 function _createPlayers(nPlayers)
     for i = 1, nPlayers do
         local p = Player:new(i)
@@ -699,4 +712,20 @@ function _deserialize(loader)
     Game = _Game:load(loader.Game)
     Box = _Box:load(loader.Box)
     Players = _Players:load(loader.Players)
+end
+
+-- Game API --
+
+function callback(name, func)
+    JumpTable:add(name, func)
+    return func
+end
+
+function isGameOver()
+    return gameOver
+end
+
+function discard(card, pile)
+    -- fixme: implement
+    assert(false)
 end
