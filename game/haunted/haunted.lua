@@ -53,6 +53,18 @@ local itemCardOnIntercept = callback( "itemCardOnIntercept",
     end
 )
 
+local itemCardOnDraw = callback( "itemCardOnDraw",
+    function(game, card, player)
+        if card.data.fear then
+            player.fear:inc(card.data.fear)
+            discard(card)
+        end
+        if card.data.win then
+            SetPlayerWin(player)
+        end
+    end
+)
+
 function onSetupBox(game, box)
     -- create the player meeples
     local colors = { "red", "green", "blue", "yellow" }
@@ -87,10 +99,10 @@ function onSetupBox(game, box)
         { target = { "Poltergeist"}},
         { onIntercept = itemCardOnIntercept }))
 
-    table.insert(box.greenItemChits, Card:new("item", "Light", {}))  -- fear -1
+    table.insert(box.greenItemChits, Card:new("item", "Light", { fear = -1}, { onDraw = itemCardOnDraw})) 
 
-    table.insert(box.redItemChits, Card:new("item", "Magic Grimoire", {}))  -- win the game
-    table.insert(box.redItemChits, Card:new("item", "Cursed Doll", {}))  -- fear +1
+    table.insert(box.redItemChits, Card:new("item", "Magic Grimoire", { win = true}, { onDraw = itemCardOnDraw}))
+    table.insert(box.redItemChits, Card:new("item", "Cursed Doll", { fear = 1}, {onDraw = itemCardOnDraw}))
 end
 
 function onSetupGame(game, box, players)
