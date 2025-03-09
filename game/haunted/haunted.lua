@@ -45,21 +45,9 @@ local eventCardOnDraw = callback( "eventCardOnDraw",
 local itemCardOnIntercept = callback( "itemCardOnIntercept",
     function(game, card, player, draw)
         if (draw.cardType == "event") then
-            if (card.name == "Holy Water") then
-                if (draw.name == "Ghost" or draw.name == "Poltergeist") then
-                    discard(draw)
-                    discard(card)
-                end
-            elseif (card.name == "Ward") then
-                if (draw.name == "Ghost") then
-                    discard(draw)
-                    discard(card)
-                end
-            elseif (card.name == "Salt") then
-                if (draw.name == "Poltergeist") then
-                    discard(draw)
-                    discard(card)
-                end
+            if card.data.target[draw.name] then
+                discard(draw)
+                discard(card)
             end
         end
     end

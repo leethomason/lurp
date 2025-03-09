@@ -532,33 +532,6 @@ end
 
 Card = _Card
 
------- API Functions ------
-
-local gameOver = false
-
-function GameOver()
-    return gameOver
-end
-
-function SetGameOver()
-    gameOver = true
-end
-
-function SetPlayerOver(player)
-    local index = player.index
-    Players[index].inPlay = false
-    local anyInPlay = false
-    for _, v in ipairs(Players) do
-        if v.inPlay then
-            anyInPlay = true
-            break
-        end
-    end
-    if not anyInPlay then
-        SetGameOver()
-    end
-end
-
 ------ Internal API Functions ------
 
 function _onSetupBox()
@@ -714,7 +687,32 @@ function _deserialize(loader)
     Players = _Players:load(loader.Players)
 end
 
--- Game API --
+------ API Functions ------
+
+local gameOver = false
+
+function GameOver()
+    return gameOver
+end
+
+function SetGameOver()
+    gameOver = true
+end
+
+function SetPlayerOver(player)
+    local index = player.index
+    Players[index].inPlay = false
+    local anyInPlay = false
+    for _, v in ipairs(Players) do
+        if v.inPlay then
+            anyInPlay = true
+            break
+        end
+    end
+    if not anyInPlay then
+        SetGameOver()
+    end
+end
 
 function callback(name, func)
     JumpTable:add(name, func)
