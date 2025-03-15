@@ -461,24 +461,33 @@ function _Counter:load(obj)
     return o
 end
 
+local function counterDelta(counter, d)
+    local inRange = counter.value > counter.min and counter.value < counter.max
+    counter.value = counter.value + d
+    if counter.value >= counter.max then
+        counter.value = counter.max
+        if inRange and counter.onMax then
+            counter.onMax()
+        end
+    end
+    if counter.value <= counter.min then
+        counter.value = counter.min
+        if inRange and counter.onMin then
+            counter.onMin()
+        end
+    end
+end
+
 function _Counter:inc(n)
     assert(type(self) == "table")
     n = n or 1
-    self.value = self.value + self.incValue
-    if self.value >= self.max then
-        self.value = self.max
-        if self.onMax then self.onMax() end
-    end
+    counterDelta(self, n)
 end
 
 function _Counter:dec(n)
     assert(type(self) == "table")
     n = n or 1
-    self.value = self.value - self.incValue
-    if self.value <= self.min then
-        self.value = self.min
-        if self.onMin then self.onMin() end
-    end
+    counterDelta(self, -n)
 end
 
 Counter = _Counter
